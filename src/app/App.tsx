@@ -11,6 +11,7 @@ import { TextRecordingScreen } from './screens/TextRecordingScreen';
 import { EmotionValidationScreen } from './screens/EmotionValidationScreen';
 import { BeliefValidationScreen } from './screens/BeliefValidationScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
+import { EntryDetailScreen } from './screens/EntryDetailScreen';
 import { PatternsScreen } from './screens/PatternsScreen';
 import { NewPatternScreen } from './screens/NewPatternScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
@@ -37,6 +38,7 @@ function AppRoutes() {
         <Route path="/validacao-emocoes" element={<RequireAuth><EmotionValidationScreen /></RequireAuth>} />
         <Route path="/validacao-crencas" element={<RequireAuth><BeliefValidationScreen /></RequireAuth>} />
         <Route path="/historico" element={<RequireAuth><HistoryScreen /></RequireAuth>} />
+        <Route path="/registro/:id" element={<RequireAuth><EntryDetailScreen /></RequireAuth>} />
         <Route path="/padroes" element={<RequireAuth><PatternsScreen /></RequireAuth>} />
         <Route path="/novo-padrao" element={<RequireAuth><NewPatternScreen /></RequireAuth>} />
         <Route path="/resumo" element={<RequireAuth><SummaryScreen /></RequireAuth>} />
