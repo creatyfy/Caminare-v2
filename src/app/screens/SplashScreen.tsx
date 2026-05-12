@@ -1,0 +1,133 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { motion, AnimatePresence } from 'motion/react';
+import { OwlMascot, CaminareText } from '../components/Logo';
+import { useAuth } from '../contexts/AuthContext';
+
+const BRAND = '#534AB7';
+const BRAND_DARK = '#3D2E5E';
+const BG = '#F8F7FF';
+
+export function SplashScreen() {
+  const navigate = useNavigate();
+  const { session, loading } = useAuth();
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStep(1), 900);
+    const t2 = setTimeout(() => setStep(2), 1900);
+    const t3 = setTimeout(() => setStep(3), 3100);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (step === 3 && !loading) {
+      navigate(session ? '/home' : '/login', { replace: true });
+    }
+  }, [step, loading, session, navigate]);
+
+  const owlVisible = step >= 0;
+  const textVisible = step >= 1;
+  const exiting = step >= 3;
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: BG,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <AnimatePresence>
+        {!exiting && (
+          <motion.div
+            key="splash-content"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.45, ease: 'easeOut' } }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={
+                owlVisible
+                  ? {
+                      opacity: 1,
+                      scale: [0.95, 1.05, 0.98, 1.04, 1],
+                    }
+                  : {}
+              }
+              transition={{
+                opacity: { duration: 0.5, ease: 'easeOut' },
+                scale: {
+                  duration: 2.2,
+                  times: [0, 0.25, 0.5, 0.75, 1],
+                  ease: 'easeInOut',
+                },
+              }}
+              style={{ display: 'flex' }}
+            >
+              <OwlMascot size={140} color={BRAND_DARK} />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.9 }}
+              animate={
+                textVisible
+                  ? {
+                      opacity: 1,
+                      y: 0,
+                      scale: [0.95, 1.04, 1],
+                    }
+                  : { opacity: 0, y: 14, scale: 0.9 }
+              }
+              transition={{
+                opacity: { duration: 0.5, ease: 'easeOut' },
+                y: { duration: 0.5, ease: 'easeOut' },
+                scale: {
+                  duration: 1.6,
+                  times: [0, 0.5, 1],
+                  ease: 'easeInOut',
+                },
+              }}
+              style={{ display: 'flex', marginTop: '6px' }}
+            >
+              <CaminareText height={44} color={BRAND_DARK} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Subtle bottom hint while waiting */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: textVisible && !exiting ? 0.45 : 0 }}
+        transition={{ duration: 0.6 }}
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          fontSize: 13,
+          fontWeight: 500,
+          color: BRAND,
+        }}
+      >
+        Sua jornada de autoconhecimento
+      </motion.div>
+    </div>
+  );
+}
