@@ -78,7 +78,7 @@ export function SplashScreen() {
               style={{ display: 'flex' }}
             >
               <img
-                src="/images/alinhadapng.png"
+                src="/alinhadapng.png"
                 alt="Caminare mascote"
                 style={{
                   width: 320,
@@ -111,7 +111,7 @@ export function SplashScreen() {
               style={{ display: 'flex', marginTop: '6px' }}
             >
               <img
-                src="/images/caminaretexto.png"
+                src="/caminarecomp.png"
                 alt="Caminare"
                 style={{
                   width: 260,

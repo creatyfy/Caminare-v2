@@ -59,10 +59,20 @@ export function LoginScreen() {
         }}
       >
         <img
-          src="/images/alinhadapng.png"
+          src="/alinhadapng.png"
+          alt="Caminare mascote"
+          style={{
+            width: 160,
+            height: 'auto',
+            objectFit: 'contain',
+          }}
+        />
+        <img
+          src="/caminarecomp.png"
           alt="Caminare"
           style={{
-            width: 220,
+            marginTop: 10,
+            width: 200,
             height: 'auto',
             objectFit: 'contain',
           }}
