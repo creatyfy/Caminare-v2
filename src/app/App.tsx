@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { BottomNav } from './components/BottomNav';
 import { HomeScreen } from './screens/HomeScreen';
 import { RecordingScreen } from './screens/RecordingScreen';
+import { TextRecordingScreen } from './screens/TextRecordingScreen';
 import { EmotionValidationScreen } from './screens/EmotionValidationScreen';
 import { BeliefValidationScreen } from './screens/BeliefValidationScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
@@ -16,6 +17,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/gravacao" element={<RecordingScreen />} />
+          <Route path="/registro-texto" element={<TextRecordingScreen />} />
           <Route path="/validacao-emocoes" element={<EmotionValidationScreen />} />
           <Route path="/validacao-crencas" element={<BeliefValidationScreen />} />
           <Route path="/historico" element={<HistoryScreen />} />

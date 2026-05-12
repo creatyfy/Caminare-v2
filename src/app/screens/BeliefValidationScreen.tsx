@@ -1,6 +1,4 @@
 import { Check, X, Edit3, ArrowLeft } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
 import { useNavigate } from 'react-router';
 import { useState } from 'react';
 
@@ -10,13 +8,13 @@ export function BeliefValidationScreen() {
     {
       id: 1,
       text: 'Eu não sou competente o suficiente',
-      validated: null,
+      validated: null as boolean | null,
       contexts: ['Trabalho', 'Apresentações'],
     },
     {
       id: 2,
       text: 'Preciso ser perfeita para ser aceita',
-      validated: null,
+      validated: null as boolean | null,
       contexts: ['Relacionamentos', 'Trabalho'],
     },
   ]);
@@ -31,81 +29,187 @@ export function BeliefValidationScreen() {
   };
 
   return (
-    <div className="flex flex-col h-full pb-20 bg-[#F8F7FF]">
-      <div className="px-6 pt-12 pb-6 bg-white">
-        <button onClick={() => navigate('/validacao-emocoes')} className="text-[#534AB7] flex items-center gap-2 mb-6">
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%', 
+      backgroundColor: '#F8F7FF', 
+      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif' 
+    }}>
+      {/* Header */}
+      <div style={{ padding: '48px 24px 24px 24px', backgroundColor: '#FFFFFF' }}>
+        <button 
+          onClick={() => navigate('/validacao-emocoes')} 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            color: '#534AB7', 
+            background: 'none', 
+            border: 'none', 
+            fontSize: '16px', 
+            fontWeight: '500', 
+            padding: 0, 
+            cursor: 'pointer', 
+            marginBottom: '24px' 
+          }}
+        >
           <ArrowLeft size={20} />
           <span>Voltar</span>
         </button>
 
-        <h1 className="text-2xl text-[#2D2A45] mb-2">Crenças Identificadas</h1>
-        <p className="text-[#8B87A8]">Valide as crenças limitantes encontradas</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#2D2A45', margin: '0 0 8px 0' }}>
+          Crenças Identificadas
+        </h1>
+        <p style={{ fontSize: '15px', color: '#8B87A8', margin: 0, lineHeight: '1.4' }}>
+          Valide as crenças limitantes encontradas
+        </p>
       </div>
 
-      <div className="flex-1 px-6 py-6 overflow-auto">
-        <div className="space-y-4">
+      {/* Content */}
+      <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
           {beliefs.map((belief) => (
-            <Card key={belief.id} className="p-5 bg-white shadow-sm border border-[#534AB7]/5">
-              <div className="mb-4">
-                <p className="text-[#2D2A45] font-medium mb-3 leading-relaxed">{belief.text}</p>
-                <div className="flex flex-wrap gap-2">
+            <div key={belief.id} style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '24px',
+              padding: '20px',
+              boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)'
+            }}>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ 
+                  color: '#2D2A45', 
+                  fontSize: '16px', 
+                  fontWeight: '600',
+                  lineHeight: '1.5', 
+                  margin: '0 0 12px 0' 
+                }}>
+                  {belief.text}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {belief.contexts.map((context, idx) => (
-                    <span key={idx} className="text-xs bg-[#E8E6F7] text-[#534AB7] px-3 py-1 rounded-full">
+                    <span key={idx} style={{
+                      backgroundColor: '#F0EFFF',
+                      color: '#534AB7',
+                      padding: '6px 12px',
+                      borderRadius: '9999px',
+                      fontSize: '13px',
+                      fontWeight: '500'
+                    }}>
                       {context}
                     </span>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => handleValidation(belief.id, 'confirm')}
-                  className={`flex flex-col items-center gap-1 py-3 rounded-xl transition-all ${
-                    belief.validated === true
-                      ? 'bg-[#1D9E75] text-white shadow-md'
-                      : 'bg-[#1D9E75]/10 text-[#1D9E75] hover:bg-[#1D9E75]/20'
-                  }`}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '12px 0',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: belief.validated === true ? '#1D9E75' : '#E8F5F0',
+                    color: belief.validated === true ? '#FFFFFF' : '#1D9E75'
+                  }}
                 >
-                  <Check size={18} strokeWidth={2.5} />
-                  <span className="text-xs font-medium">Confirmar</span>
+                  <Check size={20} strokeWidth={2.5} />
+                  <span style={{ fontSize: '13px', fontWeight: '600' }}>Confirmar</span>
                 </button>
 
                 <button
                   onClick={() => handleValidation(belief.id, 'adjust')}
-                  className="flex flex-col items-center gap-1 py-3 rounded-xl bg-[#F59E0B]/10 text-[#F59E0B] hover:bg-[#F59E0B]/20 transition-all"
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '12px 0',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: '#FEF5E7',
+                    color: '#F59E0B'
+                  }}
                 >
-                  <Edit3 size={18} strokeWidth={2.5} />
-                  <span className="text-xs font-medium">Ajustar</span>
+                  <Edit3 size={20} strokeWidth={2.5} />
+                  <span style={{ fontSize: '13px', fontWeight: '600' }}>Ajustar</span>
                 </button>
 
                 <button
                   onClick={() => handleValidation(belief.id, 'reject')}
-                  className={`flex flex-col items-center gap-1 py-3 rounded-xl transition-all ${
-                    belief.validated === false
-                      ? 'bg-[#DC2626] text-white shadow-md'
-                      : 'bg-[#DC2626]/10 text-[#DC2626] hover:bg-[#DC2626]/20'
-                  }`}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '12px 0',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: belief.validated === false ? '#DC2626' : '#FEF2F2',
+                    color: belief.validated === false ? '#FFFFFF' : '#DC2626'
+                  }}
                 >
-                  <X size={18} strokeWidth={2.5} />
-                  <span className="text-xs font-medium">Descartar</span>
+                  <X size={20} strokeWidth={2.5} />
+                  <span style={{ fontSize: '13px', fontWeight: '600' }}>Descartar</span>
                 </button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 
-        <div className="mt-6 p-4 bg-[#534AB7]/5 rounded-2xl border border-[#534AB7]/10">
-          <p className="text-sm text-[#534AB7]">
-            💡 Crenças limitantes são pensamentos que podem estar afetando sua autoestima e bem-estar
+        <div style={{
+          backgroundColor: '#F0EFFF',
+          borderRadius: '16px',
+          padding: '16px',
+          marginBottom: '24px',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'flex-start'
+        }}>
+          <span style={{ fontSize: '16px' }}>💡</span>
+          <p style={{ 
+            fontSize: '14px', 
+            color: '#534AB7', 
+            margin: 0, 
+            lineHeight: '1.5' 
+          }}>
+            Crenças limitantes são pensamentos que podem estar afetando sua autoestima e bem-estar
           </p>
         </div>
 
-        <Button
+        <button
           onClick={() => navigate('/novo-padrao')}
-          className="w-full h-12 bg-[#534AB7] hover:bg-[#453EA0] text-white rounded-full mt-6"
+          style={{
+            width: '100%',
+            height: '56px',
+            backgroundColor: '#534AB7',
+            color: '#FFFFFF',
+            borderRadius: '9999px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            fontWeight: '600',
+            border: 'none',
+            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            cursor: 'pointer'
+          }}
         >
           Finalizar Registro
-        </Button>
+        </button>
       </div>
     </div>
   );

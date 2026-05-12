@@ -1,8 +1,4 @@
-import { Calendar, Heart, Search } from 'lucide-react';
-import { Card } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Calendar, Heart, Search, ChevronDown } from 'lucide-react';
 
 export function HistoryScreen() {
   const records = [
@@ -36,7 +32,7 @@ export function HistoryScreen() {
       time: '20:15',
       emotions: ['Cansaço', 'Estresse'],
       summary: 'Dia intenso de trabalho, muitas demandas...',
-      color: '#8B5CF6',
+      color: '#534AB7',
     },
     {
       id: 5,
@@ -49,77 +45,147 @@ export function HistoryScreen() {
   ];
 
   return (
-    <div className="flex flex-col h-full pb-20 bg-[#F8F7FF]">
-      <div className="px-6 pt-12 pb-6 bg-white">
-        <h1 className="text-2xl text-[#2D2A45] mb-2">Histórico</h1>
-        <p className="text-[#8B87A8]">Seus registros de emoções e pensamentos</p>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%', 
+      backgroundColor: '#F8F7FF', 
+      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif' 
+    }}>
+      {/* Header */}
+      <div style={{ padding: '48px 24px 24px 24px', backgroundColor: '#FFFFFF' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#2D2A45', margin: '0 0 8px 0' }}>
+          Histórico
+        </h1>
+        <p style={{ fontSize: '15px', color: '#8B87A8', margin: 0, lineHeight: '1.4' }}>
+          Seus registros
+        </p>
       </div>
 
-      <div className="px-6 py-4 bg-white border-b border-[#534AB7]/10">
-        <div className="flex gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B87A8]" size={18} />
-            <Input
-              placeholder="Buscar registros..."
-              className="pl-10 bg-[#F8F7FF] border-0 h-10 rounded-xl"
-            />
-          </div>
-
-          <Select defaultValue="all">
-            <SelectTrigger className="w-32 h-10 border-0 bg-[#F8F7FF] rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="week">7 dias</SelectItem>
-              <SelectItem value="month">30 dias</SelectItem>
-              <SelectItem value="year">Ano</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Search & Filter */}
+      <div style={{ 
+        padding: '0 24px 24px 24px', 
+        backgroundColor: '#FFFFFF', 
+        display: 'flex', 
+        gap: '12px' 
+      }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <Search size={18} color="#8B87A8" style={{ position: 'absolute', left: '16px' }} />
+          <input
+            type="text"
+            placeholder="Buscar registros..."
+            style={{
+              width: '100%',
+              height: '44px',
+              backgroundColor: '#F8F7FF',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '0 16px 0 44px',
+              fontSize: '15px',
+              color: '#2D2A45',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+        
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <select style={{
+            appearance: 'none',
+            height: '44px',
+            backgroundColor: '#F8F7FF',
+            border: 'none',
+            borderRadius: '9999px',
+            padding: '0 36px 0 20px',
+            fontSize: '15px',
+            color: '#2D2A45',
+            fontWeight: '500',
+            outline: 'none',
+            cursor: 'pointer'
+          }}>
+            <option>Todos</option>
+            <option>7 dias</option>
+            <option>30 dias</option>
+          </select>
+          <ChevronDown size={16} color="#8B87A8" style={{ position: 'absolute', right: '12px', pointerEvents: 'none' }} />
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto px-6 py-4">
-        <div className="space-y-3">
-          {records.map((record) => (
-            <Card key={record.id} className="p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-start gap-3">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${record.color}15` }}
-                >
-                  <Heart size={20} style={{ color: record.color }} strokeWidth={2.5} />
-                </div>
+      {/* List */}
+      <div style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        padding: '24px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '16px',
+        paddingBottom: '100px' // Space for bottom nav
+      }}>
+        {records.map((record) => (
+          <div key={record.id} style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '24px',
+            padding: '20px',
+            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+            display: 'flex',
+            gap: '16px'
+          }}>
+            {/* Icon */}
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              backgroundColor: `${record.color}15`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Heart size={20} color={record.color} strokeWidth={2.5} />
+            </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-xs text-[#8B87A8]">
-                      <Calendar size={14} />
-                      <span>{record.date}</span>
-                      <span>•</span>
-                      <span>{record.time}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-[#2D2A45] text-sm mb-3 leading-relaxed line-clamp-2">
-                    {record.summary}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-                    {record.emotions.map((emotion, idx) => (
-                      <Badge
-                        key={idx}
-                        className="bg-[#E8E6F7] text-[#534AB7] border-0 text-xs px-3 py-0.5"
-                      >
-                        {emotion}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+            {/* Content */}
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '6px', 
+                marginBottom: '8px',
+                color: '#8B87A8',
+                fontSize: '13px'
+              }}>
+                <Calendar size={14} />
+                <span>{record.date}</span>
+                <span>•</span>
+                <span>{record.time}</span>
               </div>
-            </Card>
-          ))}
-        </div>
+
+              <p style={{ 
+                color: '#2D2A45', 
+                fontSize: '15px', 
+                lineHeight: '1.5', 
+                margin: '0 0 12px 0' 
+              }}>
+                {record.summary}
+              </p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {record.emotions.map((emotion, idx) => (
+                  <span key={idx} style={{
+                    backgroundColor: '#F0EFFF',
+                    color: '#534AB7',
+                    padding: '6px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    fontWeight: '500'
+                  }}>
+                    {emotion}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

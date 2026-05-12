@@ -1,70 +1,189 @@
-import { Mic, Heart, Brain, TrendingUp, BookOpen } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
+import { Mic, Heart, Brain, TrendingUp, BookOpen, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 export function HomeScreen() {
   const navigate = useNavigate();
 
   const stats = [
-    { icon: Heart, label: 'Emoções registradas', value: '24', color: '#534AB7' },
-    { icon: Brain, label: 'Padrões identificados', value: '7', color: '#1D9E75' },
-    { icon: TrendingUp, label: 'Dias seguidos', value: '12', color: '#F59E0B' },
-    { icon: BookOpen, label: 'Total de registros', value: '45', color: '#8B5CF6' },
+    { icon: Heart, label: 'Emoções', value: '24', color: '#6558D3', bgColor: '#F0EFFF' },
+    { icon: Brain, label: 'Padrões', value: '7', color: '#6558D3', bgColor: '#F0EFFF' },
+    { icon: TrendingUp, label: 'Dias', value: '12', color: '#6558D3', bgColor: '#F0EFFF' },
+    { icon: BookOpen, label: 'Registros', value: '45', color: '#8B5CF6', bgColor: '#F3EFFF' },
   ];
 
   return (
-    <div className="flex flex-col h-full pb-20">
-      <div className="bg-gradient-to-br from-[#534AB7] to-[#7B72D9] text-white px-6 pt-12 pb-8 rounded-b-3xl">
-        <h1 className="text-2xl mb-1">Olá, Maria</h1>
-        <p className="text-[#E8E6F7] opacity-90">Como você está se sentindo hoje?</p>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100%', 
+      paddingBottom: '90px', 
+      backgroundColor: '#F8F7FF', 
+      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif' 
+    }}>
+      {/* Header */}
+      <div style={{
+        backgroundColor: '#6558D3',
+        padding: '64px 24px 80px 24px',
+        borderBottomLeftRadius: '32px',
+        borderBottomRightRadius: '32px',
+        color: '#FFFFFF'
+      }}>
+        <h1 style={{ fontSize: '26px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Olá, Maria</h1>
+        <p style={{ fontSize: '15px', margin: 0, opacity: 0.9, fontWeight: '400' }}>O que aconteceu hoje?</p>
       </div>
 
-      <div className="flex-1 px-6 -mt-4">
-        <div className="grid grid-cols-2 gap-3 mb-6">
+      {/* Content */}
+      <div style={{ padding: '0 24px', marginTop: '-54px', flex: 1 }}>
+        
+        {/* Stats Grid (4 columns) */}
+        <div 
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px', 
+            marginBottom: '24px',
+          }}
+        >
           {stats.map((stat, index) => (
-            <Card key={index} className="p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-full" style={{ backgroundColor: `${stat.color}15` }}>
-                  <stat.icon size={18} style={{ color: stat.color }} strokeWidth={2.5} />
-                </div>
+            <div key={index} style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              padding: '12px 4px',
+              boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.03)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center'
+            }}>
+              <div style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                backgroundColor: stat.bgColor,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '8px'
+              }}>
+                <stat.icon size={14} color={stat.color} strokeWidth={2.5} />
               </div>
-              <div className="text-2xl font-semibold text-[#2D2A45] mb-1">{stat.value}</div>
-              <div className="text-xs text-[#8B87A8]">{stat.label}</div>
-            </Card>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#2D2A45', lineHeight: '1', marginBottom: '4px' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: '10px', color: '#8B87A8', fontWeight: '500', lineHeight: '1.2' }}>
+                {stat.label}
+              </div>
+            </div>
           ))}
         </div>
 
-        <Button
-          onClick={() => navigate('/gravacao')}
-          className="w-full h-14 bg-[#534AB7] hover:bg-[#453EA0] text-white rounded-2xl shadow-lg shadow-[#534AB7]/20 flex items-center justify-center gap-2"
-        >
-          <Mic size={20} strokeWidth={2.5} />
-          Novo Registro
-        </Button>
+        {/* Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button
+            onClick={() => navigate('/gravacao')}
+            style={{
+              width: '100%',
+              height: '56px',
+              backgroundColor: '#534AB7',
+              color: '#FFFFFF',
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              fontSize: '16px',
+              fontWeight: '600',
+              border: 'none',
+              boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <Mic size={20} strokeWidth={2.5} />
+            Novo Registro
+          </button>
 
-        <div className="mt-6 space-y-3">
-          <h3 className="text-sm text-[#8B87A8] px-1">Registros recentes</h3>
+          <button
+            onClick={() => navigate('/registro-texto')}
+            style={{
+              width: '100%',
+              height: '56px',
+              backgroundColor: '#FFFFFF',
+              color: '#534AB7',
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              fontSize: '16px',
+              fontWeight: '600',
+              border: '2px solid #534AB7',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease'
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <Edit3 size={20} strokeWidth={2.5} />
+            Novo Registro (Texto)
+          </button>
+        </div>
 
-          {[
-            { emotion: 'Ansiedade', time: 'Há 2 horas', color: '#534AB7' },
-            { emotion: 'Gratidão', time: 'Ontem às 18:30', color: '#1D9E75' },
-            { emotion: 'Frustração', time: 'Ontem às 14:20', color: '#F59E0B' },
-          ].map((record, index) => (
-            <Card key={index} className="p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${record.color}15` }}>
-                    <Heart size={18} style={{ color: record.color }} strokeWidth={2.5} />
+        {/* Recent Records */}
+        <div style={{ marginTop: '32px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#8B87A8', marginBottom: '16px', marginLeft: '4px' }}>
+            Registros recentes
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              { summary: 'Briga com Fulano', time: 'Há 2 horas', color: '#6558D3', bgColor: '#F0EFFF' },
+              { summary: 'Acesso de raiva no trabalho', time: 'Ontem às 18:30', color: '#DC2626', bgColor: '#FEF2F2' },
+              { summary: 'Sentimento de desesperança à noite', time: 'Ontem às 14:20', color: '#F59E0B', bgColor: '#FEF5E7' },
+            ].map((record, index) => (
+              <div key={index} style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '20px',
+                padding: '16px',
+                boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                cursor: 'pointer'
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  backgroundColor: record.bgColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Heart size={20} color={record.color} strokeWidth={2.5} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    fontSize: '15px', 
+                    fontWeight: '700', 
+                    color: '#2D2A45', 
+                    marginBottom: '4px',
+                    lineHeight: '1.3'
+                  }}>
+                    {record.summary}
                   </div>
-                  <div>
-                    <div className="font-medium text-[#2D2A45]">{record.emotion}</div>
-                    <div className="text-xs text-[#8B87A8]">{record.time}</div>
+                  <div style={{ fontSize: '13px', color: '#8B87A8', fontWeight: '500' }}>
+                    {record.time}
                   </div>
                 </div>
               </div>
-            </Card>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

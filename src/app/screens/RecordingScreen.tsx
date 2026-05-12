@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Mic, Square, ArrowLeft } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
 import { useNavigate } from 'react-router';
 
 export function RecordingScreen() {
@@ -43,78 +41,125 @@ export function RecordingScreen() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#F8F7FF] to-white">
-      <div className="px-6 pt-12 pb-6">
-        <button onClick={() => navigate('/')} className="text-[#534AB7] flex items-center gap-2 mb-6">
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100%', 
+      backgroundColor: '#F8F7FF', 
+      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif' 
+    }}>
+      {/* Header Area */}
+      <div style={{ padding: '48px 24px 32px 24px' }}>
+        <button 
+          onClick={() => navigate('/')} 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            color: '#534AB7', 
+            background: 'none', 
+            border: 'none', 
+            fontSize: '16px', 
+            fontWeight: '500', 
+            padding: 0, 
+            cursor: 'pointer', 
+            marginBottom: '24px' 
+          }}
+        >
           <ArrowLeft size={20} />
           <span>Voltar</span>
         </button>
 
-        <h1 className="text-2xl text-[#2D2A45] mb-2">Novo Registro</h1>
-        <p className="text-[#8B87A8]">Compartilhe seus pensamentos e emoções</p>
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#2D2A45', margin: '0 0 8px 0' }}>
+          Novo Registro
+        </h1>
+        <p style={{ fontSize: '15px', color: '#8B87A8', margin: 0 }}>
+          Compartilhe seus pensamentos e emoções
+        </p>
       </div>
 
-      <div className="flex-1 px-6 flex flex-col items-center justify-center">
-        <div className="relative mb-8">
-          <button
-            onClick={toggleRecording}
-            className={`w-32 h-32 rounded-full flex items-center justify-center shadow-2xl transition-all ${
-              isRecording
-                ? 'bg-[#DC2626] hover:bg-[#B91C1C] animate-pulse'
-                : 'bg-[#534AB7] hover:bg-[#453EA0]'
-            }`}
-          >
-            {isRecording ? (
-              <Square size={40} className="text-white" fill="white" />
-            ) : (
-              <Mic size={40} className="text-white" strokeWidth={2} />
-            )}
-          </button>
+      {/* Main Content Area */}
+      <div style={{ 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '32px 24px'
+      }}>
+        
+        {/* Transcription Box */}
+        {transcription && (
+          <div style={{ padding: '24px', backgroundColor: '#FFFFFF', borderRadius: '16px', boxShadow: '0px 8px 24px rgba(0,0,0,0.06)', width: '100%', maxWidth: '320px', marginBottom: '32px' }}>
+            <div style={{ fontSize: '14px', color: '#8B87A8', marginBottom: '8px' }}>Transcrição em tempo real:</div>
+            <p style={{ color: '#2D2A45', lineHeight: '1.6', margin: 0 }}>{transcription}</p>
+          </div>
+        )}
 
-          {isRecording && (
-            <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-64">
-              <div className="flex justify-center items-center gap-1">
-                {[...Array(12)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-[#534AB7] rounded-full animate-pulse"
-                    style={{
-                      height: `${Math.random() * 40 + 20}px`,
-                      animationDelay: `${i * 0.1}s`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
+        {/* Animated Audio Waves */}
         {isRecording && (
-          <div className="text-3xl font-semibold text-[#534AB7] mb-12 mt-12">
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', height: '60px', marginBottom: '16px' }}>
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: '4px',
+                  backgroundColor: '#534AB7',
+                  borderRadius: '9999px',
+                  height: `${Math.random() * 40 + 20}px`,
+                  animation: 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  animationDelay: `${i * 0.1}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Timer */}
+        {isRecording && (
+          <div style={{ fontSize: '30px', fontWeight: '600', color: '#534AB7', marginBottom: '48px' }}>
             {formatTime(duration)}
           </div>
         )}
 
-        {transcription && (
-          <Card className="p-6 bg-white shadow-lg w-full max-w-sm">
-            <div className="text-sm text-[#8B87A8] mb-2">Transcrição em tempo real:</div>
-            <p className="text-[#2D2A45] leading-relaxed">{transcription}</p>
-          </Card>
-        )}
-
-        {!isRecording && !transcription && (
-          <div className="text-center text-[#8B87A8] max-w-xs">
-            Toque no botão para começar a gravar seus pensamentos e emoções
-          </div>
-        )}
-
-        {isRecording && (
-          <Button
+        {/* Record / Stop Button */}
+        <div style={{ position: 'relative', marginBottom: '32px' }}>
+          <button
             onClick={toggleRecording}
-            className="mt-8 bg-[#1D9E75] hover:bg-[#188A64] text-white px-8 rounded-full"
+            style={{
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              backgroundColor: isRecording ? '#DC2626' : '#534AB7',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isRecording ? '0px 12px 32px rgba(220, 38, 38, 0.3)' : '0px 12px 32px rgba(83, 74, 183, 0.25)',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
           >
-            Concluir Gravação
-          </Button>
+            {isRecording ? (
+              <Square size={40} color="white" fill="white" />
+            ) : (
+              <Mic size={40} color="white" strokeWidth={2} />
+            )}
+          </button>
+        </div>
+
+        {/* Helper Text when not recording */}
+        {!isRecording && !transcription && (
+          <p style={{ 
+            textAlign: 'center', 
+            color: '#8B87A8', 
+            fontSize: '15px', 
+            lineHeight: '1.5', 
+            maxWidth: '260px', 
+            margin: 0 
+          }}>
+            Toque no botão para começar a gravar seus pensamentos e emoções
+          </p>
         )}
       </div>
     </div>
