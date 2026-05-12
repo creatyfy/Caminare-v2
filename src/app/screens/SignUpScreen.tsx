@@ -148,12 +148,12 @@ export function SignUpScreen() {
         <img
           src="/alinhadapng.png"
           alt="Caminare mascote"
-          style={{ width: 80, height: 'auto', objectFit: 'contain' }}
+          style={{ width: 120, height: 120, objectFit: 'contain' }}
         />
         <img
           src="/caminarecomp.png"
           alt="Caminare"
-          style={{ marginTop: 10, width: 160, height: 'auto', objectFit: 'contain' }}
+          style={{ marginTop: 10, width: 180, height: 'auto', objectFit: 'contain' }}
         />
       </div>
 

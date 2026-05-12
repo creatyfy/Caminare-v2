@@ -62,8 +62,8 @@ export function LoginScreen() {
           src="/alinhadapng.png"
           alt="Caminare mascote"
           style={{
-            width: 160,
-            height: 'auto',
+            width: 120,
+            height: 120,
             objectFit: 'contain',
           }}
         />
@@ -72,7 +72,7 @@ export function LoginScreen() {
           alt="Caminare"
           style={{
             marginTop: 10,
-            width: 200,
+            width: 180,
             height: 'auto',
             objectFit: 'contain',
           }}
