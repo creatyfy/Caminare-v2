@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, Loader2, CheckCircle2 } from 'lucide-react';
-import { OwlMascot, CaminareText } from '../components/Logo';
+import { CaminareText } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 
 const BRAND = '#534AB7';
@@ -147,7 +147,11 @@ export function SignUpScreen() {
           marginBottom: '32px',
         }}
       >
-        <OwlMascot size={80} color={BRAND_DARK} />
+        <img
+          src="/images/alinhadapng.png"
+          alt="Caminare mascote"
+          style={{ width: 80, height: 'auto', objectFit: 'contain' }}
+        />
         <div style={{ marginTop: '10px' }}>
           <CaminareText height={28} color={BRAND_DARK} />
         </div>
