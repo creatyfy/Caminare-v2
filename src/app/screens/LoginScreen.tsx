@@ -59,7 +59,7 @@ export function LoginScreen() {
         }}
       >
         <img
-          src="/images/caminarealinhada.png"
+          src="/images/alinhadapng.png"
           alt="Caminare"
           style={{
             width: 220,
