@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { OwlMascot, CaminareText } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 
 const BRAND = '#534AB7';
-const BRAND_DARK = '#3D2E5E';
 const BG = '#F8F7FF';
 
 export function SplashScreen() {
@@ -79,7 +77,15 @@ export function SplashScreen() {
               }}
               style={{ display: 'flex' }}
             >
-              <OwlMascot size={140} color={BRAND_DARK} />
+              <img
+                src="/images/caminaremascote.png"
+                alt="Caminare mascote"
+                style={{
+                  width: 320,
+                  height: 'auto',
+                  objectFit: 'contain',
+                }}
+              />
             </motion.div>
 
             <motion.div
@@ -104,7 +110,15 @@ export function SplashScreen() {
               }}
               style={{ display: 'flex', marginTop: '6px' }}
             >
-              <CaminareText height={44} color={BRAND_DARK} />
+              <img
+                src="/images/caminaretexto.png"
+                alt="Caminare"
+                style={{
+                  width: 260,
+                  height: 'auto',
+                  objectFit: 'contain',
+                }}
+              />
             </motion.div>
           </motion.div>
         )}
