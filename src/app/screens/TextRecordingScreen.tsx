@@ -7,49 +7,48 @@ export function TextRecordingScreen() {
   const [text, setText] = useState('');
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%', 
-      backgroundColor: '#F8F7FF', 
-      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif' 
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      backgroundColor: '#F8F7FF',
+      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+      overflow: 'hidden'
     }}>
-      {/* Header Area */}
-      <div style={{ padding: '48px 24px 32px 24px' }}>
-        <button 
+      {/* Header Area (compact to maximize textarea space) */}
+      <div style={{ padding: '32px 24px 12px 24px', flexShrink: 0 }}>
+        <button
           onClick={() => navigate('/home')}
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            color: '#534AB7', 
-            background: 'none', 
-            border: 'none', 
-            fontSize: '16px', 
-            fontWeight: '500', 
-            padding: 0, 
-            cursor: 'pointer', 
-            marginBottom: '24px' 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: '#534AB7',
+            background: 'none',
+            border: 'none',
+            fontSize: '16px',
+            fontWeight: '500',
+            padding: 0,
+            cursor: 'pointer',
+            marginBottom: '12px'
           }}
         >
           <ArrowLeft size={20} />
           <span>Voltar</span>
         </button>
 
-        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#2D2A45', margin: '0 0 8px 0' }}>
-          Escrever Registro
+        <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#2D2A45', margin: '0 0 4px 0' }}>
+          Novo Registro por Texto
         </h1>
-        <p style={{ fontSize: '15px', color: '#8B87A8', margin: 0 }}>
-          Descreva seus pensamentos e emoções
-        </p>
       </div>
 
-      {/* Main Content Area */}
-      <div style={{ 
-        flex: 1, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        padding: '0 24px 32px 24px'
+      {/* Main Content Area — textarea takes most of the screen */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '8px 24px 24px 24px',
+        minHeight: 0
       }}>
         <textarea
           value={text}
@@ -60,9 +59,9 @@ export function TextRecordingScreen() {
             width: '100%',
             backgroundColor: '#FFFFFF',
             border: '1px solid rgba(83, 74, 183, 0.1)',
-            borderRadius: '24px',
+            borderRadius: '20px',
             padding: '20px',
-            fontSize: '16px',
+            fontSize: '17px',
             color: '#2D2A45',
             lineHeight: '1.6',
             resize: 'none',
@@ -70,7 +69,8 @@ export function TextRecordingScreen() {
             boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
             fontFamily: 'inherit',
             boxSizing: 'border-box',
-            marginBottom: '24px'
+            marginBottom: '16px',
+            minHeight: 0
           }}
         />
 
@@ -91,7 +91,8 @@ export function TextRecordingScreen() {
             border: 'none',
             boxShadow: text.trim().length === 0 ? 'none' : '0px 4px 12px rgba(29, 158, 117, 0.2)',
             cursor: text.trim().length === 0 ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            flexShrink: 0
           }}
         >
           Concluir Registro

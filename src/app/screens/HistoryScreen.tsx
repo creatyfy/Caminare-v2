@@ -1,56 +1,17 @@
 import { Calendar, Heart, Search, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { entries } from '../data/entries';
 
 export function HistoryScreen() {
-  const records = [
-    {
-      id: 1,
-      date: '08 Mai, 2026',
-      time: '14:30',
-      emotions: ['Ansiedade', 'Preocupação'],
-      summary: 'Apresentação importante gerando ansiedade...',
-      color: '#534AB7',
-    },
-    {
-      id: 2,
-      date: '07 Mai, 2026',
-      time: '18:30',
-      emotions: ['Gratidão', 'Alegria'],
-      summary: 'Feedback positivo da equipe sobre o projeto...',
-      color: '#1D9E75',
-    },
-    {
-      id: 3,
-      date: '07 Mai, 2026',
-      time: '14:20',
-      emotions: ['Frustração'],
-      summary: 'Dificuldade em me comunicar na reunião...',
-      color: '#F59E0B',
-    },
-    {
-      id: 4,
-      date: '06 Mai, 2026',
-      time: '20:15',
-      emotions: ['Cansaço', 'Estresse'],
-      summary: 'Dia intenso de trabalho, muitas demandas...',
-      color: '#534AB7',
-    },
-    {
-      id: 5,
-      date: '05 Mai, 2026',
-      time: '16:45',
-      emotions: ['Confiança'],
-      summary: 'Consegui resolver um problema complexo...',
-      color: '#1D9E75',
-    },
-  ];
+  const navigate = useNavigate();
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%', 
-      backgroundColor: '#F8F7FF', 
-      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif' 
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      backgroundColor: '#F8F7FF',
+      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif'
     }}>
       {/* Header */}
       <div style={{ padding: '48px 24px 24px 24px', backgroundColor: '#FFFFFF' }}>
@@ -63,11 +24,11 @@ export function HistoryScreen() {
       </div>
 
       {/* Search & Filter */}
-      <div style={{ 
-        padding: '0 24px 24px 24px', 
-        backgroundColor: '#FFFFFF', 
-        display: 'flex', 
-        gap: '12px' 
+      <div style={{
+        padding: '0 24px 24px 24px',
+        backgroundColor: '#FFFFFF',
+        display: 'flex',
+        gap: '12px'
       }}>
         <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
           <Search size={18} color="#8B87A8" style={{ position: 'absolute', left: '16px' }} />
@@ -88,7 +49,7 @@ export function HistoryScreen() {
             }}
           />
         </div>
-        
+
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
           <select style={{
             appearance: 'none',
@@ -112,24 +73,41 @@ export function HistoryScreen() {
       </div>
 
       {/* List */}
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        padding: '24px', 
-        display: 'flex', 
-        flexDirection: 'column', 
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
         gap: '16px',
-        paddingBottom: '100px' // Space for bottom nav
+        paddingBottom: '100px'
       }}>
-        {records.map((record) => (
-          <div key={record.id} style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '24px',
-            padding: '20px',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
-            display: 'flex',
-            gap: '16px'
-          }}>
+        {entries.map((record) => (
+          <div
+            key={record.id}
+            onClick={() => navigate(`/registro/${record.id}`)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate(`/registro/${record.id}`);
+              }
+            }}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '24px',
+              padding: '20px',
+              boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+              display: 'flex',
+              gap: '16px',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
             {/* Icon */}
             <div style={{
               width: '48px',
@@ -146,10 +124,10 @@ export function HistoryScreen() {
 
             {/* Content */}
             <div style={{ flex: 1 }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px', 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
                 marginBottom: '8px',
                 color: '#8B87A8',
                 fontSize: '13px'
@@ -160,11 +138,11 @@ export function HistoryScreen() {
                 <span>{record.time}</span>
               </div>
 
-              <p style={{ 
-                color: '#2D2A45', 
-                fontSize: '15px', 
-                lineHeight: '1.5', 
-                margin: '0 0 12px 0' 
+              <p style={{
+                color: '#2D2A45',
+                fontSize: '15px',
+                lineHeight: '1.5',
+                margin: '0 0 12px 0'
               }}>
                 {record.summary}
               </p>
