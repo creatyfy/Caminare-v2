@@ -87,16 +87,16 @@ export function NewPatternScreen() {
         }}>
           {/* Badge */}
           <div style={{
-            backgroundColor: '#F3F4F6',
+            backgroundColor: '#534AB7',
             borderRadius: '16px',
             padding: '16px',
             marginBottom: '24px'
           }}>
-            <div style={{ 
-              color: '#4B5563', 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              textTransform: 'uppercase', 
+            <div style={{
+              color: '#FFFFFF',
+              fontSize: '13px',
+              fontWeight: '700',
+              textTransform: 'uppercase',
               letterSpacing: '0.5px',
               lineHeight: '1.4'
             }}>
@@ -119,16 +119,18 @@ export function NewPatternScreen() {
             <h4 style={{ fontSize: '15px', fontWeight: '600', color: '#2D2A45', margin: '0 0 8px 0' }}>
               Gatilhos comuns:
             </h4>
-            <ul style={{ 
-              fontSize: '15px', 
-              color: '#8B87A8', 
-              lineHeight: '1.6', 
-              margin: 0, 
-              paddingLeft: '20px' 
+            <ul style={{
+              fontSize: '15px',
+              color: '#8B87A8',
+              lineHeight: '1.6',
+              margin: 0,
+              paddingLeft: '20px',
+              listStyleType: 'disc',
+              listStylePosition: 'outside'
             }}>
-              <li>Apresentações importantes</li>
-              <li>Reuniões com superiores</li>
-              <li>Situações de avaliação</li>
+              <li style={{ display: 'list-item' }}>Apresentações importantes</li>
+              <li style={{ display: 'list-item' }}>Reuniões com superiores</li>
+              <li style={{ display: 'list-item' }}>Situações de avaliação</li>
             </ul>
           </div>
         </div>
