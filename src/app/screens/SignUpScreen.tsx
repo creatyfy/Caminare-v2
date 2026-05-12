@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, Loader2, CheckCircle2 } from 'lucide-react';
-import { CaminareText } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 
 const BRAND = '#534AB7';
-const BRAND_DARK = '#3D2E5E';
 const ACCENT = '#1D9E75';
 const BG = '#F8F7FF';
 const MUTED = '#8B87A8';
@@ -148,13 +146,15 @@ export function SignUpScreen() {
         }}
       >
         <img
-          src="/images/alinhadapng.png"
+          src="/alinhadapng.png"
           alt="Caminare mascote"
           style={{ width: 80, height: 'auto', objectFit: 'contain' }}
         />
-        <div style={{ marginTop: '10px' }}>
-          <CaminareText height={28} color={BRAND_DARK} />
-        </div>
+        <img
+          src="/caminarecomp.png"
+          alt="Caminare"
+          style={{ marginTop: 10, width: 160, height: 'auto', objectFit: 'contain' }}
+        />
       </div>
 
       <h1
