@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
-import { OwlMascot, CaminareText } from '../components/Logo';
 import { useAuth } from '../contexts/AuthContext';
 
 const BRAND = '#534AB7';
-const BRAND_DARK = '#3D2E5E';
 const BG = '#F8F7FF';
 const MUTED = '#8B87A8';
 const ERROR = '#DC2626';
@@ -60,10 +58,15 @@ export function LoginScreen() {
           marginBottom: '40px',
         }}
       >
-        <OwlMascot size={92} color={BRAND_DARK} />
-        <div style={{ marginTop: '12px' }}>
-          <CaminareText height={34} color={BRAND_DARK} />
-        </div>
+        <img
+          src="/images/caminarealinhada.png"
+          alt="Caminare"
+          style={{
+            width: 220,
+            height: 'auto',
+            objectFit: 'contain',
+          }}
+        />
       </div>
 
       <h1
