@@ -51,7 +51,7 @@ export function RecordingScreen() {
       {/* Header Area */}
       <div style={{ padding: '48px 24px 32px 24px' }}>
         <button 
-          onClick={() => navigate('/')} 
+          onClick={() => navigate('/home')}
           style={{ 
             display: 'flex', 
             alignItems: 'center', 

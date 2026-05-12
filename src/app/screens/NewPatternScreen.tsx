@@ -144,7 +144,7 @@ export function NewPatternScreen() {
           boxSizing: 'border-box'
         }}>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
             style={{
               width: '100%',
               height: '56px',
@@ -167,7 +167,7 @@ export function NewPatternScreen() {
           </button>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
             style={{
               width: '100%',
               height: '56px',
