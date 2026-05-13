@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Brain } from 'lucide-react';
+import { Brain, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -9,6 +9,7 @@ import {
   type EmotionCount,
   type BeliefInsight,
   type PatternInsight,
+  type InsightsFilter,
 } from '../lib/db';
 
 export function PatternsScreen() {
@@ -18,15 +19,16 @@ export function PatternsScreen() {
   const [beliefs, setBeliefs] = useState<BeliefInsight[]>([]);
   const [patterns, setPatterns] = useState<PatternInsight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<InsightsFilter>('all');
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     setLoading(true);
     Promise.all([
-      getEmotionCounts(user.id),
-      getBeliefs(user.id),
-      getPatterns(user.id),
+      getEmotionCounts(user.id, filter),
+      getBeliefs(user.id, filter),
+      getPatterns(user.id, filter),
     ]).then(([e, b, p]) => {
       if (!active) return;
       setEmotions(e);
@@ -37,7 +39,7 @@ export function PatternsScreen() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, filter]);
 
   const maxCount = emotions[0]?.count ?? 1;
   const fontSize = (count: number) => {
@@ -64,13 +66,52 @@ export function PatternsScreen() {
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      <div style={{ padding: '48px 24px 24px 24px', backgroundColor: 'var(--cam-bg-card)' }}>
+      <div style={{ padding: '48px 24px 16px 24px', backgroundColor: 'var(--cam-bg-card)' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--cam-text-primary)', margin: '0 0 8px 0' }}>
           {t('patterns.title')}
         </h1>
         <p style={{ fontSize: '15px', color: 'var(--cam-text-secondary)', margin: 0, lineHeight: 1.4 }}>
           {t('patterns.subtitle')}
         </p>
+      </div>
+
+      <div
+        style={{
+          padding: '0 24px 20px 24px',
+          backgroundColor: 'var(--cam-bg-card)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+        }}
+      >
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as InsightsFilter)}
+            style={{
+              appearance: 'none',
+              height: '40px',
+              backgroundColor: 'var(--cam-bg-tint)',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '0 36px 0 18px',
+              fontSize: '14px',
+              color: 'var(--cam-text-primary)',
+              fontWeight: 500,
+              outline: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <option value="all">{t('history.filterAll')}</option>
+            <option value="7days">{t('history.filter7')}</option>
+            <option value="30days">{t('history.filter30')}</option>
+          </select>
+          <ChevronDown
+            size={16}
+            color="var(--cam-text-secondary)"
+            style={{ position: 'absolute', right: '12px', pointerEvents: 'none' }}
+          />
+        </div>
       </div>
 
       <div
@@ -97,9 +138,9 @@ export function PatternsScreen() {
               fontSize: '15px',
               marginTop: '48px',
               lineHeight: 1.6,
+              padding: '0 16px',
             }}
           >
-            <div style={{ fontSize: '40px', marginBottom: '16px' }}>🌱</div>
             {t('patterns.empty')}
           </div>
         )}
