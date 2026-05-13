@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Mic, Heart, Brain, TrendingUp, BookOpen, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { getProfile, getHomeStats, type Profile, type HomeStats } from '../lib/db';
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<HomeStats | null>(null);
@@ -26,48 +28,63 @@ export function HomeScreen() {
     };
   }, [user]);
 
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'você';
+  const firstName = profile?.full_name?.split(' ')[0] ?? t('home.greetingFallback');
   const statValue = (n: number | undefined) =>
     loading || n === undefined ? '—' : String(n);
 
   const statsCards = [
-    { icon: Heart, label: 'Emoções', value: statValue(stats?.totalEmotions), color: '#6558D3', bgColor: '#F0EFFF' },
-    { icon: Brain, label: 'Padrões', value: statValue(stats?.totalPatterns), color: '#6558D3', bgColor: '#F0EFFF' },
-    { icon: TrendingUp, label: 'Dias', value: statValue(stats?.activeDays), color: '#6558D3', bgColor: '#F0EFFF' },
-    { icon: BookOpen, label: 'Registros', value: statValue(stats?.totalEntries), color: '#8B5CF6', bgColor: '#F3EFFF' },
+    { icon: Heart, label: t('home.stats.emotions'), value: statValue(stats?.totalEmotions) },
+    { icon: Brain, label: t('home.stats.patterns'), value: statValue(stats?.totalPatterns) },
+    { icon: TrendingUp, label: t('home.stats.days'), value: statValue(stats?.activeDays) },
+    { icon: BookOpen, label: t('home.stats.entries'), value: statValue(stats?.totalEntries) },
   ];
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      paddingBottom: '90px',
-      backgroundColor: '#F8F7FF',
-      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif'
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100%',
+        paddingBottom: '90px',
+        backgroundColor: 'var(--cam-bg-page)',
+        fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+      }}
+    >
       {/* Header */}
-      <div style={{
-        backgroundColor: '#6558D3',
-        padding: '64px 24px 80px 24px',
-        borderBottomLeftRadius: '32px',
-        borderBottomRightRadius: '32px',
-        color: '#FFFFFF'
-      }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Olá, {firstName}</h1>
-        <p style={{ fontSize: '15px', margin: 0, opacity: 0.9, fontWeight: '400' }}>O que aconteceu hoje?</p>
+      <div
+        style={{
+          backgroundColor: 'var(--cam-color-brand-strong)',
+          padding: '64px 24px 80px 24px',
+          borderBottomLeftRadius: '32px',
+          borderBottomRightRadius: '32px',
+          color: 'var(--cam-text-on-brand)',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '26px',
+            fontWeight: 700,
+            margin: '0 0 6px 0',
+            letterSpacing: '-0.5px',
+            color: 'var(--cam-text-on-brand)',
+          }}
+        >
+          {t('home.greeting', { name: firstName })}
+        </h1>
+        <p style={{ fontSize: '15px', margin: 0, opacity: 0.9, fontWeight: 400 }}>
+          {t('home.prompt')}
+        </p>
       </div>
 
-      {/* Content */}
-      <div style={{
-        padding: '0 24px',
-        marginTop: '-54px',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-
-        {/* Stats Grid (4 columns) */}
+      <div
+        style={{
+          padding: '0 24px',
+          marginTop: '-54px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <div
           style={{
             display: 'grid',
@@ -77,68 +94,86 @@ export function HomeScreen() {
           }}
         >
           {statsCards.map((stat, index) => (
-            <div key={index} style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '16px',
-              padding: '12px 4px',
-              boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.03)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center'
-            }}>
-              <div style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: stat.bgColor,
+            <div
+              key={index}
+              style={{
+                backgroundColor: 'var(--cam-bg-card)',
+                borderRadius: '16px',
+                padding: '12px 4px',
+                boxShadow: 'var(--cam-shadow-card)',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '8px'
-              }}>
-                <stat.icon size={14} color={stat.color} strokeWidth={2.5} />
+                textAlign: 'center',
+              }}
+            >
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--cam-bg-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '8px',
+                }}
+              >
+                <stat.icon size={14} color="var(--cam-text-brand)" strokeWidth={2.5} />
               </div>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#2D2A45', lineHeight: '1', marginBottom: '4px' }}>
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: 'var(--cam-text-primary)',
+                  lineHeight: 1,
+                  marginBottom: '4px',
+                }}
+              >
                 {stat.value}
               </div>
-              <div style={{ fontSize: '10px', color: '#8B87A8', fontWeight: '500', lineHeight: '1.2' }}>
+              <div
+                style={{
+                  fontSize: '10px',
+                  color: 'var(--cam-text-secondary)',
+                  fontWeight: 500,
+                  lineHeight: 1.2,
+                }}
+              >
                 {stat.label}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Spacer pushes buttons to bottom for thumb reach */}
         <div style={{ flex: 1 }} />
 
-        {/* Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
           <button
             onClick={() => navigate('/gravacao')}
             style={{
               width: '100%',
               height: '72px',
-              backgroundColor: '#534AB7',
-              color: '#FFFFFF',
+              backgroundColor: 'var(--cam-color-brand)',
+              color: 'var(--cam-text-on-brand)',
               borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '12px',
               fontSize: '18px',
-              fontWeight: '600',
+              fontWeight: 600,
               border: 'none',
-              boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+              boxShadow: 'var(--cam-shadow-brand)',
               cursor: 'pointer',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
             }}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.98)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
             <Mic size={24} strokeWidth={2.5} />
-            Novo Registro por Voz
+            {t('home.voiceButton')}
           </button>
 
           <button
@@ -146,25 +181,25 @@ export function HomeScreen() {
             style={{
               width: '100%',
               height: '72px',
-              backgroundColor: '#FFFFFF',
-              color: '#534AB7',
+              backgroundColor: 'var(--cam-bg-card)',
+              color: 'var(--cam-text-brand)',
               borderRadius: '9999px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '12px',
               fontSize: '18px',
-              fontWeight: '600',
-              border: '2px solid #534AB7',
+              fontWeight: 600,
+              border: `2px solid var(--cam-color-brand)`,
               cursor: 'pointer',
-              transition: 'transform 0.2s ease'
+              transition: 'transform 0.2s ease',
             }}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.98)')}
+            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
             <Edit3 size={24} strokeWidth={2.5} />
-            Novo Registro por Texto
+            {t('home.textButton')}
           </button>
         </div>
       </div>

@@ -1,18 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
-const BRAND = '#534AB7';
-const ACCENT = '#1D9E75';
-const BG = '#F8F7FF';
-const MUTED = '#8B87A8';
-const ERROR = '#DC2626';
-const BORDER = 'rgba(83, 74, 183, 0.18)';
-
 export function ResetPasswordScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { updatePassword } = useAuth();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -63,11 +58,11 @@ export function ResetPasswordScreen() {
     setError(null);
 
     if (password.length < 6) {
-      setError('A senha deve ter ao menos 6 caracteres.');
+      setError(t('resetPassword.errors.shortPassword'));
       return;
     }
     if (password !== confirm) {
-      setError('As senhas não coincidem.');
+      setError(t('resetPassword.errors.mismatch'));
       return;
     }
 
@@ -76,7 +71,7 @@ export function ResetPasswordScreen() {
     setSubmitting(false);
 
     if (err) {
-      setError(translateError(err));
+      setError(translateError(err, t));
       return;
     }
     setSuccess(true);
@@ -84,139 +79,25 @@ export function ResetPasswordScreen() {
 
   if (success) {
     return (
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundColor: BG,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-          textAlign: 'center',
-          fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
-        }}
-      >
-        <div
-          style={{
-            width: 88,
-            height: 88,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(29, 158, 117, 0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 24,
-          }}
-        >
-          <CheckCircle2 size={48} color={ACCENT} strokeWidth={2.2} />
-        </div>
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: '#2D2A45',
-            margin: '0 0 8px',
-            letterSpacing: '-0.5px',
-          }}
-        >
-          Senha atualizada!
-        </h1>
-        <p
-          style={{
-            fontSize: 15,
-            color: MUTED,
-            margin: '0 0 32px',
-            fontWeight: 500,
-            lineHeight: 1.5,
-            maxWidth: 280,
-          }}
-        >
-          Sua senha foi alterada com sucesso. Já pode entrar com a nova senha.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/home', { replace: true })}
-          style={{
-            width: '100%',
-            maxWidth: 320,
-            height: 56,
-            borderRadius: 9999,
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
-            border: 'none',
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
-          }}
-        >
-          Ir para o app
-        </button>
-      </div>
+      <CenteredCard
+        icon={<CheckCircle2 size={48} color="var(--cam-color-accent)" strokeWidth={2.2} />}
+        iconBg="var(--cam-bg-accent-soft)"
+        title={t('resetPassword.successTitle')}
+        message={t('resetPassword.successMessage')}
+        actionLabel={t('resetPassword.goToApp')}
+        onAction={() => navigate('/home', { replace: true })}
+      />
     );
   }
 
   if (invalidLink) {
     return (
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundColor: BG,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-          textAlign: 'center',
-          fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: '#2D2A45',
-            margin: '0 0 8px',
-            letterSpacing: '-0.5px',
-          }}
-        >
-          Link inválido ou expirado
-        </h1>
-        <p
-          style={{
-            fontSize: 15,
-            color: MUTED,
-            margin: '0 0 32px',
-            fontWeight: 500,
-            lineHeight: 1.5,
-            maxWidth: 280,
-          }}
-        >
-          O link de recuperação não é válido ou já expirou. Solicite um novo.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/esqueci-senha', { replace: true })}
-          style={{
-            width: '100%',
-            maxWidth: 320,
-            height: 56,
-            borderRadius: 9999,
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
-            border: 'none',
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
-          }}
-        >
-          Solicitar novo link
-        </button>
-      </div>
+      <CenteredCard
+        title={t('resetPassword.invalidTitle')}
+        message={t('resetPassword.invalidMessage')}
+        actionLabel={t('resetPassword.requestNew')}
+        onAction={() => navigate('/esqueci-senha', { replace: true })}
+      />
     );
   }
 
@@ -226,17 +107,17 @@ export function ResetPasswordScreen() {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: BG,
+          backgroundColor: 'var(--cam-bg-page)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
-          color: MUTED,
+          color: 'var(--cam-text-secondary)',
           fontSize: 14,
         }}
       >
         <Loader2 size={20} className="animate-spin" style={{ marginRight: 8 }} />
-        Carregando...
+        {t('common.loading')}
       </div>
     );
   }
@@ -246,7 +127,7 @@ export function ResetPasswordScreen() {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: BG,
+        backgroundColor: 'var(--cam-bg-page)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -266,7 +147,7 @@ export function ResetPasswordScreen() {
       >
         <img
           src="/owl_cropped.png"
-          alt="Caminare mascote"
+          alt="Caminare"
           style={{ width: 72, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
         <img
@@ -281,24 +162,24 @@ export function ResetPasswordScreen() {
           style={{
             fontSize: '22px',
             fontWeight: 700,
-            color: '#2D2A45',
+            color: 'var(--cam-text-primary)',
             margin: '0 0 4px',
             letterSpacing: '-0.5px',
             textAlign: 'center',
           }}
         >
-          Criar nova senha
+          {t('resetPassword.title')}
         </h1>
         <p
           style={{
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             margin: 0,
             fontWeight: 500,
             textAlign: 'center',
           }}
         >
-          Defina uma senha segura para sua conta.
+          {t('resetPassword.subtitle')}
         </p>
       </div>
 
@@ -309,25 +190,29 @@ export function ResetPasswordScreen() {
         <PasswordField
           value={password}
           onChange={setPassword}
-          placeholder="Nova senha (mín. 6 caracteres)"
+          placeholder={t('resetPassword.newPlaceholder')}
           show={showPass}
           onToggleShow={() => setShowPass((v) => !v)}
+          showLabel={t('common.showPassword')}
+          hideLabel={t('common.hidePassword')}
         />
 
         <PasswordField
           value={confirm}
           onChange={setConfirm}
-          placeholder="Confirmar nova senha"
+          placeholder={t('resetPassword.confirmPlaceholder')}
           show={showPass}
           onToggleShow={() => setShowPass((v) => !v)}
+          showLabel={t('common.showPassword')}
+          hideLabel={t('common.hidePassword')}
         />
 
         {error && (
           <div
             role="alert"
             style={{
-              backgroundColor: 'rgba(220, 38, 38, 0.08)',
-              color: ERROR,
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-error)',
               borderRadius: '12px',
               padding: '10px 14px',
               fontSize: '13px',
@@ -345,8 +230,8 @@ export function ResetPasswordScreen() {
             marginTop: '4px',
             height: '56px',
             borderRadius: '9999px',
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: '16px',
             fontWeight: 600,
@@ -355,21 +240,112 @@ export function ResetPasswordScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            boxShadow: 'var(--cam-shadow-brand)',
             opacity: submitting ? 0.85 : 1,
-            transition: 'transform 0.15s ease, opacity 0.15s ease',
           }}
         >
           {submitting ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Salvando...
+              {t('common.saving')}
             </>
           ) : (
-            'Salvar nova senha'
+            t('resetPassword.submit')
           )}
         </button>
       </form>
+    </div>
+  );
+}
+
+function CenteredCard({
+  icon,
+  iconBg,
+  title,
+  message,
+  actionLabel,
+  onAction,
+}: {
+  icon?: React.ReactNode;
+  iconBg?: string;
+  title: string;
+  message: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: 'var(--cam-bg-page)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+        fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+      }}
+    >
+      {icon && (
+        <div
+          style={{
+            width: 88,
+            height: 88,
+            borderRadius: '50%',
+            backgroundColor: iconBg ?? 'var(--cam-bg-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 24,
+          }}
+        >
+          {icon}
+        </div>
+      )}
+      <h1
+        style={{
+          fontSize: 22,
+          fontWeight: 700,
+          color: 'var(--cam-text-primary)',
+          margin: '0 0 8px',
+          letterSpacing: '-0.5px',
+        }}
+      >
+        {title}
+      </h1>
+      <p
+        style={{
+          fontSize: 15,
+          color: 'var(--cam-text-secondary)',
+          margin: '0 0 32px',
+          fontWeight: 500,
+          lineHeight: 1.5,
+          maxWidth: 280,
+        }}
+      >
+        {message}
+      </p>
+      <button
+        type="button"
+        onClick={onAction}
+        style={{
+          width: '100%',
+          maxWidth: 320,
+          height: 56,
+          borderRadius: 9999,
+          backgroundColor: 'var(--cam-color-brand)',
+          color: 'var(--cam-text-on-brand)',
+          border: 'none',
+          fontSize: 16,
+          fontWeight: 600,
+          cursor: 'pointer',
+          boxShadow: 'var(--cam-shadow-brand)',
+        }}
+      >
+        {actionLabel}
+      </button>
     </div>
   );
 }
@@ -380,12 +356,16 @@ function PasswordField({
   placeholder,
   show,
   onToggleShow,
+  showLabel,
+  hideLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
   show: boolean;
   onToggleShow: () => void;
+  showLabel: string;
+  hideLabel: string;
 }) {
   return (
     <div
@@ -395,13 +375,13 @@ function PasswordField({
         gap: '10px',
         height: '56px',
         padding: '0 16px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'var(--cam-bg-input)',
         borderRadius: '16px',
-        border: `1.5px solid ${BORDER}`,
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.02)',
+        border: `1.5px solid var(--cam-border)`,
+        boxShadow: 'var(--cam-shadow-card)',
       }}
     >
-      <Lock size={18} color={MUTED} strokeWidth={2.2} />
+      <Lock size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
       <input
         type={show ? 'text' : 'password'}
         value={value}
@@ -414,7 +394,7 @@ function PasswordField({
           outline: 'none',
           background: 'transparent',
           fontSize: '15px',
-          color: '#2D2A45',
+          color: 'var(--cam-text-primary)',
           fontWeight: 500,
           fontFamily: 'inherit',
         }}
@@ -422,7 +402,7 @@ function PasswordField({
       <button
         type="button"
         onClick={onToggleShow}
-        aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+        aria-label={show ? hideLabel : showLabel}
         style={{
           background: 'none',
           border: 'none',
@@ -434,20 +414,21 @@ function PasswordField({
         }}
       >
         {show ? (
-          <EyeOff size={18} color={MUTED} strokeWidth={2.2} />
+          <EyeOff size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
         ) : (
-          <Eye size={18} color={MUTED} strokeWidth={2.2} />
+          <Eye size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
         )}
       </button>
     </div>
   );
 }
 
-function translateError(msg: string): string {
+function translateError(msg: string, t: (k: string) => string): string {
   const m = msg.toLowerCase();
-  if (m.includes('password')) return 'Senha inválida — mínimo 6 caracteres.';
-  if (m.includes('same as the old')) return 'A nova senha não pode ser igual à atual.';
+  if (m.includes('password') && m.includes('short'))
+    return t('resetPassword.errors.passwordInvalid');
+  if (m.includes('same as the old')) return t('resetPassword.errors.sameAsOld');
   if (m.includes('expired') || m.includes('invalid'))
-    return 'Link expirado ou inválido. Solicite um novo.';
+    return t('resetPassword.errors.expired');
   return msg;
 }

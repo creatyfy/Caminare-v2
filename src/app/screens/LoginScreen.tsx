@@ -1,17 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 
-const BRAND = '#534AB7';
-const BG = '#F8F7FF';
-const MUTED = '#8B87A8';
-const ERROR = '#DC2626';
-const BORDER = 'rgba(83, 74, 183, 0.18)';
-
 export function LoginScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,14 +20,14 @@ export function LoginScreen() {
     if (submitting) return;
     setError(null);
     if (!email || !password) {
-      setError('Preencha email e senha.');
+      setError(t('login.errors.missingFields'));
       return;
     }
     setSubmitting(true);
     const { error: err } = await signIn(email.trim(), password);
     setSubmitting(false);
     if (err) {
-      setError(translateError(err));
+      setError(translateLoginError(err, t));
       return;
     }
     navigate('/home', { replace: true });
@@ -42,7 +38,7 @@ export function LoginScreen() {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: BG,
+        backgroundColor: 'var(--cam-bg-page)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -51,19 +47,18 @@ export function LoginScreen() {
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      {/* Logo */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          marginBottom: '32px',
+          marginBottom: '24px',
           gap: '6px',
         }}
       >
         <img
           src="/owl_cropped.png"
-          alt="Caminare mascote"
+          alt="Caminare"
           style={{ width: 72, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
         <img
@@ -73,51 +68,49 @@ export function LoginScreen() {
         />
       </div>
 
-      {/* Textos */}
       <div style={{ marginBottom: '20px' }}>
         <h1
           style={{
             fontSize: '22px',
             fontWeight: 700,
-            color: '#2D2A45',
+            color: 'var(--cam-text-primary)',
             margin: '0 0 4px',
             letterSpacing: '-0.5px',
             textAlign: 'center',
           }}
         >
-          Bem-vindo de volta
+          {t('login.title')}
         </h1>
         <p
           style={{
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             margin: 0,
             fontWeight: 500,
             textAlign: 'center',
           }}
         >
-          Continue sua jornada de autoconhecimento.
+          {t('login.subtitle')}
         </p>
       </div>
 
-      {/* Formulário */}
       <form
         onSubmit={handleSubmit}
         style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
       >
         <InputField
-          icon={<Mail size={18} color={MUTED} strokeWidth={2.2} />}
+          icon={<Mail size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}
           type="email"
-          placeholder="Email"
+          placeholder={t('login.emailPlaceholder')}
           value={email}
           onChange={setEmail}
           autoComplete="email"
         />
 
         <InputField
-          icon={<Lock size={18} color={MUTED} strokeWidth={2.2} />}
+          icon={<Lock size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}
           type={showPass ? 'text' : 'password'}
-          placeholder="Senha"
+          placeholder={t('login.passwordPlaceholder')}
           value={password}
           onChange={setPassword}
           autoComplete="current-password"
@@ -125,13 +118,13 @@ export function LoginScreen() {
             <button
               type="button"
               onClick={() => setShowPass((v) => !v)}
-              aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}
+              aria-label={showPass ? t('common.hidePassword') : t('common.showPassword')}
               style={trailingButtonStyle}
             >
               {showPass ? (
-                <EyeOff size={18} color={MUTED} strokeWidth={2.2} />
+                <EyeOff size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
               ) : (
-                <Eye size={18} color={MUTED} strokeWidth={2.2} />
+                <Eye size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
               )}
             </button>
           }
@@ -141,8 +134,8 @@ export function LoginScreen() {
           <div
             role="alert"
             style={{
-              backgroundColor: 'rgba(220, 38, 38, 0.08)',
-              color: ERROR,
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-error)',
               borderRadius: '12px',
               padding: '10px 14px',
               fontSize: '13px',
@@ -153,26 +146,21 @@ export function LoginScreen() {
           </div>
         )}
 
-        <div
-          style={{
-            textAlign: 'right',
-            marginTop: '-4px',
-          }}
-        >
+        <div style={{ textAlign: 'right', marginTop: '-4px' }}>
           <button
             type="button"
             onClick={() => navigate('/esqueci-senha')}
             style={{
               background: 'none',
               border: 'none',
-              color: BRAND,
+              color: 'var(--cam-text-brand)',
               fontWeight: 600,
               cursor: 'pointer',
               padding: 0,
               fontSize: '13px',
             }}
           >
-            Esqueci minha senha
+            {t('login.forgotPassword')}
           </button>
         </div>
 
@@ -183,8 +171,8 @@ export function LoginScreen() {
             marginTop: '4px',
             height: '56px',
             borderRadius: '9999px',
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: '16px',
             fontWeight: 600,
@@ -193,7 +181,7 @@ export function LoginScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            boxShadow: 'var(--cam-shadow-brand)',
             opacity: submitting ? 0.85 : 1,
             transition: 'transform 0.15s ease, opacity 0.15s ease',
           }}
@@ -204,41 +192,41 @@ export function LoginScreen() {
           {submitting ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Entrando...
+              {t('login.submitting')}
             </>
           ) : (
-            'Entrar'
+            t('login.submit')
           )}
         </button>
 
         <AuthDivider />
 
-        <GoogleSignInButton onError={(msg) => setError(translateError(msg))} />
+        <GoogleSignInButton onError={(msg) => setError(translateLoginError(msg, t))} />
 
         <div
           style={{
             marginTop: '8px',
             textAlign: 'center',
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             fontWeight: 500,
           }}
         >
-          Não tem conta?{' '}
+          {t('login.noAccount')}{' '}
           <button
             type="button"
             onClick={() => navigate('/cadastro')}
             style={{
               background: 'none',
               border: 'none',
-              color: BRAND,
+              color: 'var(--cam-text-brand)',
               fontWeight: 700,
               cursor: 'pointer',
               padding: 0,
               fontSize: '14px',
             }}
           >
-            Criar conta
+            {t('login.createAccount')}
           </button>
         </div>
       </form>
@@ -271,10 +259,10 @@ function InputField({
         gap: '10px',
         height: '56px',
         padding: '0 16px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'var(--cam-bg-input)',
         borderRadius: '16px',
-        border: `1.5px solid ${BORDER}`,
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.02)',
+        border: `1.5px solid var(--cam-border)`,
+        boxShadow: 'var(--cam-shadow-card)',
       }}
     >
       {icon}
@@ -290,7 +278,7 @@ function InputField({
           outline: 'none',
           background: 'transparent',
           fontSize: '15px',
-          color: '#2D2A45',
+          color: 'var(--cam-text-primary)',
           fontWeight: 500,
           fontFamily: 'inherit',
         }}
@@ -310,12 +298,12 @@ const trailingButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-function translateError(msg: string): string {
+function translateLoginError(msg: string, t: (k: string) => string): string {
   const m = msg.toLowerCase();
   if (m.includes('invalid login') || m.includes('invalid credentials'))
-    return 'Email ou senha incorretos.';
+    return t('login.errors.invalidCredentials');
   if (m.includes('email not confirmed'))
-    return 'Confirme seu email antes de entrar.';
-  if (m.includes('rate limit')) return 'Muitas tentativas. Tente novamente em instantes.';
+    return t('login.errors.emailNotConfirmed');
+  if (m.includes('rate limit')) return t('login.errors.rateLimit');
   return msg;
 }

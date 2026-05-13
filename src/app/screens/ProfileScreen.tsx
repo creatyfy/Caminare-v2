@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { Trans, useTranslation } from 'react-i18next';
 import {
   User as UserIcon,
   Mail,
@@ -11,25 +12,27 @@ import {
   Loader2,
   ChevronRight,
   AlertTriangle,
+  Globe,
+  Sun,
+  Moon,
+  Monitor,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
 import { getProfile, deleteAccount, type Profile } from '../lib/db';
-
-const BRAND = '#534AB7';
-const BG = '#F8F7FF';
-const MUTED = '#8B87A8';
-const TEXT = '#2D2A45';
-const ERROR = '#DC2626';
-const SUCCESS = '#1D9E75';
-const BORDER = 'rgba(83, 74, 183, 0.18)';
+import { setLanguage, type Lang } from '../lib/i18n';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -49,13 +52,12 @@ export function ProfileScreen() {
     navigate('/login', { replace: true });
   }
 
-  const provider =
-    (user?.app_metadata?.provider as string | undefined) ?? 'email';
+  const provider = (user?.app_metadata?.provider as string | undefined) ?? 'email';
   const isOAuthUser = provider !== 'email';
-  const fullName = profile?.full_name ?? 'Sem nome';
+  const fullName = profile?.full_name ?? t('profile.noName');
   const initial = (fullName[0] ?? 'U').toUpperCase();
   const memberSince = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString('pt-BR', {
+    ? new Date(user.created_at).toLocaleDateString(i18n.language, {
         month: 'long',
         year: 'numeric',
       })
@@ -68,24 +70,16 @@ export function ProfileScreen() {
         flexDirection: 'column',
         minHeight: '100%',
         paddingBottom: '90px',
-        backgroundColor: BG,
+        backgroundColor: 'var(--cam-bg-page)',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      {/* Header */}
-      <div style={{ padding: '48px 24px 24px 24px', backgroundColor: '#FFFFFF' }}>
-        <h1
-          style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: TEXT,
-            margin: '0 0 8px 0',
-          }}
-        >
-          Perfil
+      <div style={{ padding: '48px 24px 24px 24px', backgroundColor: 'var(--cam-bg-card)' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--cam-text-primary)', margin: '0 0 8px 0' }}>
+          {t('profile.title')}
         </h1>
-        <p style={{ fontSize: '15px', color: MUTED, margin: 0, lineHeight: 1.4 }}>
-          Suas informações e configurações
+        <p style={{ fontSize: '15px', color: 'var(--cam-text-secondary)', margin: 0, lineHeight: 1.4 }}>
+          {t('profile.subtitle')}
         </p>
       </div>
 
@@ -93,10 +87,10 @@ export function ProfileScreen() {
         {/* User card */}
         <div
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: 'var(--cam-bg-card)',
             borderRadius: '20px',
             padding: '20px',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+            boxShadow: 'var(--cam-shadow-card)',
             display: 'flex',
             alignItems: 'center',
             gap: '16px',
@@ -107,14 +101,14 @@ export function ProfileScreen() {
               width: 56,
               height: 56,
               borderRadius: '50%',
-              backgroundColor: '#F0EFFF',
+              backgroundColor: 'var(--cam-bg-muted)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
               fontSize: 22,
               fontWeight: 700,
-              color: BRAND,
+              color: 'var(--cam-text-brand)',
             }}
           >
             {loading ? <Loader2 size={20} className="animate-spin" /> : initial}
@@ -124,7 +118,7 @@ export function ProfileScreen() {
               style={{
                 fontSize: '17px',
                 fontWeight: 700,
-                color: TEXT,
+                color: 'var(--cam-text-primary)',
                 marginBottom: '4px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -136,7 +130,7 @@ export function ProfileScreen() {
             <div
               style={{
                 fontSize: '13px',
-                color: MUTED,
+                color: 'var(--cam-text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
@@ -146,9 +140,7 @@ export function ProfileScreen() {
               }}
             >
               <Mail size={13} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.email ?? '—'}
-              </span>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email ?? '—'}</span>
             </div>
           </div>
         </div>
@@ -156,65 +148,92 @@ export function ProfileScreen() {
         {/* Info card */}
         <div
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: 'var(--cam-bg-card)',
             borderRadius: '20px',
             padding: '20px',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+            boxShadow: 'var(--cam-shadow-card)',
           }}
         >
-          <h3
-            style={{
-              fontSize: '13px',
-              color: MUTED,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              margin: '0 0 12px 0',
-            }}
-          >
-            Conta
-          </h3>
+          <SectionLabel text={t('profile.accountSection')} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <InfoRow label="Nome" value={fullName} icon={<UserIcon size={16} color={MUTED} />} />
-            <InfoRow label="Email" value={user?.email ?? '—'} icon={<Mail size={16} color={MUTED} />} />
+            <InfoRow label={t('profile.name')} value={fullName} icon={<UserIcon size={16} color="var(--cam-text-secondary)" />} />
+            <InfoRow label={t('profile.email')} value={user?.email ?? '—'} icon={<Mail size={16} color="var(--cam-text-secondary)" />} />
             <InfoRow
-              label="Conta criada em"
+              label={t('profile.memberSince')}
               value={memberSince}
-              icon={<UserIcon size={16} color={MUTED} />}
+              icon={<UserIcon size={16} color="var(--cam-text-secondary)" />}
             />
             <InfoRow
-              label="Método de login"
-              value={isOAuthUser ? capitalize(provider) : 'Email e senha'}
-              icon={<Lock size={16} color={MUTED} />}
+              label={t('profile.loginMethod')}
+              value={isOAuthUser ? capitalize(provider) : t('profile.emailPassword')}
+              icon={<Lock size={16} color="var(--cam-text-secondary)" />}
             />
           </div>
+        </div>
+
+        {/* Preferences: language + theme */}
+        <div
+          style={{
+            backgroundColor: 'var(--cam-bg-card)',
+            borderRadius: '20px',
+            boxShadow: 'var(--cam-shadow-card)',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ padding: '16px 20px 8px 20px' }}>
+            <SectionLabel text={t('profile.settingsSection')} />
+          </div>
+          <LanguageRow
+            label={t('profile.language')}
+            value={i18n.language.startsWith('en') ? t('profile.languageEN') : t('profile.languagePT')}
+            expanded={showLangPicker}
+            onToggle={() => setShowLangPicker((v) => !v)}
+          />
+          {showLangPicker && (
+            <OptionList
+              options={[
+                { value: 'pt-BR', label: t('profile.languagePT') },
+                { value: 'en', label: t('profile.languageEN') },
+              ]}
+              selected={i18n.language.startsWith('en') ? 'en' : 'pt-BR'}
+              onSelect={(v) => {
+                setLanguage(v as Lang);
+                setShowLangPicker(false);
+              }}
+            />
+          )}
+
+          <ThemeRow
+            label={t('profile.theme')}
+            expanded={showThemePicker}
+            onToggle={() => setShowThemePicker((v) => !v)}
+          />
+          {showThemePicker && <ThemePicker onClose={() => setShowThemePicker(false)} />}
         </div>
 
         {/* Actions */}
         <div
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: 'var(--cam-bg-card)',
             borderRadius: '20px',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+            boxShadow: 'var(--cam-shadow-card)',
             overflow: 'hidden',
           }}
         >
           {!isOAuthUser && (
             <ActionRow
-              icon={<Lock size={18} color={BRAND} strokeWidth={2.2} />}
-              label="Alterar senha"
+              icon={<Lock size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
+              label={t('profile.changePassword')}
               onClick={() => setShowPasswordForm((v) => !v)}
               expanded={showPasswordForm}
             />
           )}
 
-          {!isOAuthUser && showPasswordForm && (
-            <ChangePasswordForm onClose={() => setShowPasswordForm(false)} />
-          )}
+          {!isOAuthUser && showPasswordForm && <ChangePasswordForm onClose={() => setShowPasswordForm(false)} />}
 
           <ActionRow
-            icon={<LogOut size={18} color={BRAND} strokeWidth={2.2} />}
-            label="Sair da conta"
+            icon={<LogOut size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
+            label={t('profile.signOut')}
             onClick={handleSignOut}
           />
         </div>
@@ -222,53 +241,53 @@ export function ProfileScreen() {
         {/* Danger zone */}
         <div
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: 'var(--cam-bg-card)',
             borderRadius: '20px',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+            boxShadow: 'var(--cam-shadow-card)',
             overflow: 'hidden',
-            border: `1.5px solid rgba(220, 38, 38, 0.15)`,
+            border: `1.5px solid var(--cam-bg-error-soft)`,
           }}
         >
           <ActionRow
-            icon={<Trash2 size={18} color={ERROR} strokeWidth={2.2} />}
-            label="Excluir conta"
+            icon={<Trash2 size={18} color="var(--cam-text-error)" strokeWidth={2.2} />}
+            label={t('profile.deleteAccount')}
             onClick={() => setShowDeleteConfirm(true)}
             destructive
           />
         </div>
       </div>
 
-      {showDeleteConfirm && (
-        <DeleteAccountModal onCancel={() => setShowDeleteConfirm(false)} />
-      )}
+      {showDeleteConfirm && <DeleteAccountModal onCancel={() => setShowDeleteConfirm(false)} />}
     </div>
   );
 }
 
-function InfoRow({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-}) {
+function SectionLabel({ text }: { text: string }) {
   return (
-    <div
+    <h3
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '8px 0',
+        fontSize: '13px',
+        color: 'var(--cam-text-secondary)',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        margin: '0 0 12px 0',
       }}
     >
+      {text}
+    </h3>
+  );
+}
+
+function InfoRow({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0' }}>
       <div
         style={{
           width: 32,
           height: 32,
           borderRadius: '50%',
-          backgroundColor: '#F8F7FF',
+          backgroundColor: 'var(--cam-bg-tint)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -278,20 +297,13 @@ function InfoRow({
         {icon}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: '12px',
-            color: MUTED,
-            fontWeight: 500,
-            marginBottom: '2px',
-          }}
-        >
+        <div style={{ fontSize: '12px', color: 'var(--cam-text-secondary)', fontWeight: 500, marginBottom: '2px' }}>
           {label}
         </div>
         <div
           style={{
             fontSize: '14px',
-            color: TEXT,
+            color: 'var(--cam-text-primary)',
             fontWeight: 500,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -330,7 +342,7 @@ function ActionRow({
         padding: '16px 20px',
         background: 'none',
         border: 'none',
-        borderBottom: expanded ? `1px solid ${BORDER}` : 'none',
+        borderBottom: expanded ? `1px solid var(--cam-border)` : 'none',
         cursor: 'pointer',
         textAlign: 'left',
         fontFamily: 'inherit',
@@ -341,7 +353,7 @@ function ActionRow({
           width: 36,
           height: 36,
           borderRadius: '50%',
-          backgroundColor: destructive ? 'rgba(220, 38, 38, 0.08)' : '#F0EFFF',
+          backgroundColor: destructive ? 'var(--cam-bg-error-soft)' : 'var(--cam-bg-muted)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -355,17 +367,193 @@ function ActionRow({
           flex: 1,
           fontSize: '15px',
           fontWeight: 600,
-          color: destructive ? ERROR : TEXT,
+          color: destructive ? 'var(--cam-text-error)' : 'var(--cam-text-primary)',
         }}
       >
         {label}
       </span>
-      <ChevronRight size={18} color={destructive ? ERROR : MUTED} />
+      <ChevronRight size={18} color={destructive ? 'var(--cam-text-error)' : 'var(--cam-text-secondary)'} />
     </button>
   );
 }
 
+function LanguageRow({
+  label,
+  value,
+  expanded,
+  onToggle,
+}: {
+  label: string;
+  value: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        width: '100%',
+        padding: '16px 20px',
+        background: 'none',
+        border: 'none',
+        borderBottom: expanded ? `1px solid var(--cam-border)` : 'none',
+        cursor: 'pointer',
+        textAlign: 'left',
+        fontFamily: 'inherit',
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          backgroundColor: 'var(--cam-bg-muted)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Globe size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />
+      </div>
+      <span style={{ flex: 1, fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-primary)' }}>{label}</span>
+      <span style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', fontWeight: 500 }}>{value}</span>
+      <ChevronRight size={18} color="var(--cam-text-secondary)" />
+    </button>
+  );
+}
+
+function ThemeRow({ label, expanded, onToggle }: { label: string; expanded: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
+  const { mode } = useTheme();
+  const valueLabel =
+    mode === 'light' ? t('profile.themeLight') : mode === 'dark' ? t('profile.themeDark') : t('profile.themeSystem');
+  const Icon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Monitor;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        width: '100%',
+        padding: '16px 20px',
+        background: 'none',
+        border: 'none',
+        borderTop: `1px solid var(--cam-border-subtle)`,
+        borderBottom: expanded ? `1px solid var(--cam-border)` : 'none',
+        cursor: 'pointer',
+        textAlign: 'left',
+        fontFamily: 'inherit',
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          backgroundColor: 'var(--cam-bg-muted)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Icon size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />
+      </div>
+      <span style={{ flex: 1, fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-primary)' }}>{label}</span>
+      <span style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', fontWeight: 500 }}>{valueLabel}</span>
+      <ChevronRight size={18} color="var(--cam-text-secondary)" />
+    </button>
+  );
+}
+
+function ThemePicker({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
+  const { mode, setMode } = useTheme();
+  const options: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
+    { value: 'light', label: t('profile.themeLight'), icon: Sun },
+    { value: 'dark', label: t('profile.themeDark'), icon: Moon },
+    { value: 'system', label: t('profile.themeSystem'), icon: Monitor },
+  ];
+  return (
+    <div>
+      {options.map((opt, idx) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => {
+            setMode(opt.value);
+            onClose();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            width: '100%',
+            padding: '14px 20px 14px 56px',
+            background: mode === opt.value ? 'var(--cam-bg-tint)' : 'transparent',
+            border: 'none',
+            borderBottom: idx < options.length - 1 ? `1px solid var(--cam-border-subtle)` : 'none',
+            cursor: 'pointer',
+            textAlign: 'left',
+            fontFamily: 'inherit',
+          }}
+        >
+          <opt.icon size={16} color="var(--cam-text-secondary)" />
+          <span style={{ flex: 1, fontSize: '14px', color: 'var(--cam-text-primary)', fontWeight: 500 }}>{opt.label}</span>
+          {mode === opt.value && <Check size={16} color="var(--cam-color-brand)" strokeWidth={2.5} />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function OptionList({
+  options,
+  selected,
+  onSelect,
+}: {
+  options: { value: string; label: string }[];
+  selected: string;
+  onSelect: (v: string) => void;
+}) {
+  return (
+    <div>
+      {options.map((opt, idx) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onSelect(opt.value)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            width: '100%',
+            padding: '14px 20px 14px 56px',
+            background: selected === opt.value ? 'var(--cam-bg-tint)' : 'transparent',
+            border: 'none',
+            borderBottom: idx < options.length - 1 ? `1px solid var(--cam-border-subtle)` : 'none',
+            cursor: 'pointer',
+            textAlign: 'left',
+            fontFamily: 'inherit',
+          }}
+        >
+          <span style={{ flex: 1, fontSize: '14px', color: 'var(--cam-text-primary)', fontWeight: 500 }}>{opt.label}</span>
+          {selected === opt.value && <Check size={16} color="var(--cam-color-brand)" strokeWidth={2.5} />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ChangePasswordForm({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const { changePassword } = useAuth();
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
@@ -383,11 +571,11 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
     setSuccess(false);
 
     if (!currentPass || !newPass || !confirmPass) {
-      setError('Preencha todos os campos.');
+      setError(t('profile.errors.missingFields'));
       return;
     }
     if (newPass !== confirmPass) {
-      setError('A confirmação não coincide com a nova senha.');
+      setError(t('profile.errors.mismatch'));
       return;
     }
 
@@ -396,7 +584,7 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
     setSubmitting(false);
 
     if (err) {
-      setError(err);
+      setError(translateProfileError(err, t));
       return;
     }
     setSuccess(true);
@@ -417,40 +605,46 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        borderBottom: `1px solid ${BORDER}`,
+        borderBottom: `1px solid var(--cam-border)`,
       }}
     >
       <PasswordField
         value={currentPass}
         onChange={setCurrentPass}
-        placeholder="Senha atual"
+        placeholder={t('profile.currentPwdPlaceholder')}
         show={showCurrent}
         onToggleShow={() => setShowCurrent((v) => !v)}
         autoComplete="current-password"
+        showLabel={t('common.showPassword')}
+        hideLabel={t('common.hidePassword')}
       />
       <PasswordField
         value={newPass}
         onChange={setNewPass}
-        placeholder="Nova senha (mín. 6 caracteres)"
+        placeholder={t('profile.newPwdPlaceholder')}
         show={showNew}
         onToggleShow={() => setShowNew((v) => !v)}
         autoComplete="new-password"
+        showLabel={t('common.showPassword')}
+        hideLabel={t('common.hidePassword')}
       />
       <PasswordField
         value={confirmPass}
         onChange={setConfirmPass}
-        placeholder="Confirmar nova senha"
+        placeholder={t('profile.confirmPwdPlaceholder')}
         show={showNew}
         onToggleShow={() => setShowNew((v) => !v)}
         autoComplete="new-password"
+        showLabel={t('common.showPassword')}
+        hideLabel={t('common.hidePassword')}
       />
 
       {error && (
         <div
           role="alert"
           style={{
-            backgroundColor: 'rgba(220, 38, 38, 0.08)',
-            color: ERROR,
+            backgroundColor: 'var(--cam-bg-error-soft)',
+            color: 'var(--cam-text-error)',
             borderRadius: '12px',
             padding: '10px 14px',
             fontSize: '13px',
@@ -464,15 +658,15 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
       {success && (
         <div
           style={{
-            backgroundColor: 'rgba(29, 158, 117, 0.1)',
-            color: SUCCESS,
+            backgroundColor: 'var(--cam-bg-accent-soft)',
+            color: 'var(--cam-text-accent)',
             borderRadius: '12px',
             padding: '10px 14px',
             fontSize: '13px',
             fontWeight: 500,
           }}
         >
-          Senha alterada com sucesso!
+          {t('profile.pwdSuccess')}
         </div>
       )}
 
@@ -486,15 +680,15 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
             height: '44px',
             borderRadius: '9999px',
             backgroundColor: 'transparent',
-            color: MUTED,
-            border: `1.5px solid ${BORDER}`,
+            color: 'var(--cam-text-secondary)',
+            border: `1.5px solid var(--cam-border)`,
             fontSize: '14px',
             fontWeight: 600,
             cursor: submitting ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
           }}
         >
-          Cancelar
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
@@ -503,8 +697,8 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
             flex: 1,
             height: '44px',
             borderRadius: '9999px',
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: '14px',
             fontWeight: 600,
@@ -518,7 +712,7 @@ function ChangePasswordForm({ onClose }: { onClose: () => void }) {
           }}
         >
           {submitting && <Loader2 size={14} className="animate-spin" />}
-          {submitting ? 'Salvando' : 'Salvar'}
+          {submitting ? t('common.saving') : t('common.save')}
         </button>
       </div>
     </form>
@@ -532,6 +726,8 @@ function PasswordField({
   show,
   onToggleShow,
   autoComplete,
+  showLabel,
+  hideLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -539,6 +735,8 @@ function PasswordField({
   show: boolean;
   onToggleShow: () => void;
   autoComplete?: string;
+  showLabel: string;
+  hideLabel: string;
 }) {
   return (
     <div
@@ -548,12 +746,12 @@ function PasswordField({
         gap: '10px',
         height: '52px',
         padding: '0 14px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'var(--cam-bg-input)',
         borderRadius: '14px',
-        border: `1.5px solid ${BORDER}`,
+        border: `1.5px solid var(--cam-border)`,
       }}
     >
-      <Lock size={16} color={MUTED} strokeWidth={2.2} />
+      <Lock size={16} color="var(--cam-text-secondary)" strokeWidth={2.2} />
       <input
         type={show ? 'text' : 'password'}
         value={value}
@@ -566,7 +764,7 @@ function PasswordField({
           outline: 'none',
           background: 'transparent',
           fontSize: '14px',
-          color: TEXT,
+          color: 'var(--cam-text-primary)',
           fontWeight: 500,
           fontFamily: 'inherit',
         }}
@@ -574,7 +772,7 @@ function PasswordField({
       <button
         type="button"
         onClick={onToggleShow}
-        aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+        aria-label={show ? hideLabel : showLabel}
         style={{
           background: 'none',
           border: 'none',
@@ -585,9 +783,9 @@ function PasswordField({
         }}
       >
         {show ? (
-          <EyeOff size={16} color={MUTED} strokeWidth={2.2} />
+          <EyeOff size={16} color="var(--cam-text-secondary)" strokeWidth={2.2} />
         ) : (
-          <Eye size={16} color={MUTED} strokeWidth={2.2} />
+          <Eye size={16} color="var(--cam-text-secondary)" strokeWidth={2.2} />
         )}
       </button>
     </div>
@@ -595,13 +793,15 @@ function PasswordField({
 }
 
 function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const [confirmText, setConfirmText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canDelete = confirmText.trim().toUpperCase() === 'EXCLUIR';
+  const confirmWord = t('profile.deleteModal.confirmWord');
+  const canDelete = confirmText.trim().toUpperCase() === confirmWord;
 
   async function handleDelete() {
     if (!canDelete || submitting) return;
@@ -624,7 +824,7 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(45, 42, 69, 0.55)',
+        backgroundColor: 'var(--cam-bg-overlay)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -636,7 +836,7 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: 'var(--cam-bg-card)',
           borderRadius: '24px',
           padding: '24px',
           maxWidth: 360,
@@ -651,37 +851,22 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
             width: 56,
             height: 56,
             borderRadius: '50%',
-            backgroundColor: 'rgba(220, 38, 38, 0.12)',
+            backgroundColor: 'var(--cam-bg-error-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             alignSelf: 'center',
           }}
         >
-          <AlertTriangle size={28} color={ERROR} strokeWidth={2.2} />
+          <AlertTriangle size={28} color="var(--cam-text-error)" strokeWidth={2.2} />
         </div>
 
         <div style={{ textAlign: 'center' }}>
-          <h2
-            style={{
-              fontSize: '18px',
-              fontWeight: 700,
-              color: TEXT,
-              margin: '0 0 8px 0',
-            }}
-          >
-            Excluir sua conta?
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--cam-text-primary)', margin: '0 0 8px 0' }}>
+            {t('profile.deleteModal.title')}
           </h2>
-          <p
-            style={{
-              fontSize: '14px',
-              color: MUTED,
-              margin: 0,
-              lineHeight: 1.5,
-            }}
-          >
-            Esta ação é permanente. Todos os seus registros, emoções, crenças e
-            padrões serão apagados. Não é possível desfazer.
+          <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0, lineHeight: 1.5 }}>
+            {t('profile.deleteModal.message')}
           </p>
         </div>
 
@@ -689,29 +874,32 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
           <label
             style={{
               fontSize: '12px',
-              color: MUTED,
+              color: 'var(--cam-text-secondary)',
               fontWeight: 500,
               marginBottom: '6px',
               display: 'block',
             }}
           >
-            Digite <strong style={{ color: ERROR }}>EXCLUIR</strong> para confirmar
+            <Trans
+              i18nKey="profile.deleteModal.confirmLabel"
+              components={{ strong: <strong style={{ color: 'var(--cam-text-error)' }} /> }}
+            />
           </label>
           <input
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="EXCLUIR"
+            placeholder={confirmWord}
             autoCapitalize="characters"
             style={{
               width: '100%',
               height: '48px',
               padding: '0 14px',
               borderRadius: '12px',
-              border: `1.5px solid ${BORDER}`,
-              backgroundColor: '#FFFFFF',
+              border: `1.5px solid var(--cam-border)`,
+              backgroundColor: 'var(--cam-bg-input)',
               fontSize: '14px',
-              color: TEXT,
+              color: 'var(--cam-text-primary)',
               outline: 'none',
               boxSizing: 'border-box',
               fontFamily: 'inherit',
@@ -726,8 +914,8 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
           <div
             role="alert"
             style={{
-              backgroundColor: 'rgba(220, 38, 38, 0.08)',
-              color: ERROR,
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-error)',
               borderRadius: '12px',
               padding: '10px 14px',
               fontSize: '13px',
@@ -748,15 +936,15 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
               height: '48px',
               borderRadius: '9999px',
               backgroundColor: 'transparent',
-              color: TEXT,
-              border: `1.5px solid ${BORDER}`,
+              color: 'var(--cam-text-primary)',
+              border: `1.5px solid var(--cam-border)`,
               fontSize: '14px',
               fontWeight: 600,
               cursor: submitting ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit',
             }}
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -766,8 +954,8 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
               flex: 1,
               height: '48px',
               borderRadius: '9999px',
-              backgroundColor: canDelete ? ERROR : 'rgba(220, 38, 38, 0.3)',
-              color: '#FFFFFF',
+              backgroundColor: canDelete ? 'var(--cam-color-error)' : 'var(--cam-bg-error-soft)',
+              color: canDelete ? '#FFFFFF' : 'var(--cam-text-error)',
               border: 'none',
               fontSize: '14px',
               fontWeight: 600,
@@ -777,15 +965,25 @@ function DeleteAccountModal({ onCancel }: { onCancel: () => void }) {
               justifyContent: 'center',
               gap: '8px',
               fontFamily: 'inherit',
+              opacity: !canDelete ? 0.7 : 1,
             }}
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
-            {submitting ? 'Excluindo' : 'Excluir conta'}
+            {submitting ? t('profile.deleteModal.submitting') : t('profile.deleteModal.submit')}
           </button>
         </div>
       </div>
     </div>
   );
+}
+
+function translateProfileError(msg: string, t: (k: string) => string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('senha atual incorreta') || m.includes('current')) return t('profile.errors.wrongCurrent');
+  if (m.includes('mínimo') || m.includes('at least') || m.includes('short')) return t('profile.errors.shortPassword');
+  if (m.includes('diferente') || m.includes('different')) return t('profile.errors.sameAsOld');
+  if (m.includes('sessão') || m.includes('session')) return t('profile.errors.invalidSession');
+  return msg;
 }
 
 function capitalize(s: string): string {

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createTextEntry } from '../lib/db';
 
 export function TextRecordingScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -18,13 +20,13 @@ export function TextRecordingScreen() {
     try {
       const entryId = await createTextEntry(user.id, text.trim());
       if (!entryId) {
-        setError('Não foi possível salvar o registro. Tente novamente.');
+        setError(t('textRecording.errorSave'));
         return;
       }
       navigate(`/validacao-emocoes?entryId=${entryId}`);
     } catch (err) {
       console.error('Erro ao salvar registro:', err);
-      setError('Erro ao salvar o registro.');
+      setError(t('textRecording.errorGeneric'));
     } finally {
       setSubmitting(false);
     }
@@ -33,15 +35,16 @@ export function TextRecordingScreen() {
   const disabled = text.trim().length === 0 || submitting;
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      backgroundColor: '#F8F7FF',
-      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
-      overflow: 'hidden'
-    }}>
-      {/* Header Area (compact to maximize textarea space) */}
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        backgroundColor: 'var(--cam-bg-page)',
+        fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+        overflow: 'hidden',
+      }}
+    >
       <div style={{ padding: '32px 24px 12px 24px', flexShrink: 0 }}>
         <button
           onClick={() => navigate('/home')}
@@ -49,68 +52,72 @@ export function TextRecordingScreen() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            color: '#534AB7',
+            color: 'var(--cam-text-brand)',
             background: 'none',
             border: 'none',
             fontSize: '16px',
-            fontWeight: '500',
+            fontWeight: 500,
             padding: 0,
             cursor: 'pointer',
-            marginBottom: '12px'
+            marginBottom: '12px',
           }}
         >
           <ArrowLeft size={20} />
-          <span>Voltar</span>
+          <span>{t('common.back')}</span>
         </button>
 
-        <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#2D2A45', margin: '0 0 4px 0' }}>
-          Novo Registro por Texto
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cam-text-primary)', margin: '0 0 4px 0' }}>
+          {t('textRecording.title')}
         </h1>
       </div>
 
-      {/* Main Content Area — textarea takes most of the screen */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '8px 24px 24px 24px',
-        minHeight: 0
-      }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '8px 24px 24px 24px',
+          minHeight: 0,
+        }}
+      >
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Como você está se sentindo hoje? O que aconteceu?"
+          placeholder={t('textRecording.placeholder')}
           disabled={submitting}
           style={{
             flex: 1,
             width: '100%',
-            backgroundColor: '#FFFFFF',
-            border: '1px solid rgba(83, 74, 183, 0.1)',
+            backgroundColor: 'var(--cam-bg-card)',
+            border: `1px solid var(--cam-border-subtle)`,
             borderRadius: '20px',
             padding: '20px',
             fontSize: '17px',
-            color: '#2D2A45',
-            lineHeight: '1.6',
+            color: 'var(--cam-text-primary)',
+            lineHeight: 1.6,
             resize: 'none',
             outline: 'none',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
+            boxShadow: 'var(--cam-shadow-card)',
             fontFamily: 'inherit',
             boxSizing: 'border-box',
             marginBottom: '16px',
-            minHeight: 0
+            minHeight: 0,
           }}
         />
 
         {error && (
-          <div role="alert" style={{
-            backgroundColor: 'rgba(220, 38, 38, 0.08)',
-            color: '#DC2626',
-            borderRadius: '12px',
-            padding: '10px 14px',
-            fontSize: '13px',
-            fontWeight: 500,
-            marginBottom: '12px'
-          }}>
+          <div
+            role="alert"
+            style={{
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-error)',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              fontSize: '13px',
+              fontWeight: 500,
+              marginBottom: '12px',
+            }}
+          >
             {error}
           </div>
         )}
@@ -121,22 +128,22 @@ export function TextRecordingScreen() {
           style={{
             width: '100%',
             height: '56px',
-            backgroundColor: disabled ? '#E8E6F7' : '#1D9E75',
-            color: disabled ? '#8B87A8' : '#FFFFFF',
+            backgroundColor: disabled ? 'var(--cam-bg-muted)' : 'var(--cam-color-accent)',
+            color: disabled ? 'var(--cam-text-secondary)' : '#FFFFFF',
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            fontWeight: '600',
+            fontWeight: 600,
             border: 'none',
-            boxShadow: disabled ? 'none' : '0px 4px 12px rgba(29, 158, 117, 0.2)',
+            boxShadow: disabled ? 'none' : 'var(--cam-shadow-accent)',
             cursor: disabled ? 'not-allowed' : 'pointer',
             transition: 'all 0.2s ease',
-            flexShrink: 0
+            flexShrink: 0,
           }}
         >
-          {submitting ? 'Salvando...' : 'Concluir Registro'}
+          {submitting ? t('textRecording.submitting') : t('textRecording.submit')}
         </button>
       </div>
     </div>

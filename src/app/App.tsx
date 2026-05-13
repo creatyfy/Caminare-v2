@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import type { ReactNode } from 'react';
+import './lib/i18n';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -63,12 +65,17 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="h-screen w-full max-w-[375px] mx-auto bg-[#F8F7FF] relative overflow-hidden">
-          <AppRoutes />
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <div
+            className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
+            style={{ backgroundColor: 'var(--cam-bg-page)' }}
+          >
+            <AppRoutes />
+          </div>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

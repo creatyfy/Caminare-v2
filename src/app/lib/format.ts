@@ -1,8 +1,12 @@
-export function formatDate(isoString: string): { date: string; time: string } {
+export function formatDate(
+  isoString: string,
+  locale: string = 'pt-BR'
+): { date: string; time: string } {
   const d = new Date(isoString);
+  const loc = locale.startsWith('en') ? 'en-US' : 'pt-BR';
   const date = d
-    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toLocaleDateString(loc, { day: '2-digit', month: 'short', year: 'numeric' })
     .replace(/\./g, '');
-  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
   return { date, time };
 }
