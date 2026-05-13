@@ -44,77 +44,77 @@ export function LoginScreen() {
         backgroundColor: BG,
         display: 'flex',
         flexDirection: 'column',
-        padding: '48px 24px 32px',
+        paddingTop: '10vh',
+        paddingRight: '24px',
+        paddingBottom: '32px',
+        paddingLeft: '24px',
         overflow: 'auto',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      <div style={{ marginTop: '24px', marginBottom: '40px' }}>
-        <div
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '4px',
+        }}
+      >
+        <img
+          src="/alinhadapng.png"
+          alt="Caminare mascote"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0,
+            display: 'block',
+            width: 96,
+            height: 96,
+            objectFit: 'contain',
           }}
-        >
-          <img
-            src="/alinhadapng.png"
-            alt="Caminare mascote"
-            style={{
-              display: 'block',
-              margin: 0,
-              padding: 0,
-              width: 120,
-              height: 120,
-              objectFit: 'contain',
-            }}
-          />
-          <img
-            src="/caminarecomp.png"
-            alt="Caminare"
-            style={{
-              display: 'block',
-              marginTop: -50,
-              marginBottom: 0,
-              marginLeft: 0,
-              marginRight: 0,
-              padding: 0,
-              width: 180,
-              height: 'auto',
-              objectFit: 'contain',
-            }}
-          />
-        </div>
+        />
+        <img
+          src="/caminarecomp.png"
+          alt="Caminare"
+          style={{
+            display: 'block',
+            width: 160,
+            height: 'auto',
+            objectFit: 'contain',
+          }}
+        />
       </div>
 
-      <h1
-        style={{
-          fontSize: '24px',
-          fontWeight: 700,
-          color: '#2D2A45',
-          margin: 0,
-          marginBottom: '6px',
-          letterSpacing: '-0.5px',
-        }}
-      >
-        Bem-vindo de volta
-      </h1>
-      <p
-        style={{
-          fontSize: '15px',
-          color: MUTED,
-          margin: 0,
-          marginBottom: '28px',
-          fontWeight: 500,
-        }}
-      >
-        Continue sua jornada de autoconhecimento.
-      </p>
+      <div style={{ marginTop: '24px', textAlign: 'left' }}>
+        <h1
+          style={{
+            fontSize: '24px',
+            fontWeight: 700,
+            color: '#2D2A45',
+            margin: 0,
+            marginBottom: '6px',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          Bem-vindo de volta
+        </h1>
+        <p
+          style={{
+            fontSize: '15px',
+            color: MUTED,
+            margin: 0,
+            fontWeight: 500,
+          }}
+        >
+          Continue sua jornada de autoconhecimento.
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
-        style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+        style={{
+          marginTop: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+        }}
       >
         <InputField
           icon={<Mail size={18} color={MUTED} strokeWidth={2.2} />}
@@ -198,35 +198,34 @@ export function LoginScreen() {
             'Entrar'
           )}
         </button>
-      </form>
 
-      <div
-        style={{
-          marginTop: 'auto',
-          paddingTop: '32px',
-          textAlign: 'center',
-          fontSize: '14px',
-          color: MUTED,
-          fontWeight: 500,
-        }}
-      >
-        Não tem conta?{' '}
-        <button
-          type="button"
-          onClick={() => navigate('/cadastro')}
+        <div
           style={{
-            background: 'none',
-            border: 'none',
-            color: BRAND,
-            fontWeight: 700,
-            cursor: 'pointer',
-            padding: 0,
+            marginTop: '16px',
+            textAlign: 'center',
             fontSize: '14px',
+            color: MUTED,
+            fontWeight: 500,
           }}
         >
-          Criar conta
-        </button>
-      </div>
+          Não tem conta?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/cadastro')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: BRAND,
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: 0,
+              fontSize: '14px',
+            }}
+          >
+            Criar conta
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

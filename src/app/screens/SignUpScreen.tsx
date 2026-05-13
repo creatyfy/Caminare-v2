@@ -131,60 +131,77 @@ export function SignUpScreen() {
         backgroundColor: BG,
         display: 'flex',
         flexDirection: 'column',
-        padding: '40px 24px 32px',
+        paddingTop: '10vh',
+        paddingRight: '24px',
+        paddingBottom: '32px',
+        paddingLeft: '24px',
         overflow: 'auto',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      <div style={{ marginTop: '12px', marginBottom: '32px' }}>
-        <div
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '4px',
+        }}
+      >
+        <img
+          src="/alinhadapng.png"
+          alt="Caminare mascote"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 0,
+            display: 'block',
+            width: 96,
+            height: 96,
+            objectFit: 'contain',
           }}
-        >
-          <img
-            src="/alinhadapng.png"
-            alt="Caminare mascote"
-            style={{ display: 'block', margin: 0, padding: 0, width: 120, height: 120, objectFit: 'contain' }}
-          />
-          <img
-            src="/caminarecomp.png"
-            alt="Caminare"
-            style={{ display: 'block', marginTop: -50, marginBottom: 0, marginLeft: 0, marginRight: 0, padding: 0, width: 180, height: 'auto', objectFit: 'contain' }}
-          />
-        </div>
+        />
+        <img
+          src="/caminarecomp.png"
+          alt="Caminare"
+          style={{
+            display: 'block',
+            width: 160,
+            height: 'auto',
+            objectFit: 'contain',
+          }}
+        />
       </div>
 
-      <h1
-        style={{
-          fontSize: '24px',
-          fontWeight: 700,
-          color: '#2D2A45',
-          margin: 0,
-          marginBottom: '6px',
-          letterSpacing: '-0.5px',
-        }}
-      >
-        Criar sua conta
-      </h1>
-      <p
-        style={{
-          fontSize: '15px',
-          color: MUTED,
-          margin: 0,
-          marginBottom: '24px',
-          fontWeight: 500,
-        }}
-      >
-        Comece a registrar suas emoções hoje.
-      </p>
+      <div style={{ marginTop: '24px', textAlign: 'left' }}>
+        <h1
+          style={{
+            fontSize: '24px',
+            fontWeight: 700,
+            color: '#2D2A45',
+            margin: 0,
+            marginBottom: '6px',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          Criar sua conta
+        </h1>
+        <p
+          style={{
+            fontSize: '15px',
+            color: MUTED,
+            margin: 0,
+            fontWeight: 500,
+          }}
+        >
+          Comece a registrar suas emoções hoje.
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
-        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+        style={{
+          marginTop: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        }}
       >
         <InputField
           icon={<UserIcon size={18} color={MUTED} strokeWidth={2.2} />}
@@ -277,35 +294,34 @@ export function SignUpScreen() {
             'Criar conta'
           )}
         </button>
-      </form>
 
-      <div
-        style={{
-          marginTop: 'auto',
-          paddingTop: '24px',
-          textAlign: 'center',
-          fontSize: '14px',
-          color: MUTED,
-          fontWeight: 500,
-        }}
-      >
-        Já tem conta?{' '}
-        <button
-          type="button"
-          onClick={() => navigate('/login')}
+        <div
           style={{
-            background: 'none',
-            border: 'none',
-            color: BRAND,
-            fontWeight: 700,
-            cursor: 'pointer',
-            padding: 0,
+            marginTop: '16px',
+            textAlign: 'center',
             fontSize: '14px',
+            color: MUTED,
+            fontWeight: 500,
           }}
         >
-          Já tenho conta
-        </button>
-      </div>
+          Já tem conta?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: BRAND,
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: 0,
+              fontSize: '14px',
+            }}
+          >
+            Já tenho conta
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
