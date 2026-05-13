@@ -49,34 +49,40 @@ export function LoginScreen() {
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginTop: '24px',
-          marginBottom: '40px',
-        }}
-      >
-        <img
-          src="/alinhadapng.png"
-          alt="Caminare mascote"
+      <div style={{ marginTop: '24px', marginBottom: '40px' }}>
+        <div
           style={{
-            width: 120,
-            height: 120,
-            objectFit: 'contain',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0,
           }}
-        />
-        <img
-          src="/caminarecomp.png"
-          alt="Caminare"
-          style={{
-            marginTop: 10,
-            width: 180,
-            height: 'auto',
-            objectFit: 'contain',
-          }}
-        />
+        >
+          <img
+            src="/alinhadapng.png"
+            alt="Caminare mascote"
+            style={{
+              display: 'block',
+              margin: 0,
+              padding: 0,
+              width: 120,
+              height: 120,
+              objectFit: 'contain',
+            }}
+          />
+          <img
+            src="/caminarecomp.png"
+            alt="Caminare"
+            style={{
+              display: 'block',
+              margin: 0,
+              padding: 0,
+              width: 180,
+              height: 'auto',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
       </div>
 
       <h1
