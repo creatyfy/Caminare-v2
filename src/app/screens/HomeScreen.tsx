@@ -147,9 +147,17 @@ export function HomeScreen() {
           ))}
         </div>
 
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: '16px',
+            paddingTop: '32px',
+            paddingBottom: '32px',
+          }}
+        >
           <button
             onClick={() => navigate('/gravacao')}
             style={{
