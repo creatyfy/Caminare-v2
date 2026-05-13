@@ -1,8 +1,44 @@
+import { useEffect, useMemo, useState } from 'react';
 import { FileText, Download, Share2, Calendar, ChevronDown } from 'lucide-react';
-import { entries } from '../data/entries';
+import { useAuth } from '../contexts/AuthContext';
+import { getEntriesForSummary, type EntryDetail } from '../lib/db';
+import { formatDate } from '../lib/format';
 
 export function SummaryScreen() {
-  const periodLabel = '01 Abr - 08 Mai, 2026';
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<EntryDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    setLoading(true);
+    getEntriesForSummary(user.id).then((data) => {
+      if (!active) return;
+      setEntries(data ?? []);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const periodLabel = useMemo(() => {
+    if (entries.length === 0) return '—';
+    const sorted = [...entries].sort((a, b) =>
+      a.created_at.localeCompare(b.created_at)
+    );
+    const first = formatDate(sorted[0].created_at).date;
+    const last = formatDate(sorted[sorted.length - 1].created_at).date;
+    return first === last ? first : `${first} - ${last}`;
+  }, [entries]);
+
+  const activeDays = useMemo(() => {
+    const set = new Set(
+      entries.map((e) => new Date(e.created_at).toISOString().slice(0, 10))
+    );
+    return set.size;
+  }, [entries]);
 
   const handleDownloadPdf = () => {
     const printWindow = window.open('', '_blank', 'width=800,height=900');
@@ -16,18 +52,24 @@ export function SummaryScreen() {
         .replace(/"/g, '&quot;');
 
     const eventsHtml = entries
-      .map(
-        (entry) => `
+      .map((entry) => {
+        const { date, time } = formatDate(entry.created_at);
+        const summary =
+          entry.raw_text.length > 120
+            ? entry.raw_text.slice(0, 120).trimEnd() + '…'
+            : entry.raw_text;
+        const emotionNames = entry.emotions.map((e) => e.name);
+        return `
           <section class="event">
-            <div class="event-meta">${escapeHtml(entry.date)} • ${escapeHtml(entry.time)}</div>
-            <h3 class="event-title">${escapeHtml(entry.summary)}</h3>
-            <p class="event-text">${escapeHtml(entry.fullText)}</p>
+            <div class="event-meta">${escapeHtml(date)} • ${escapeHtml(time)}</div>
+            <h3 class="event-title">${escapeHtml(summary)}</h3>
+            <p class="event-text">${escapeHtml(entry.raw_text)}</p>
             <div class="tags">
-              ${entry.emotions.map((e) => `<span class="tag">${escapeHtml(e)}</span>`).join('')}
+              ${emotionNames.map((e) => `<span class="tag">${escapeHtml(e)}</span>`).join('')}
             </div>
           </section>
-        `
-      )
+        `;
+      })
       .join('');
 
     const doc = `<!doctype html>
@@ -56,8 +98,6 @@ export function SummaryScreen() {
   .event-text { font-size: 14px; color: #2D2A45; margin: 0 0 12px 0; white-space: pre-wrap; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; }
   .tag { background: #F0EFFF; color: #534AB7; padding: 4px 10px; border-radius: 9999px; font-size: 12px; }
-  .synth { background: #F9FAFB; padding: 16px; border-radius: 8px; font-size: 13px; color: #4B5563; }
-  .synth p { margin: 4px 0; }
   @media print {
     body { margin: 16mm; }
     .event { page-break-inside: avoid; }
@@ -71,18 +111,11 @@ export function SummaryScreen() {
   <h2>Estatísticas gerais</h2>
   <div class="stats">
     <div class="stat"><strong>${entries.length}</strong> registros no período</div>
-    <div class="stat"><strong>28</strong> dias ativos</div>
+    <div class="stat"><strong>${activeDays}</strong> dias ativos</div>
   </div>
 
   <h2>Acontecimentos para abordar na terapia</h2>
   ${eventsHtml}
-
-  <h2>Síntese do período</h2>
-  <div class="synth">
-    <p><strong>Emoções principais:</strong> Ansiedade, Frustração, Gratidão</p>
-    <p><strong>Crenças identificadas:</strong> "Não sou competente", "Preciso ser perfeita"</p>
-    <p><strong>Padrões:</strong> Autossabotagem antes de desafios</p>
-  </div>
 
   <script>
     window.addEventListener('load', () => {
@@ -198,11 +231,15 @@ export function SummaryScreen() {
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ backgroundColor: '#F8F7FF', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#534AB7', marginBottom: '4px' }}>{entries.length}</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#534AB7', marginBottom: '4px' }}>
+                    {loading ? '—' : entries.length}
+                  </div>
                   <div style={{ fontSize: '13px', color: '#8B87A8' }}>Registros totais</div>
                 </div>
                 <div style={{ backgroundColor: '#F8F7FF', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#1D9E75', marginBottom: '4px' }}>28</div>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: '#1D9E75', marginBottom: '4px' }}>
+                    {loading ? '—' : activeDays}
+                  </div>
                   <div style={{ fontSize: '13px', color: '#8B87A8' }}>Dias ativos</div>
                 </div>
               </div>
@@ -221,77 +258,72 @@ export function SummaryScreen() {
               Acontecimentos para abordar na terapia
             </h4>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  style={{
-                    padding: '16px',
-                    backgroundColor: '#F8F7FF',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(83, 74, 183, 0.1)'
-                  }}
-                >
-                  <div style={{ fontSize: '13px', color: '#8B87A8', marginBottom: '6px' }}>
-                    {entry.date} • {entry.time}
-                  </div>
-                  <h5 style={{
-                    fontSize: '15px',
-                    color: '#2D2A45',
-                    margin: '0 0 10px 0',
-                    fontWeight: '600'
-                  }}>
-                    {entry.summary}
-                  </h5>
-                  <p style={{
-                    fontSize: '14px',
-                    color: '#2D2A45',
-                    lineHeight: '1.6',
-                    margin: '0 0 12px 0',
-                    whiteSpace: 'pre-wrap'
-                  }}>
-                    {entry.fullText}
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {entry.emotions.map((emotion, idx) => (
-                      <span key={idx} style={{
-                        backgroundColor: '#F0EFFF',
-                        color: '#534AB7',
-                        padding: '4px 10px',
-                        borderRadius: '9999px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}>
-                        {emotion}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            {loading && (
+              <div style={{ textAlign: 'center', color: '#8B87A8', fontSize: '14px', padding: '16px 0' }}>
+                Carregando...
+              </div>
+            )}
 
-          {/* Synthesis */}
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '24px',
-            padding: '24px',
-            boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.03)',
-            marginBottom: '24px'
-          }}>
-            <h4 style={{ fontSize: '14px', fontWeight: '600', color: '#8B87A8', margin: '0 0 12px 0' }}>
-              Síntese do Período
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#F9FAFB', padding: '16px', borderRadius: '16px' }}>
-              <div style={{ fontSize: '13px', color: '#6B7280', lineHeight: '1.5' }}>
-                <strong style={{ color: '#4B5563' }}>Emoções principais:</strong> Ansiedade, Frustração, Gratidão
+            {!loading && entries.length === 0 && (
+              <div style={{ textAlign: 'center', color: '#8B87A8', fontSize: '14px', padding: '16px 0' }}>
+                Nenhum registro no período.
               </div>
-              <div style={{ fontSize: '13px', color: '#6B7280', lineHeight: '1.5' }}>
-                <strong style={{ color: '#4B5563' }}>Crenças identificadas:</strong> "Não sou competente", "Preciso ser perfeita"
-              </div>
-              <div style={{ fontSize: '13px', color: '#6B7280', lineHeight: '1.5' }}>
-                <strong style={{ color: '#4B5563' }}>Padrões:</strong> Autossabotagem antes de desafios
-              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {!loading && entries.map((entry) => {
+                const { date, time } = formatDate(entry.created_at);
+                const summary =
+                  entry.raw_text.length > 120
+                    ? entry.raw_text.slice(0, 120).trimEnd() + '…'
+                    : entry.raw_text;
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      padding: '16px',
+                      backgroundColor: '#F8F7FF',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(83, 74, 183, 0.1)'
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', color: '#8B87A8', marginBottom: '6px' }}>
+                      {date} • {time}
+                    </div>
+                    <h5 style={{
+                      fontSize: '15px',
+                      color: '#2D2A45',
+                      margin: '0 0 10px 0',
+                      fontWeight: '600'
+                    }}>
+                      {summary}
+                    </h5>
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#2D2A45',
+                      lineHeight: '1.6',
+                      margin: '0 0 12px 0',
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      {entry.raw_text}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {entry.emotions.map((emotion) => (
+                        <span key={emotion.id} style={{
+                          backgroundColor: '#F0EFFF',
+                          color: '#534AB7',
+                          padding: '4px 10px',
+                          borderRadius: '9999px',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}>
+                          {emotion.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -299,6 +331,7 @@ export function SummaryScreen() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={handleDownloadPdf}
+              disabled={loading || entries.length === 0}
               style={{
                 flex: 1,
                 height: '56px',
@@ -312,7 +345,8 @@ export function SummaryScreen() {
                 gap: '8px',
                 fontSize: '15px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: loading || entries.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: loading || entries.length === 0 ? 0.5 : 1
               }}
             >
               <Download size={18} strokeWidth={2.5} />

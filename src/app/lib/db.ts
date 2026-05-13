@@ -1,0 +1,289 @@
+import { supabase } from './supabase';
+
+export interface Profile {
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface HomeStats {
+  totalEmotions: number;
+  totalPatterns: number;
+  activeDays: number;
+  totalEntries: number;
+}
+
+export interface EmotionRow {
+  id: string;
+  name: string;
+  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+}
+
+export interface EntryWithEmotions {
+  id: string;
+  raw_text: string;
+  processed_text: string | null;
+  created_at: string;
+  input_type: 'text' | 'audio';
+  processing_status: 'pending' | 'processing' | 'done' | 'error';
+  emotions: EmotionRow[];
+}
+
+export interface EntryDetail extends EntryWithEmotions {
+  parsed_thoughts: string[];
+}
+
+export async function getProfile(userId: string): Promise<Profile | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url')
+      .eq('id', userId)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (error) {
+      console.error('[db.getProfile]', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('[db.getProfile]', err);
+    return null;
+  }
+}
+
+export async function getHomeStats(userId: string): Promise<HomeStats | null> {
+  try {
+    const [emotionsRes, patternsRes, entriesRes, datesRes] = await Promise.all([
+      supabase
+        .from('emotions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .neq('validation', 'rejected'),
+      supabase
+        .from('patterns')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .is('deleted_at', null),
+      supabase
+        .from('entries')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .is('deleted_at', null),
+      supabase
+        .from('entries')
+        .select('created_at')
+        .eq('user_id', userId)
+        .is('deleted_at', null),
+    ]);
+
+    if (emotionsRes.error) console.error('[db.getHomeStats emotions]', emotionsRes.error);
+    if (patternsRes.error) console.error('[db.getHomeStats patterns]', patternsRes.error);
+    if (entriesRes.error) console.error('[db.getHomeStats entries]', entriesRes.error);
+    if (datesRes.error) console.error('[db.getHomeStats dates]', datesRes.error);
+
+    const uniqueDays = new Set(
+      (datesRes.data ?? []).map((r: { created_at: string }) =>
+        new Date(r.created_at).toISOString().slice(0, 10)
+      )
+    );
+
+    return {
+      totalEmotions: emotionsRes.count ?? 0,
+      totalPatterns: patternsRes.count ?? 0,
+      activeDays: uniqueDays.size,
+      totalEntries: entriesRes.count ?? 0,
+    };
+  } catch (err) {
+    console.error('[db.getHomeStats]', err);
+    return null;
+  }
+}
+
+type EntryRow = {
+  id: string;
+  raw_text: string;
+  processed_text: string | null;
+  created_at: string;
+  input_type: 'text' | 'audio';
+  processing_status: 'pending' | 'processing' | 'done' | 'error';
+  emotions: EmotionRow[] | null;
+};
+
+function mapEntryRow(row: EntryRow): EntryWithEmotions {
+  return {
+    id: row.id,
+    raw_text: row.raw_text,
+    processed_text: row.processed_text,
+    created_at: row.created_at,
+    input_type: row.input_type,
+    processing_status: row.processing_status,
+    emotions: (row.emotions ?? []).filter((e) => e.validation === 'confirmed'),
+  };
+}
+
+export async function getEntries(
+  userId: string,
+  filter: '7days' | '30days' | 'all' = 'all'
+): Promise<EntryWithEmotions[] | null> {
+  try {
+    let query = supabase
+      .from('entries')
+      .select(
+        'id, raw_text, processed_text, created_at, input_type, processing_status, emotions(id, name, validation)'
+      )
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (filter === '7days' || filter === '30days') {
+      const days = filter === '7days' ? 7 : 30;
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      query = query.gte('created_at', since);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('[db.getEntries]', error);
+      return null;
+    }
+    return (data as EntryRow[]).map(mapEntryRow);
+  } catch (err) {
+    console.error('[db.getEntries]', err);
+    return null;
+  }
+}
+
+export async function getEntryById(
+  userId: string,
+  entryId: string
+): Promise<EntryDetail | null> {
+  try {
+    const { data, error } = await supabase
+      .from('entries')
+      .select(
+        'id, raw_text, processed_text, created_at, input_type, processing_status, emotions(id, name, validation)'
+      )
+      .eq('user_id', userId)
+      .eq('id', entryId)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[db.getEntryById]', error);
+      return null;
+    }
+    if (!data) return null;
+
+    const { data: logRow, error: logErr } = await supabase
+      .from('entry_analysis_logs')
+      .select('parsed_thoughts')
+      .eq('user_id', userId)
+      .eq('entry_id', entryId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (logErr) console.error('[db.getEntryById log]', logErr);
+
+    const thoughts = parseThoughts(logRow?.parsed_thoughts);
+    return { ...mapEntryRow(data as EntryRow), parsed_thoughts: thoughts };
+  } catch (err) {
+    console.error('[db.getEntryById]', err);
+    return null;
+  }
+}
+
+function parseThoughts(raw: unknown): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          const obj = item as Record<string, unknown>;
+          if (typeof obj.content === 'string') return obj.content;
+          if (typeof obj.text === 'string') return obj.text;
+          if (typeof obj.thought === 'string') return obj.thought;
+        }
+        return null;
+      })
+      .filter((v): v is string => typeof v === 'string' && v.length > 0);
+  }
+  return [];
+}
+
+export async function createTextEntry(
+  userId: string,
+  rawText: string
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('entries')
+      .insert({
+        user_id: userId,
+        input_type: 'text',
+        raw_text: rawText,
+        processing_status: 'pending',
+        recorded_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('[db.createTextEntry]', error);
+      return null;
+    }
+    return data?.id ?? null;
+  } catch (err) {
+    console.error('[db.createTextEntry]', err);
+    return null;
+  }
+}
+
+export async function getEntriesForSummary(
+  userId: string,
+  startDate?: string,
+  endDate?: string
+): Promise<EntryDetail[] | null> {
+  try {
+    let query = supabase
+      .from('entries')
+      .select(
+        'id, raw_text, processed_text, created_at, input_type, processing_status, emotions(id, name, validation), entry_analysis_logs(parsed_thoughts, created_at)'
+      )
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (startDate) query = query.gte('created_at', startDate);
+    if (endDate) query = query.lte('created_at', endDate);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('[db.getEntriesForSummary]', error);
+      return null;
+    }
+
+    type SummaryRow = EntryRow & {
+      entry_analysis_logs:
+        | Array<{ parsed_thoughts: unknown; created_at: string }>
+        | null;
+    };
+
+    return (data as SummaryRow[]).map((row) => {
+      const logs = row.entry_analysis_logs ?? [];
+      const latestLog = logs.length
+        ? [...logs].sort((a, b) =>
+            b.created_at.localeCompare(a.created_at)
+          )[0]
+        : null;
+      return {
+        ...mapEntryRow(row),
+        parsed_thoughts: parseThoughts(latestLog?.parsed_thoughts),
+      };
+    });
+  } catch (err) {
+    console.error('[db.getEntriesForSummary]', err);
+    return null;
+  }
+}

@@ -1,14 +1,40 @@
+import { useEffect, useState } from 'react';
 import { Mic, Heart, Brain, TrendingUp, BookOpen, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useAuth } from '../contexts/AuthContext';
+import { getProfile, getHomeStats, type Profile, type HomeStats } from '../lib/db';
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [stats, setStats] = useState<HomeStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { icon: Heart, label: 'Emoções', value: '24', color: '#6558D3', bgColor: '#F0EFFF' },
-    { icon: Brain, label: 'Padrões', value: '7', color: '#6558D3', bgColor: '#F0EFFF' },
-    { icon: TrendingUp, label: 'Dias', value: '12', color: '#6558D3', bgColor: '#F0EFFF' },
-    { icon: BookOpen, label: 'Registros', value: '45', color: '#8B5CF6', bgColor: '#F3EFFF' },
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    setLoading(true);
+    Promise.all([getProfile(user.id), getHomeStats(user.id)]).then(([p, s]) => {
+      if (!active) return;
+      setProfile(p);
+      setStats(s);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'você';
+  const statValue = (n: number | undefined) =>
+    loading || n === undefined ? '—' : String(n);
+
+  const statsCards = [
+    { icon: Heart, label: 'Emoções', value: statValue(stats?.totalEmotions), color: '#6558D3', bgColor: '#F0EFFF' },
+    { icon: Brain, label: 'Padrões', value: statValue(stats?.totalPatterns), color: '#6558D3', bgColor: '#F0EFFF' },
+    { icon: TrendingUp, label: 'Dias', value: statValue(stats?.activeDays), color: '#6558D3', bgColor: '#F0EFFF' },
+    { icon: BookOpen, label: 'Registros', value: statValue(stats?.totalEntries), color: '#8B5CF6', bgColor: '#F3EFFF' },
   ];
 
   return (
@@ -28,7 +54,7 @@ export function HomeScreen() {
         borderBottomRightRadius: '32px',
         color: '#FFFFFF'
       }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Olá, Maria</h1>
+        <h1 style={{ fontSize: '26px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>Olá, {firstName}</h1>
         <p style={{ fontSize: '15px', margin: 0, opacity: 0.9, fontWeight: '400' }}>O que aconteceu hoje?</p>
       </div>
 
@@ -50,7 +76,7 @@ export function HomeScreen() {
             marginBottom: '24px',
           }}
         >
-          {stats.map((stat, index) => (
+          {statsCards.map((stat, index) => (
             <div key={index} style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '16px',
