@@ -144,8 +144,7 @@ export function SignUpScreen() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          marginBottom: '28px',
-          gap: '2px',
+          marginBottom: '24px',
         }}
       >
         <img
@@ -156,7 +155,7 @@ export function SignUpScreen() {
         <img
           src="/caminarecomp.png"
           alt="Caminare"
-          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block' }}
+          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block', marginTop: '-12px' }}
         />
       </div>
 
