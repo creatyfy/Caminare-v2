@@ -81,7 +81,7 @@ export function LoginScreen() {
             color: '#2D2A45',
             margin: '0 0 4px',
             letterSpacing: '-0.5px',
-            textAlign: 'left',
+            textAlign: 'center',
           }}
         >
           Bem-vindo de volta
@@ -92,7 +92,7 @@ export function LoginScreen() {
             color: MUTED,
             margin: 0,
             fontWeight: 500,
-            textAlign: 'left',
+            textAlign: 'center',
           }}
         >
           Continue sua jornada de autoconhecimento.
