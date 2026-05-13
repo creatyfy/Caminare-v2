@@ -26,10 +26,10 @@ function readSystemPref(): 'light' | 'dark' {
 }
 
 function readStoredMode(): ThemeMode {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'light';
   const stored = window.localStorage.getItem(THEME_KEY) as ThemeMode | null;
   if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
-  return 'system';
+  return 'light';
 }
 
 function applyTheme(resolved: 'light' | 'dark') {
