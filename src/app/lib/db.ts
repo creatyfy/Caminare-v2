@@ -34,17 +34,26 @@ export interface EntryDetail extends EntryWithEmotions {
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   try {
+    // Busca na tabela profiles
     const { data, error } = await supabase
       .from('profiles')
       .select('full_name, avatar_url')
       .eq('id', userId)
       .is('deleted_at', null)
       .maybeSingle();
-    if (error) {
-      console.error('[db.getProfile]', error);
-      return null;
-    }
-    return data;
+    if (error) console.error('[db.getProfile]', error);
+
+    // Se tem nome na tabela profiles, usa ele
+    if (data?.full_name) return data;
+
+    // Fallback: busca o nome nos metadados do auth (raw_user_meta_data)
+    const { data: userData } = await supabase.auth.getUser();
+    const metaName = userData?.user?.user_metadata?.full_name as string | undefined;
+
+    return {
+      full_name: metaName ?? data?.full_name ?? null,
+      avatar_url: data?.avatar_url ?? null,
+    };
   } catch (err) {
     console.error('[db.getProfile]', err);
     return null;
@@ -285,5 +294,86 @@ export async function getEntriesForSummary(
   } catch (err) {
     console.error('[db.getEntriesForSummary]', err);
     return null;
+  }
+}
+
+// ── Insights ────────────────────────────────────────────────────────────────
+
+export interface EmotionCount {
+  name: string;
+  count: number;
+}
+
+export interface BeliefInsight {
+  id: string;
+  content: string;
+  occurrence_count: number;
+  validation: string;
+}
+
+export interface PatternInsight {
+  id: string;
+  description: string;
+  triggers: string[];
+  emotions_involved: string[];
+  occurrence_count: number;
+}
+
+// Busca emoções agrupadas por nome com contagem (para nuvem de emoções)
+export async function getEmotionCounts(userId: string): Promise<EmotionCount[]> {
+  try {
+    const { data, error } = await supabase
+      .from('emotions')
+      .select('name')
+      .eq('user_id', userId)
+      .eq('validation', 'confirmed');
+    if (error) { console.error('[db.getEmotionCounts]', error); return []; }
+    // Agrupa no cliente
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) {
+      counts[row.name] = (counts[row.name] ?? 0) + 1;
+    }
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  } catch (err) {
+    console.error('[db.getEmotionCounts]', err);
+    return [];
+  }
+}
+
+// Busca crenças do usuário (não deletadas, não rejeitadas)
+export async function getBeliefs(userId: string): Promise<BeliefInsight[]> {
+  try {
+    const { data, error } = await supabase
+      .from('beliefs')
+      .select('id, content, occurrence_count, validation')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .neq('validation', 'rejected')
+      .order('occurrence_count', { ascending: false });
+    if (error) { console.error('[db.getBeliefs]', error); return []; }
+    return data ?? [];
+  } catch (err) {
+    console.error('[db.getBeliefs]', err);
+    return [];
+  }
+}
+
+// Busca padrões do usuário (não deletados)
+export async function getPatterns(userId: string): Promise<PatternInsight[]> {
+  try {
+    const { data, error } = await supabase
+      .from('patterns')
+      .select('id, description, triggers, emotions_involved, occurrence_count')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .neq('validation', 'rejected')
+      .order('occurrence_count', { ascending: false });
+    if (error) { console.error('[db.getPatterns]', error); return []; }
+    return data ?? [];
+  } catch (err) {
+    console.error('[db.getPatterns]', err);
+    return [];
   }
 }
