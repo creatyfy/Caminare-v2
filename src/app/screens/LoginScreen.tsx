@@ -44,7 +44,7 @@ export function LoginScreen() {
         backgroundColor: BG,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '10vh',
+        paddingTop: '24px',
         paddingRight: '24px',
         paddingBottom: '32px',
         paddingLeft: '24px',
@@ -57,50 +57,42 @@ export function LoginScreen() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '4px',
+          marginBottom: '28px',
+          gap: '2px',
         }}
       >
         <img
           src="/alinhadapng.png"
           alt="Caminare mascote"
-          style={{
-            display: 'block',
-            width: 96,
-            height: 96,
-            objectFit: 'contain',
-          }}
+          style={{ width: 100, height: 100, objectFit: 'contain', display: 'block' }}
         />
         <img
           src="/caminarecomp.png"
           alt="Caminare"
-          style={{
-            display: 'block',
-            width: 160,
-            height: 'auto',
-            objectFit: 'contain',
-          }}
+          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </div>
 
-      <div style={{ marginTop: '24px', textAlign: 'left' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h1
           style={{
-            fontSize: '24px',
+            fontSize: '22px',
             fontWeight: 700,
             color: '#2D2A45',
-            margin: 0,
-            marginBottom: '6px',
+            margin: '0 0 4px',
             letterSpacing: '-0.5px',
+            textAlign: 'left',
           }}
         >
           Bem-vindo de volta
         </h1>
         <p
           style={{
-            fontSize: '15px',
+            fontSize: '14px',
             color: MUTED,
             margin: 0,
             fontWeight: 500,
+            textAlign: 'left',
           }}
         >
           Continue sua jornada de autoconhecimento.
@@ -110,7 +102,6 @@ export function LoginScreen() {
       <form
         onSubmit={handleSubmit}
         style={{
-          marginTop: '16px',
           display: 'flex',
           flexDirection: 'column',
           gap: '14px',
