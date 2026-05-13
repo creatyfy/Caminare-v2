@@ -136,25 +136,26 @@ export function SignUpScreen() {
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginTop: '12px',
-          marginBottom: '32px',
-        }}
-      >
-        <img
-          src="/alinhadapng.png"
-          alt="Caminare mascote"
-          style={{ width: 120, height: 120, objectFit: 'contain' }}
-        />
-        <img
-          src="/caminarecomp.png"
-          alt="Caminare"
-          style={{ marginTop: 10, width: 180, height: 'auto', objectFit: 'contain' }}
-        />
+      <div style={{ marginTop: '12px', marginBottom: '32px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 0,
+          }}
+        >
+          <img
+            src="/alinhadapng.png"
+            alt="Caminare mascote"
+            style={{ display: 'block', margin: 0, padding: 0, width: 120, height: 120, objectFit: 'contain' }}
+          />
+          <img
+            src="/caminarecomp.png"
+            alt="Caminare"
+            style={{ display: 'block', margin: 0, padding: 0, width: 180, height: 'auto', objectFit: 'contain' }}
+          />
+        </div>
       </div>
 
       <h1
