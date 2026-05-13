@@ -153,7 +153,7 @@ export function SignUpScreen() {
           <img
             src="/caminarecomp.png"
             alt="Caminare"
-            style={{ display: 'block', margin: 0, padding: 0, width: 180, height: 'auto', objectFit: 'contain' }}
+            style={{ display: 'block', marginTop: -50, marginBottom: 0, marginLeft: 0, marginRight: 0, padding: 0, width: 180, height: 'auto', objectFit: 'contain' }}
           />
         </div>
       </div>
