@@ -54,7 +54,7 @@ export function SplashScreen() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '16px',
+              gap: '8px',
             }}
           >
             <motion.div
@@ -78,10 +78,10 @@ export function SplashScreen() {
               style={{ display: 'flex' }}
             >
               <img
-                src="/alinhadapng.png"
+                src="/owl_cropped.png"
                 alt="Caminare mascote"
                 style={{
-                  width: 320,
+                  width: 120,
                   height: 'auto',
                   objectFit: 'contain',
                 }}
@@ -108,13 +108,13 @@ export function SplashScreen() {
                   ease: 'easeInOut',
                 },
               }}
-              style={{ display: 'flex', marginTop: '6px' }}
+              style={{ display: 'flex' }}
             >
               <img
-                src="/caminarecomp.png"
+                src="/text_cropped.png"
                 alt="Caminare"
                 style={{
-                  width: 260,
+                  width: 180,
                   height: 'auto',
                   objectFit: 'contain',
                 }}
@@ -124,7 +124,6 @@ export function SplashScreen() {
         )}
       </AnimatePresence>
 
-      {/* Subtle bottom hint while waiting */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: textVisible && !exiting ? 0.45 : 0 }}

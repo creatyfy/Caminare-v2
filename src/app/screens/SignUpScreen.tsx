@@ -131,35 +131,35 @@ export function SignUpScreen() {
         backgroundColor: BG,
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '24px',
-        paddingRight: '24px',
-        paddingBottom: '32px',
-        paddingLeft: '24px',
+        justifyContent: 'center',
+        padding: '32px 24px 40px',
         overflow: 'auto',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
+      {/* Logo */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          marginBottom: '24px',
+          marginBottom: '32px',
           gap: '6px',
         }}
       >
         <img
           src="/owl_cropped.png"
           alt="Caminare mascote"
-          style={{ width: 80, height: 'auto', objectFit: 'contain', display: 'block' }}
+          style={{ width: 72, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
         <img
           src="/text_cropped.png"
           alt="Caminare"
-          style={{ width: 148, height: 'auto', objectFit: 'contain', display: 'block' }}
+          style={{ width: 140, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </div>
 
+      {/* Textos */}
       <div style={{ marginBottom: '20px' }}>
         <h1
           style={{
@@ -186,13 +186,10 @@ export function SignUpScreen() {
         </p>
       </div>
 
+      {/* Formulário */}
       <form
         onSubmit={handleSubmit}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
+        style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
       >
         <InputField
           icon={<UserIcon size={18} color={MUTED} strokeWidth={2.2} />}
@@ -255,7 +252,7 @@ export function SignUpScreen() {
           type="submit"
           disabled={submitting}
           style={{
-            marginTop: '8px',
+            marginTop: '4px',
             height: '56px',
             borderRadius: '9999px',
             backgroundColor: BRAND,
@@ -288,7 +285,7 @@ export function SignUpScreen() {
 
         <div
           style={{
-            marginTop: '16px',
+            marginTop: '8px',
             textAlign: 'center',
             fontSize: '14px',
             color: MUTED,
