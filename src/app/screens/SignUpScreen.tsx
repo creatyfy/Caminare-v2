@@ -145,17 +145,18 @@ export function SignUpScreen() {
           flexDirection: 'column',
           alignItems: 'center',
           marginBottom: '24px',
+          gap: '6px',
         }}
       >
         <img
-          src="/alinhadapng.png"
+          src="/owl_cropped.png"
           alt="Caminare mascote"
-          style={{ width: 100, height: 100, objectFit: 'contain', display: 'block' }}
+          style={{ width: 80, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
         <img
-          src="/caminarecomp.png"
+          src="/text_cropped.png"
           alt="Caminare"
-          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block', marginTop: '-12px' }}
+          style={{ width: 148, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </div>
 
