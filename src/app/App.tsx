@@ -5,6 +5,8 @@ import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { SignUpScreen } from './screens/SignUpScreen';
+import { ForgotPasswordScreen } from './screens/ForgotPasswordScreen';
+import { ResetPasswordScreen } from './screens/ResetPasswordScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { RecordingScreen } from './screens/RecordingScreen';
 import { TextRecordingScreen } from './screens/TextRecordingScreen';
@@ -31,6 +33,8 @@ function AppRoutes() {
         <Route path="/" element={<SplashScreen />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/cadastro" element={<SignUpScreen />} />
+        <Route path="/esqueci-senha" element={<ForgotPasswordScreen />} />
+        <Route path="/redefinir-senha" element={<ResetPasswordScreen />} />
 
         <Route path="/home" element={<RequireAuth><HomeScreen /></RequireAuth>} />
         <Route path="/gravacao" element={<RequireAuth><RecordingScreen /></RequireAuth>} />

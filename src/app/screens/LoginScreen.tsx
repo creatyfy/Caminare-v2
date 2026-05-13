@@ -152,6 +152,29 @@ export function LoginScreen() {
           </div>
         )}
 
+        <div
+          style={{
+            textAlign: 'right',
+            marginTop: '-4px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => navigate('/esqueci-senha')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: BRAND,
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: 0,
+              fontSize: '13px',
+            }}
+          >
+            Esqueci minha senha
+          </button>
+        </div>
+
         <button
           type="submit"
           disabled={submitting}
