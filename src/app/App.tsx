@@ -17,6 +17,7 @@ import { EntryDetailScreen } from './screens/EntryDetailScreen';
 import { PatternsScreen } from './screens/PatternsScreen';
 import { NewPatternScreen } from './screens/NewPatternScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
+import { ProfileScreen } from './screens/ProfileScreen';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -46,6 +47,7 @@ function AppRoutes() {
         <Route path="/padroes" element={<RequireAuth><PatternsScreen /></RequireAuth>} />
         <Route path="/novo-padrao" element={<RequireAuth><NewPatternScreen /></RequireAuth>} />
         <Route path="/resumo" element={<RequireAuth><SummaryScreen /></RequireAuth>} />
+        <Route path="/perfil" element={<RequireAuth><ProfileScreen /></RequireAuth>} />
       </Routes>
 
       <Routes>
@@ -53,6 +55,7 @@ function AppRoutes() {
         <Route path="/historico" element={<BottomNav />} />
         <Route path="/padroes" element={<BottomNav />} />
         <Route path="/resumo" element={<BottomNav />} />
+        <Route path="/perfil" element={<BottomNav />} />
       </Routes>
     </>
   );

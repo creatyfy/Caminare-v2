@@ -60,6 +60,20 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   }
 }
 
+export async function deleteAccount(): Promise<{ error: string | null }> {
+  try {
+    const { error } = await supabase.rpc('delete_my_account');
+    if (error) {
+      console.error('[db.deleteAccount]', error);
+      return { error: error.message };
+    }
+    return { error: null };
+  } catch (err) {
+    console.error('[db.deleteAccount]', err);
+    return { error: 'Erro ao excluir a conta.' };
+  }
+}
+
 export async function getHomeStats(userId: string): Promise<HomeStats | null> {
   try {
     const [emotionsRes, patternsRes, entriesRes, datesRes] = await Promise.all([

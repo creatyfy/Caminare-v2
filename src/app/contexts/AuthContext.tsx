@@ -22,6 +22,10 @@ type AuthContextValue = {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
 };
 
@@ -80,6 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async updatePassword(newPassword) {
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         return { error: error?.message ?? null };
+      },
+      async changePassword(currentPassword, newPassword) {
+        const email = session?.user?.email;
+        if (!email) return { error: 'Sessão inválida. Faça login novamente.' };
+        if (currentPassword === newPassword)
+          return { error: 'A nova senha deve ser diferente da atual.' };
+        if (newPassword.length < 6)
+          return { error: 'A nova senha deve ter ao menos 6 caracteres.' };
+
+        const { error: verifyErr } = await supabase.auth.signInWithPassword({
+          email,
+          password: currentPassword,
+        });
+        if (verifyErr) return { error: 'Senha atual incorreta.' };
+
+        const { error: updateErr } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+        return { error: updateErr?.message ?? null };
       },
       async signInWithGoogle() {
         const redirectTo = `${window.location.origin}/home`;

@@ -1,4 +1,4 @@
-import { Home, History, Brain, FileText } from 'lucide-react';
+import { Home, History, Brain, FileText, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 
 export function BottomNav() {
@@ -11,6 +11,7 @@ export function BottomNav() {
     { icon: History, label: 'Histórico', path: '/historico' },
     { icon: Brain, label: 'Insights', path: '/padroes' },
     { icon: FileText, label: 'Resumo', path: '/resumo' },
+    { icon: User, label: 'Perfil', path: '/perfil' },
   ];
 
   return (
