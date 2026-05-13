@@ -1,17 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { Trans, useTranslation } from 'react-i18next';
 import { ArrowLeft, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const BRAND = '#534AB7';
-const ACCENT = '#1D9E75';
-const BG = '#F8F7FF';
-const MUTED = '#8B87A8';
-const ERROR = '#DC2626';
-const BORDER = 'rgba(83, 74, 183, 0.18)';
-
 export function ForgotPasswordScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -24,14 +19,14 @@ export function ForgotPasswordScreen() {
     setError(null);
     const trimmed = email.trim();
     if (!trimmed) {
-      setError('Informe seu email.');
+      setError(t('forgotPassword.errors.missingEmail'));
       return;
     }
     setSubmitting(true);
     const { error: err } = await resetPassword(trimmed);
     setSubmitting(false);
     if (err) {
-      setError(translateError(err));
+      setError(translateError(err, t));
       return;
     }
     setSent(true);
@@ -43,7 +38,7 @@ export function ForgotPasswordScreen() {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: BG,
+          backgroundColor: 'var(--cam-bg-page)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -58,41 +53,41 @@ export function ForgotPasswordScreen() {
             width: 88,
             height: 88,
             borderRadius: '50%',
-            backgroundColor: 'rgba(29, 158, 117, 0.12)',
+            backgroundColor: 'var(--cam-bg-accent-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 24,
           }}
         >
-          <CheckCircle2 size={48} color={ACCENT} strokeWidth={2.2} />
+          <CheckCircle2 size={48} color="var(--cam-color-accent)" strokeWidth={2.2} />
         </div>
         <h1
           style={{
             fontSize: 22,
             fontWeight: 700,
-            color: '#2D2A45',
+            color: 'var(--cam-text-primary)',
             margin: '0 0 8px',
             letterSpacing: '-0.5px',
-            textAlign: 'center',
           }}
         >
-          Verifique seu email
+          {t('forgotPassword.sentTitle')}
         </h1>
         <p
           style={{
             fontSize: 15,
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             margin: '0 0 32px',
             fontWeight: 500,
             lineHeight: 1.5,
             maxWidth: 280,
-            textAlign: 'center',
           }}
         >
-          Enviamos um link de recuperação para{' '}
-          <strong style={{ color: '#2D2A45' }}>{email}</strong>. Clique no link
-          para criar uma nova senha.
+          <Trans
+            i18nKey="forgotPassword.sentMessage"
+            values={{ email }}
+            components={{ strong: <strong style={{ color: 'var(--cam-text-primary)' }} /> }}
+          />
         </p>
         <button
           type="button"
@@ -102,16 +97,16 @@ export function ForgotPasswordScreen() {
             maxWidth: 320,
             height: 56,
             borderRadius: 9999,
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: 16,
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            boxShadow: 'var(--cam-shadow-brand)',
           }}
         >
-          Voltar para o login
+          {t('forgotPassword.backToLogin')}
         </button>
       </div>
     );
@@ -122,7 +117,7 @@ export function ForgotPasswordScreen() {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: BG,
+        backgroundColor: 'var(--cam-bg-page)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -138,7 +133,7 @@ export function ForgotPasswordScreen() {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          color: BRAND,
+          color: 'var(--cam-text-brand)',
           background: 'none',
           border: 'none',
           fontSize: '16px',
@@ -150,7 +145,7 @@ export function ForgotPasswordScreen() {
         }}
       >
         <ArrowLeft size={20} />
-        <span>Voltar</span>
+        <span>{t('common.back')}</span>
       </button>
 
       <div
@@ -164,7 +159,7 @@ export function ForgotPasswordScreen() {
       >
         <img
           src="/owl_cropped.png"
-          alt="Caminare mascote"
+          alt="Caminare"
           style={{ width: 72, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
         <img
@@ -179,24 +174,24 @@ export function ForgotPasswordScreen() {
           style={{
             fontSize: '22px',
             fontWeight: 700,
-            color: '#2D2A45',
+            color: 'var(--cam-text-primary)',
             margin: '0 0 4px',
             letterSpacing: '-0.5px',
             textAlign: 'center',
           }}
         >
-          Esqueceu sua senha?
+          {t('forgotPassword.title')}
         </h1>
         <p
           style={{
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             margin: 0,
             fontWeight: 500,
             textAlign: 'center',
           }}
         >
-          Informe seu email e enviaremos um link para criar uma nova senha.
+          {t('forgotPassword.subtitle')}
         </p>
       </div>
 
@@ -211,18 +206,18 @@ export function ForgotPasswordScreen() {
             gap: '10px',
             height: '56px',
             padding: '0 16px',
-            backgroundColor: '#FFFFFF',
+            backgroundColor: 'var(--cam-bg-input)',
             borderRadius: '16px',
-            border: `1.5px solid ${BORDER}`,
-            boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.02)',
+            border: `1.5px solid var(--cam-border)`,
+            boxShadow: 'var(--cam-shadow-card)',
           }}
         >
-          <Mail size={18} color={MUTED} strokeWidth={2.2} />
+          <Mail size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
+            placeholder={t('forgotPassword.emailPlaceholder')}
             autoComplete="email"
             style={{
               flex: 1,
@@ -230,7 +225,7 @@ export function ForgotPasswordScreen() {
               outline: 'none',
               background: 'transparent',
               fontSize: '15px',
-              color: '#2D2A45',
+              color: 'var(--cam-text-primary)',
               fontWeight: 500,
               fontFamily: 'inherit',
             }}
@@ -241,8 +236,8 @@ export function ForgotPasswordScreen() {
           <div
             role="alert"
             style={{
-              backgroundColor: 'rgba(220, 38, 38, 0.08)',
-              color: ERROR,
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-error)',
               borderRadius: '12px',
               padding: '10px 14px',
               fontSize: '13px',
@@ -260,8 +255,8 @@ export function ForgotPasswordScreen() {
             marginTop: '4px',
             height: '56px',
             borderRadius: '9999px',
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: '16px',
             fontWeight: 600,
@@ -270,18 +265,17 @@ export function ForgotPasswordScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            boxShadow: 'var(--cam-shadow-brand)',
             opacity: submitting ? 0.85 : 1,
-            transition: 'transform 0.15s ease, opacity 0.15s ease',
           }}
         >
           {submitting ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Enviando...
+              {t('forgotPassword.submitting')}
             </>
           ) : (
-            'Enviar link de recuperação'
+            t('forgotPassword.submit')
           )}
         </button>
 
@@ -290,25 +284,25 @@ export function ForgotPasswordScreen() {
             marginTop: '16px',
             textAlign: 'center',
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             fontWeight: 500,
           }}
         >
-          Lembrou da senha?{' '}
+          {t('forgotPassword.remembered')}{' '}
           <button
             type="button"
             onClick={() => navigate('/login')}
             style={{
               background: 'none',
               border: 'none',
-              color: BRAND,
+              color: 'var(--cam-text-brand)',
               fontWeight: 700,
               cursor: 'pointer',
               padding: 0,
               fontSize: '14px',
             }}
           >
-            Voltar ao login
+            {t('forgotPassword.goBack')}
           </button>
         </div>
       </form>
@@ -316,10 +310,9 @@ export function ForgotPasswordScreen() {
   );
 }
 
-function translateError(msg: string): string {
+function translateError(msg: string, t: (k: string) => string): string {
   const m = msg.toLowerCase();
-  if (m.includes('rate limit'))
-    return 'Muitas tentativas. Tente novamente em instantes.';
-  if (m.includes('invalid email')) return 'Email inválido.';
+  if (m.includes('rate limit')) return t('forgotPassword.errors.rateLimit');
+  if (m.includes('invalid email')) return t('forgotPassword.errors.invalidEmail');
   return msg;
 }

@@ -2,80 +2,139 @@
 
 :root {
   --font-size: 16px;
-  --background: #F8F7FF;
-  --foreground: #2D2A45;
-  --card: #ffffff;
-  --card-foreground: #2D2A45;
-  --popover: #ffffff;
-  --popover-foreground: #2D2A45;
-  --primary: #534AB7;
-  --primary-foreground: #ffffff;
+
+  /* Caminare design tokens — light theme (default) */
+  --cam-bg-page: #F8F7FF;
+  --cam-bg-card: #FFFFFF;
+  --cam-bg-elevated: #FFFFFF;
+  --cam-bg-tint: #F8F7FF;
+  --cam-bg-muted: #F0EFFF;
+  --cam-bg-input: #FFFFFF;
+  --cam-bg-accent-soft: #E8F5F0;
+  --cam-bg-error-soft: #FEF2F2;
+  --cam-bg-warning-soft: #FEF5E7;
+  --cam-bg-overlay: rgba(45, 42, 69, 0.55);
+
+  --cam-text-primary: #2D2A45;
+  --cam-text-secondary: #8B87A8;
+  --cam-text-on-brand: #FFFFFF;
+  --cam-text-brand: #534AB7;
+  --cam-text-accent: #1D9E75;
+  --cam-text-error: #DC2626;
+  --cam-text-warning: #F59E0B;
+
+  --cam-color-brand: #534AB7;
+  --cam-color-brand-strong: #6558D3;
+  --cam-color-accent: #1D9E75;
+  --cam-color-error: #DC2626;
+  --cam-color-warning: #F59E0B;
+
+  --cam-border: rgba(83, 74, 183, 0.18);
+  --cam-border-subtle: rgba(83, 74, 183, 0.1);
+
+  --cam-shadow-card: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  --cam-shadow-card-strong: 0px 8px 24px rgba(0, 0, 0, 0.06);
+  --cam-shadow-brand: 0px 8px 24px rgba(83, 74, 183, 0.25);
+  --cam-shadow-accent: 0px 4px 12px rgba(29, 158, 117, 0.2);
+  --cam-shadow-error: 0px 12px 32px rgba(220, 38, 38, 0.3);
+
+  /* Tailwind / shadcn vars (legacy — kept for any components that use them) */
+  --background: var(--cam-bg-page);
+  --foreground: var(--cam-text-primary);
+  --card: var(--cam-bg-card);
+  --card-foreground: var(--cam-text-primary);
+  --popover: var(--cam-bg-card);
+  --popover-foreground: var(--cam-text-primary);
+  --primary: var(--cam-color-brand);
+  --primary-foreground: var(--cam-text-on-brand);
   --secondary: #E8E6F7;
-  --secondary-foreground: #534AB7;
-  --muted: #E8E6F7;
-  --muted-foreground: #8B87A8;
-  --accent: #1D9E75;
-  --accent-foreground: #ffffff;
-  --destructive: #DC2626;
-  --destructive-foreground: #ffffff;
-  --border: rgba(83, 74, 183, 0.1);
+  --secondary-foreground: var(--cam-text-brand);
+  --muted: var(--cam-bg-muted);
+  --muted-foreground: var(--cam-text-secondary);
+  --accent: var(--cam-color-accent);
+  --accent-foreground: var(--cam-text-on-brand);
+  --destructive: var(--cam-color-error);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--cam-border-subtle);
   --input: transparent;
-  --input-background: #ffffff;
+  --input-background: var(--cam-bg-input);
   --switch-background: #E8E6F7;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #534AB7;
+  --ring: var(--cam-color-brand);
   --chart-1: #534AB7;
   --chart-2: #1D9E75;
   --chart-3: #A99FE0;
   --chart-4: #F59E0B;
   --chart-5: #8B5CF6;
   --radius: 1rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #2D2A45;
-  --sidebar-primary: #534AB7;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: var(--cam-text-primary);
+  --sidebar-primary: var(--cam-color-brand);
+  --sidebar-primary-foreground: var(--cam-text-on-brand);
   --sidebar-accent: #E8E6F7;
-  --sidebar-accent-foreground: #534AB7;
-  --sidebar-border: rgba(83, 74, 183, 0.1);
-  --sidebar-ring: #534AB7;
+  --sidebar-accent-foreground: var(--cam-text-brand);
+  --sidebar-border: var(--cam-border-subtle);
+  --sidebar-ring: var(--cam-color-brand);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+html.dark,
+:root.dark,
+[data-theme='dark'] {
+  --cam-bg-page: #0F0E1A;
+  --cam-bg-card: #1C1B2E;
+  --cam-bg-elevated: #252339;
+  --cam-bg-tint: #161525;
+  --cam-bg-muted: rgba(127, 116, 220, 0.15);
+  --cam-bg-input: #252339;
+  --cam-bg-accent-soft: rgba(52, 211, 153, 0.12);
+  --cam-bg-error-soft: rgba(248, 113, 113, 0.12);
+  --cam-bg-warning-soft: rgba(251, 191, 36, 0.12);
+  --cam-bg-overlay: rgba(0, 0, 0, 0.65);
+
+  --cam-text-primary: #F5F4FA;
+  --cam-text-secondary: #A8A5C5;
+  --cam-text-on-brand: #FFFFFF;
+  --cam-text-brand: #B8AEEC;
+  --cam-text-accent: #34D399;
+  --cam-text-error: #F87171;
+  --cam-text-warning: #FBBF24;
+
+  --cam-color-brand: #6558D3;
+  --cam-color-brand-strong: #7B6FE0;
+  --cam-color-accent: #1D9E75;
+  --cam-color-error: #DC2626;
+  --cam-color-warning: #F59E0B;
+
+  --cam-border: rgba(255, 255, 255, 0.12);
+  --cam-border-subtle: rgba(255, 255, 255, 0.06);
+
+  --cam-shadow-card: 0px 4px 16px rgba(0, 0, 0, 0.4);
+  --cam-shadow-card-strong: 0px 8px 24px rgba(0, 0, 0, 0.5);
+  --cam-shadow-brand: 0px 8px 24px rgba(101, 88, 211, 0.45);
+  --cam-shadow-accent: 0px 4px 12px rgba(29, 158, 117, 0.35);
+  --cam-shadow-error: 0px 12px 32px rgba(220, 38, 38, 0.4);
+
+  /* legacy */
+  --background: var(--cam-bg-page);
+  --foreground: var(--cam-text-primary);
+  --card: var(--cam-bg-card);
+  --card-foreground: var(--cam-text-primary);
+  --popover: var(--cam-bg-card);
+  --popover-foreground: var(--cam-text-primary);
+  --primary: var(--cam-color-brand);
+  --primary-foreground: var(--cam-text-on-brand);
+  --secondary: rgba(127, 116, 220, 0.15);
+  --secondary-foreground: var(--cam-text-brand);
+  --muted: var(--cam-bg-muted);
+  --muted-foreground: var(--cam-text-secondary);
+  --accent: var(--cam-color-accent);
+  --accent-foreground: var(--cam-text-on-brand);
+  --destructive: var(--cam-color-error);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--cam-border-subtle);
+  --input-background: var(--cam-bg-input);
+  --ring: var(--cam-color-brand);
 }
 
 @theme inline {
@@ -120,62 +179,39 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  html {
+    font-size: var(--font-size);
+    background-color: var(--cam-bg-page);
+    color: var(--cam-text-primary);
+    color-scheme: light;
+  }
+
+  html.dark,
+  html[data-theme='dark'] {
+    color-scheme: dark;
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--cam-bg-page);
+    color: var(--cam-text-primary);
   }
 
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
-  html {
-    font-size: var(--font-size);
+  h1, h2, h3, h4 {
+    color: var(--cam-text-primary);
   }
 
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+  h1 { font-size: var(--text-2xl); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  h2 { font-size: var(--text-xl); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  h3 { font-size: var(--text-lg); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  h4 { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
 
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+  label { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  button { font-size: var(--text-base); font-weight: var(--font-weight-medium); line-height: 1.5; }
+  input { font-size: var(--text-base); font-weight: var(--font-weight-normal); line-height: 1.5; }
 
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
-
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--cam-text-secondary);
+    opacity: 0.7;
   }
 }

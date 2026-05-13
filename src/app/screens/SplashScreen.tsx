@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-
-const BRAND = '#534AB7';
-const BG = '#F8F7FF';
 
 export function SplashScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { session, loading } = useAuth();
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
 
@@ -37,7 +36,7 @@ export function SplashScreen() {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: BG,
+        backgroundColor: 'var(--cam-bg-page)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -61,10 +60,7 @@ export function SplashScreen() {
               initial={{ opacity: 0, scale: 0.6 }}
               animate={
                 owlVisible
-                  ? {
-                      opacity: 1,
-                      scale: [0.95, 1.05, 0.98, 1.04, 1],
-                    }
+                  ? { opacity: 1, scale: [0.95, 1.05, 0.98, 1.04, 1] }
                   : {}
               }
               transition={{
@@ -79,12 +75,8 @@ export function SplashScreen() {
             >
               <img
                 src="/owl_cropped.png"
-                alt="Caminare mascote"
-                style={{
-                  width: 120,
-                  height: 'auto',
-                  objectFit: 'contain',
-                }}
+                alt="Caminare"
+                style={{ width: 120, height: 'auto', objectFit: 'contain' }}
               />
             </motion.div>
 
@@ -92,32 +84,20 @@ export function SplashScreen() {
               initial={{ opacity: 0, y: 14, scale: 0.9 }}
               animate={
                 textVisible
-                  ? {
-                      opacity: 1,
-                      y: 0,
-                      scale: [0.95, 1.04, 1],
-                    }
+                  ? { opacity: 1, y: 0, scale: [0.95, 1.04, 1] }
                   : { opacity: 0, y: 14, scale: 0.9 }
               }
               transition={{
                 opacity: { duration: 0.5, ease: 'easeOut' },
                 y: { duration: 0.5, ease: 'easeOut' },
-                scale: {
-                  duration: 1.6,
-                  times: [0, 0.5, 1],
-                  ease: 'easeInOut',
-                },
+                scale: { duration: 1.6, times: [0, 0.5, 1], ease: 'easeInOut' },
               }}
               style={{ display: 'flex' }}
             >
               <img
                 src="/text_cropped.png"
                 alt="Caminare"
-                style={{
-                  width: 180,
-                  height: 'auto',
-                  objectFit: 'contain',
-                }}
+                style={{ width: 180, height: 'auto', objectFit: 'contain' }}
               />
             </motion.div>
           </motion.div>
@@ -126,7 +106,7 @@ export function SplashScreen() {
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: textVisible && !exiting ? 0.45 : 0 }}
+        animate={{ opacity: textVisible && !exiting ? 0.6 : 0 }}
         transition={{ duration: 0.6 }}
         style={{
           position: 'absolute',
@@ -136,10 +116,10 @@ export function SplashScreen() {
           textAlign: 'center',
           fontSize: 13,
           fontWeight: 500,
-          color: BRAND,
+          color: 'var(--cam-text-brand)',
         }}
       >
-        Sua jornada de autoconhecimento
+        {t('splash.tagline')}
       </motion.div>
     </div>
   );

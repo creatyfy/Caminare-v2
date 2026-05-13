@@ -1,18 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { Trans, useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 
-const BRAND = '#534AB7';
-const ACCENT = '#1D9E75';
-const BG = '#F8F7FF';
-const MUTED = '#8B87A8';
-const ERROR = '#DC2626';
-const BORDER = 'rgba(83, 74, 183, 0.18)';
-
 export function SignUpScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,11 +23,11 @@ export function SignUpScreen() {
     setError(null);
 
     if (!name.trim() || !email || !password) {
-      setError('Preencha todos os campos.');
+      setError(t('signup.errors.missingFields'));
       return;
     }
     if (password.length < 6) {
-      setError('A senha deve ter ao menos 6 caracteres.');
+      setError(t('signup.errors.shortPassword'));
       return;
     }
 
@@ -41,7 +36,7 @@ export function SignUpScreen() {
     setSubmitting(false);
 
     if (err) {
-      setError(translateError(err));
+      setError(translateSignupError(err, t));
       return;
     }
     setSuccess(true);
@@ -53,7 +48,7 @@ export function SignUpScreen() {
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: BG,
+          backgroundColor: 'var(--cam-bg-page)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -68,38 +63,41 @@ export function SignUpScreen() {
             width: 88,
             height: 88,
             borderRadius: '50%',
-            backgroundColor: 'rgba(29, 158, 117, 0.12)',
+            backgroundColor: 'var(--cam-bg-accent-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 24,
           }}
         >
-          <CheckCircle2 size={48} color={ACCENT} strokeWidth={2.2} />
+          <CheckCircle2 size={48} color="var(--cam-color-accent)" strokeWidth={2.2} />
         </div>
         <h1
           style={{
             fontSize: 22,
             fontWeight: 700,
-            color: '#2D2A45',
+            color: 'var(--cam-text-primary)',
             margin: '0 0 8px',
             letterSpacing: '-0.5px',
           }}
         >
-          Conta criada!
+          {t('signup.successTitle')}
         </h1>
         <p
           style={{
             fontSize: 15,
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             margin: '0 0 32px',
             fontWeight: 500,
             lineHeight: 1.5,
             maxWidth: 280,
           }}
         >
-          Enviamos um link de confirmação para <strong style={{ color: '#2D2A45' }}>{email}</strong>.
-          Verifique sua caixa de entrada para continuar.
+          <Trans
+            i18nKey="signup.successMessage"
+            values={{ email }}
+            components={{ strong: <strong style={{ color: 'var(--cam-text-primary)' }} /> }}
+          />
         </p>
         <button
           type="button"
@@ -109,16 +107,16 @@ export function SignUpScreen() {
             maxWidth: 320,
             height: 56,
             borderRadius: 9999,
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: 16,
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            boxShadow: 'var(--cam-shadow-brand)',
           }}
         >
-          Ir para o login
+          {t('signup.goLogin')}
         </button>
       </div>
     );
@@ -129,91 +127,89 @@ export function SignUpScreen() {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: BG,
+        backgroundColor: 'var(--cam-bg-page)',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '32px 24px 40px',
+        paddingTop: '24px',
+        paddingRight: '24px',
+        paddingBottom: '32px',
+        paddingLeft: '24px',
         overflow: 'auto',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
       }}
     >
-      {/* Logo */}
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          marginBottom: '32px',
-          gap: '6px',
+          marginBottom: '24px',
         }}
       >
         <img
           src="/owl_cropped.png"
-          alt="Caminare mascote"
-          style={{ width: 72, height: 'auto', objectFit: 'contain', display: 'block' }}
+          alt="Caminare"
+          style={{ width: 100, height: 100, objectFit: 'contain', display: 'block' }}
         />
         <img
           src="/text_cropped.png"
           alt="Caminare"
-          style={{ width: 140, height: 'auto', objectFit: 'contain', display: 'block' }}
+          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block', marginTop: '-12px' }}
         />
       </div>
 
-      {/* Textos */}
       <div style={{ marginBottom: '20px' }}>
         <h1
           style={{
             fontSize: '22px',
             fontWeight: 700,
-            color: '#2D2A45',
+            color: 'var(--cam-text-primary)',
             margin: '0 0 4px',
             letterSpacing: '-0.5px',
             textAlign: 'center',
           }}
         >
-          Criar sua conta
+          {t('signup.title')}
         </h1>
         <p
           style={{
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             margin: 0,
             fontWeight: 500,
             textAlign: 'center',
           }}
         >
-          Comece a registrar suas emoções hoje.
+          {t('signup.subtitle')}
         </p>
       </div>
 
-      {/* Formulário */}
       <form
         onSubmit={handleSubmit}
         style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
       >
         <InputField
-          icon={<UserIcon size={18} color={MUTED} strokeWidth={2.2} />}
+          icon={<UserIcon size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}
           type="text"
-          placeholder="Nome"
+          placeholder={t('signup.namePlaceholder')}
           value={name}
           onChange={setName}
           autoComplete="name"
         />
 
         <InputField
-          icon={<Mail size={18} color={MUTED} strokeWidth={2.2} />}
+          icon={<Mail size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}
           type="email"
-          placeholder="Email"
+          placeholder={t('signup.emailPlaceholder')}
           value={email}
           onChange={setEmail}
           autoComplete="email"
         />
 
         <InputField
-          icon={<Lock size={18} color={MUTED} strokeWidth={2.2} />}
+          icon={<Lock size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}
           type={showPass ? 'text' : 'password'}
-          placeholder="Senha (mín. 6 caracteres)"
+          placeholder={t('signup.passwordPlaceholder')}
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
@@ -221,13 +217,13 @@ export function SignUpScreen() {
             <button
               type="button"
               onClick={() => setShowPass((v) => !v)}
-              aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}
+              aria-label={showPass ? t('common.hidePassword') : t('common.showPassword')}
               style={trailingButtonStyle}
             >
               {showPass ? (
-                <EyeOff size={18} color={MUTED} strokeWidth={2.2} />
+                <EyeOff size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
               ) : (
-                <Eye size={18} color={MUTED} strokeWidth={2.2} />
+                <Eye size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
               )}
             </button>
           }
@@ -237,8 +233,8 @@ export function SignUpScreen() {
           <div
             role="alert"
             style={{
-              backgroundColor: 'rgba(220, 38, 38, 0.08)',
-              color: ERROR,
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-error)',
               borderRadius: '12px',
               padding: '10px 14px',
               fontSize: '13px',
@@ -253,11 +249,11 @@ export function SignUpScreen() {
           type="submit"
           disabled={submitting}
           style={{
-            marginTop: '4px',
+            marginTop: '8px',
             height: '56px',
             borderRadius: '9999px',
-            backgroundColor: BRAND,
-            color: '#FFFFFF',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
             border: 'none',
             fontSize: '16px',
             fontWeight: 600,
@@ -266,7 +262,7 @@ export function SignUpScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
-            boxShadow: '0px 8px 24px rgba(83, 74, 183, 0.25)',
+            boxShadow: 'var(--cam-shadow-brand)',
             opacity: submitting ? 0.85 : 1,
             transition: 'transform 0.15s ease, opacity 0.15s ease',
           }}
@@ -277,18 +273,18 @@ export function SignUpScreen() {
           {submitting ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Criando...
+              {t('signup.submitting')}
             </>
           ) : (
-            'Criar conta'
+            t('signup.submit')
           )}
         </button>
 
         <AuthDivider />
 
         <GoogleSignInButton
-          label="Cadastrar com Google"
-          onError={(msg) => setError(translateError(msg))}
+          label={t('signup.google')}
+          onError={(msg) => setError(translateSignupError(msg, t))}
         />
 
         <div
@@ -296,25 +292,25 @@ export function SignUpScreen() {
             marginTop: '8px',
             textAlign: 'center',
             fontSize: '14px',
-            color: MUTED,
+            color: 'var(--cam-text-secondary)',
             fontWeight: 500,
           }}
         >
-          Já tem conta?{' '}
+          {t('signup.hasAccount')}{' '}
           <button
             type="button"
             onClick={() => navigate('/login')}
             style={{
               background: 'none',
               border: 'none',
-              color: BRAND,
+              color: 'var(--cam-text-brand)',
               fontWeight: 700,
               cursor: 'pointer',
               padding: 0,
               fontSize: '14px',
             }}
           >
-            Já tenho conta
+            {t('signup.goToLogin')}
           </button>
         </div>
       </form>
@@ -347,10 +343,10 @@ function InputField({
         gap: '10px',
         height: '56px',
         padding: '0 16px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'var(--cam-bg-input)',
         borderRadius: '16px',
-        border: `1.5px solid ${BORDER}`,
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.02)',
+        border: `1.5px solid var(--cam-border)`,
+        boxShadow: 'var(--cam-shadow-card)',
       }}
     >
       {icon}
@@ -366,7 +362,7 @@ function InputField({
           outline: 'none',
           background: 'transparent',
           fontSize: '15px',
-          color: '#2D2A45',
+          color: 'var(--cam-text-primary)',
           fontWeight: 500,
           fontFamily: 'inherit',
         }}
@@ -386,12 +382,12 @@ const trailingButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-function translateError(msg: string): string {
+function translateSignupError(msg: string, t: (k: string) => string): string {
   const m = msg.toLowerCase();
   if (m.includes('already registered') || m.includes('user already'))
-    return 'Este email já está cadastrado.';
-  if (m.includes('invalid email')) return 'Email inválido.';
-  if (m.includes('password')) return 'Senha inválida — mínimo 6 caracteres.';
-  if (m.includes('rate limit')) return 'Muitas tentativas. Tente novamente em instantes.';
+    return t('signup.errors.alreadyRegistered');
+  if (m.includes('invalid email')) return t('signup.errors.invalidEmail');
+  if (m.includes('password')) return t('signup.errors.passwordInvalid');
+  if (m.includes('rate limit')) return t('signup.errors.rateLimit');
   return msg;
 }

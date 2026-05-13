@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 
-const BORDER = 'rgba(83, 74, 183, 0.18)';
-const TEXT = '#2D2A45';
-
 export function GoogleSignInButton({
-  label = 'Continuar com Google',
+  label,
   onError,
 }: {
   label?: string;
   onError?: (msg: string) => void;
 }) {
+  const { t } = useTranslation();
   const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -34,9 +33,9 @@ export function GoogleSignInButton({
         height: '56px',
         width: '100%',
         borderRadius: '9999px',
-        backgroundColor: '#FFFFFF',
-        color: TEXT,
-        border: `1.5px solid ${BORDER}`,
+        backgroundColor: 'var(--cam-bg-card)',
+        color: 'var(--cam-text-primary)',
+        border: `1.5px solid var(--cam-border)`,
         fontSize: '15px',
         fontWeight: 600,
         cursor: loading ? 'not-allowed' : 'pointer',
@@ -44,18 +43,14 @@ export function GoogleSignInButton({
         alignItems: 'center',
         justifyContent: 'center',
         gap: '12px',
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.02)',
+        boxShadow: 'var(--cam-shadow-card)',
         opacity: loading ? 0.85 : 1,
         transition: 'transform 0.15s ease, opacity 0.15s ease',
         fontFamily: 'inherit',
       }}
     >
-      {loading ? (
-        <Loader2 size={18} className="animate-spin" />
-      ) : (
-        <GoogleLogo />
-      )}
-      {label}
+      {loading ? <Loader2 size={18} className="animate-spin" /> : <GoogleLogo />}
+      {label ?? t('login.google')}
     </button>
   );
 }
@@ -85,19 +80,12 @@ function GoogleLogo() {
 
 export function AuthDivider({ label = 'ou' }: { label?: string }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        margin: '4px 0',
-      }}
-    >
-      <div style={{ flex: 1, height: 1, backgroundColor: BORDER }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '4px 0' }}>
+      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--cam-border)' }} />
       <span
         style={{
           fontSize: '12px',
-          color: '#8B87A8',
+          color: 'var(--cam-text-secondary)',
           fontWeight: 500,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
@@ -105,7 +93,7 @@ export function AuthDivider({ label = 'ou' }: { label?: string }) {
       >
         {label}
       </span>
-      <div style={{ flex: 1, height: 1, backgroundColor: BORDER }} />
+      <div style={{ flex: 1, height: 1, backgroundColor: 'var(--cam-border)' }} />
     </div>
   );
 }
