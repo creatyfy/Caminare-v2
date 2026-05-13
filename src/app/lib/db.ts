@@ -333,16 +333,29 @@ export interface PatternInsight {
   occurrence_count: number;
 }
 
+export type InsightsFilter = '7days' | '30days' | 'all';
+
+function sinceFor(filter: InsightsFilter): string | null {
+  if (filter === 'all') return null;
+  const days = filter === '7days' ? 7 : 30;
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 // Busca emoções agrupadas por nome com contagem (para nuvem de emoções)
-export async function getEmotionCounts(userId: string): Promise<EmotionCount[]> {
+export async function getEmotionCounts(
+  userId: string,
+  filter: InsightsFilter = 'all'
+): Promise<EmotionCount[]> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('emotions')
-      .select('name')
+      .select('name, created_at')
       .eq('user_id', userId)
       .eq('validation', 'confirmed');
+    const since = sinceFor(filter);
+    if (since) query = query.gte('created_at', since);
+    const { data, error } = await query;
     if (error) { console.error('[db.getEmotionCounts]', error); return []; }
-    // Agrupa no cliente
     const counts: Record<string, number> = {};
     for (const row of data ?? []) {
       counts[row.name] = (counts[row.name] ?? 0) + 1;
@@ -357,17 +370,23 @@ export async function getEmotionCounts(userId: string): Promise<EmotionCount[]> 
 }
 
 // Busca crenças do usuário (não deletadas, não rejeitadas)
-export async function getBeliefs(userId: string): Promise<BeliefInsight[]> {
+export async function getBeliefs(
+  userId: string,
+  filter: InsightsFilter = 'all'
+): Promise<BeliefInsight[]> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('beliefs')
-      .select('id, content, occurrence_count, validation')
+      .select('id, content, occurrence_count, validation, last_seen_at')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .neq('validation', 'rejected')
       .order('occurrence_count', { ascending: false });
+    const since = sinceFor(filter);
+    if (since) query = query.gte('last_seen_at', since);
+    const { data, error } = await query;
     if (error) { console.error('[db.getBeliefs]', error); return []; }
-    return data ?? [];
+    return (data ?? []) as BeliefInsight[];
   } catch (err) {
     console.error('[db.getBeliefs]', err);
     return [];
@@ -375,17 +394,23 @@ export async function getBeliefs(userId: string): Promise<BeliefInsight[]> {
 }
 
 // Busca padrões do usuário (não deletados)
-export async function getPatterns(userId: string): Promise<PatternInsight[]> {
+export async function getPatterns(
+  userId: string,
+  filter: InsightsFilter = 'all'
+): Promise<PatternInsight[]> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('patterns')
-      .select('id, description, triggers, emotions_involved, occurrence_count')
+      .select('id, description, triggers, emotions_involved, occurrence_count, last_updated_at')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .neq('validation', 'rejected')
       .order('occurrence_count', { ascending: false });
+    const since = sinceFor(filter);
+    if (since) query = query.gte('last_updated_at', since);
+    const { data, error } = await query;
     if (error) { console.error('[db.getPatterns]', error); return []; }
-    return data ?? [];
+    return (data ?? []) as PatternInsight[];
   } catch (err) {
     console.error('[db.getPatterns]', err);
     return [];
