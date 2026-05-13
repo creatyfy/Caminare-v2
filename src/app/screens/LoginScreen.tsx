@@ -75,7 +75,10 @@ export function LoginScreen() {
             alt="Caminare"
             style={{
               display: 'block',
-              margin: 0,
+              marginTop: -50,
+              marginBottom: 0,
+              marginLeft: 0,
+              marginRight: 0,
               padding: 0,
               width: 180,
               height: 'auto',
