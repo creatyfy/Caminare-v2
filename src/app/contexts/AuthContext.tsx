@@ -20,6 +20,8 @@ type AuthContextValue = {
     password: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -66,6 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async signOut() {
         await supabase.auth.signOut();
+      },
+      async resetPassword(email) {
+        const redirectTo = `${window.location.origin}/redefinir-senha`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo,
+        });
+        return { error: error?.message ?? null };
+      },
+      async updatePassword(newPassword) {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        return { error: error?.message ?? null };
       },
     }),
     [session, loading]
