@@ -68,7 +68,8 @@ export function ProfileScreen() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100%',
+        height: '100%',
+        overflowY: 'auto',
         paddingBottom: '90px',
         backgroundColor: 'var(--cam-bg-page)',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
