@@ -11,7 +11,8 @@ export function NewPatternScreen() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100%',
+        height: '100%',
+        overflowY: 'auto',
         backgroundColor: 'var(--cam-bg-page)',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
         paddingBottom: '40px',
