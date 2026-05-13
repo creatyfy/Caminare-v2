@@ -22,6 +22,7 @@ type AuthContextValue = {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
+  signInWithGoogle: () => Promise<{ error: string | null }>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -78,6 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async updatePassword(newPassword) {
         const { error } = await supabase.auth.updateUser({ password: newPassword });
+        return { error: error?.message ?? null };
+      },
+      async signInWithGoogle() {
+        const redirectTo = `${window.location.origin}/home`;
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo },
+        });
         return { error: error?.message ?? null };
       },
     }),

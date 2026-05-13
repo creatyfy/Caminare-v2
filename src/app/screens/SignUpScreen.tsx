@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 
 const BRAND = '#534AB7';
 const ACCENT = '#1D9E75';
@@ -282,6 +283,13 @@ export function SignUpScreen() {
             'Criar conta'
           )}
         </button>
+
+        <AuthDivider />
+
+        <GoogleSignInButton
+          label="Cadastrar com Google"
+          onError={(msg) => setError(translateError(msg))}
+        />
 
         <div
           style={{

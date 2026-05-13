@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 
 const BRAND = '#534AB7';
 const BG = '#F8F7FF';
@@ -209,6 +210,10 @@ export function LoginScreen() {
             'Entrar'
           )}
         </button>
+
+        <AuthDivider />
+
+        <GoogleSignInButton onError={(msg) => setError(translateError(msg))} />
 
         <div
           style={{
