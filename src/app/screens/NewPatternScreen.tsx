@@ -1,10 +1,156 @@
-import { Sparkles, Check, X, ArrowLeft } from 'lucide-react';
+import { Sparkles, Check, X, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
+import { getPendingPattern, setPatternValidation, type PatternFull } from '../lib/db';
 
 export function NewPatternScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const [pattern, setPattern] = useState<PatternFull | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    setLoading(true);
+    getPendingPattern(user.id).then((p) => {
+      if (!active) return;
+      setPattern(p);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  async function handleValidation(validation: 'confirmed' | 'rejected') {
+    if (!pattern || submitting) return;
+    setSubmitting(true);
+    const ok = await setPatternValidation(pattern.id, validation);
+    setSubmitting(false);
+    if (ok) navigate('/home');
+  }
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          backgroundColor: 'var(--cam-bg-page)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+          color: 'var(--cam-text-secondary)',
+          fontSize: 14,
+        }}
+      >
+        <Loader2 size={20} className="animate-spin" style={{ marginRight: 8 }} />
+        {t('common.loading')}
+      </div>
+    );
+  }
+
+  if (!pattern) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          backgroundColor: 'var(--cam-bg-page)',
+          fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+          padding: '48px 24px',
+        }}
+      >
+        <button
+          onClick={() => navigate(-1)}
+          style={backButtonStyle}
+        >
+          <ArrowLeft size={20} />
+          <span>{t('common.back')}</span>
+        </button>
+
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            padding: '0 16px',
+            gap: '20px',
+          }}
+        >
+          <div
+            style={{
+              width: '88px',
+              height: '88px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--cam-bg-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Sparkles size={40} color="var(--cam-text-brand)" strokeWidth={2} />
+          </div>
+
+          <h1
+            style={{
+              fontSize: '22px',
+              fontWeight: 700,
+              color: 'var(--cam-text-primary)',
+              margin: 0,
+              letterSpacing: '-0.3px',
+            }}
+          >
+            {t('newPattern.noneTitle')}
+          </h1>
+          <p
+            style={{
+              fontSize: '15px',
+              color: 'var(--cam-text-secondary)',
+              margin: 0,
+              maxWidth: 320,
+              lineHeight: 1.5,
+            }}
+          >
+            {t('newPattern.noneMessage')}
+          </p>
+
+          <button
+            onClick={() => navigate('/home')}
+            style={{
+              marginTop: '12px',
+              width: '100%',
+              maxWidth: 320,
+              height: '56px',
+              backgroundColor: 'var(--cam-color-brand)',
+              color: 'var(--cam-text-on-brand)',
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: 'var(--cam-shadow-brand)',
+            }}
+          >
+            {t('newPattern.finish')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -19,21 +165,7 @@ export function NewPatternScreen() {
       }}
     >
       <div style={{ padding: '48px 24px 24px 24px' }}>
-        <button
-          onClick={() => navigate('/validacao-crencas')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            color: 'var(--cam-text-brand)',
-            background: 'none',
-            border: 'none',
-            fontSize: '16px',
-            fontWeight: 500,
-            padding: 0,
-            cursor: 'pointer',
-          }}
-        >
+        <button onClick={() => navigate(-1)} style={backButtonStyle}>
           <ArrowLeft size={20} />
           <span>{t('common.back')}</span>
         </button>
@@ -96,14 +228,14 @@ export function NewPatternScreen() {
             style={{
               backgroundColor: 'var(--cam-color-brand)',
               borderRadius: '16px',
-              padding: '16px',
-              marginBottom: '24px',
+              padding: '14px 16px',
+              marginBottom: '20px',
             }}
           >
             <div
               style={{
                 color: '#FFFFFF',
-                fontSize: '13px',
+                fontSize: '12px',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
@@ -114,35 +246,53 @@ export function NewPatternScreen() {
             </div>
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-primary)', margin: '0 0 8px 0' }}>
+          <div style={{ marginBottom: pattern.triggers && pattern.triggers.length > 0 ? '20px' : 0 }}>
+            <h4
+              style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--cam-text-primary)',
+                margin: '0 0 8px 0',
+              }}
+            >
               {t('newPattern.descriptionLabel')}
             </h4>
             <p style={{ fontSize: '15px', color: 'var(--cam-text-secondary)', lineHeight: 1.5, margin: 0 }}>
-              {t('newPattern.descriptionText')}
+              {pattern.description}
             </p>
           </div>
 
-          <div style={{ marginBottom: '8px' }}>
-            <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-primary)', margin: '0 0 8px 0' }}>
-              {t('newPattern.triggersLabel')}
-            </h4>
-            <ul
-              style={{
-                fontSize: '15px',
-                color: 'var(--cam-text-secondary)',
-                lineHeight: 1.6,
-                margin: 0,
-                paddingLeft: '20px',
-                listStyleType: 'disc',
-                listStylePosition: 'outside',
-              }}
-            >
-              <li style={{ display: 'list-item' }}>Apresentações importantes</li>
-              <li style={{ display: 'list-item' }}>Reuniões com superiores</li>
-              <li style={{ display: 'list-item' }}>Situações de avaliação</li>
-            </ul>
-          </div>
+          {pattern.triggers && pattern.triggers.length > 0 && (
+            <div>
+              <h4
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: 'var(--cam-text-primary)',
+                  margin: '0 0 8px 0',
+                }}
+              >
+                {t('newPattern.triggersLabel')}
+              </h4>
+              <ul
+                style={{
+                  fontSize: '15px',
+                  color: 'var(--cam-text-secondary)',
+                  lineHeight: 1.6,
+                  margin: 0,
+                  paddingLeft: '20px',
+                  listStyleType: 'disc',
+                  listStylePosition: 'outside',
+                }}
+              >
+                {pattern.triggers.map((trigger, idx) => (
+                  <li key={idx} style={{ display: 'list-item' }}>
+                    {trigger}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div
@@ -157,7 +307,8 @@ export function NewPatternScreen() {
           }}
         >
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => handleValidation('confirmed')}
+            disabled={submitting}
             style={{
               width: '100%',
               height: '56px',
@@ -171,16 +322,18 @@ export function NewPatternScreen() {
               fontSize: '16px',
               fontWeight: 600,
               border: 'none',
-              cursor: 'pointer',
+              cursor: submitting ? 'not-allowed' : 'pointer',
               boxShadow: 'var(--cam-shadow-accent)',
+              opacity: submitting ? 0.7 : 1,
             }}
           >
-            <Check size={20} strokeWidth={2.5} />
+            {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={2.5} />}
             {t('newPattern.confirmPattern')}
           </button>
 
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => handleValidation('rejected')}
+            disabled={submitting}
             style={{
               width: '100%',
               height: '56px',
@@ -194,7 +347,8 @@ export function NewPatternScreen() {
               fontSize: '16px',
               fontWeight: 600,
               border: `1px solid var(--cam-text-error)`,
-              cursor: 'pointer',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              opacity: submitting ? 0.7 : 1,
             }}
           >
             <X size={20} strokeWidth={2.5} />
@@ -205,3 +359,16 @@ export function NewPatternScreen() {
     </div>
   );
 }
+
+const backButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  color: 'var(--cam-text-brand)',
+  background: 'none',
+  border: 'none',
+  fontSize: '16px',
+  fontWeight: 500,
+  padding: 0,
+  cursor: 'pointer',
+};
