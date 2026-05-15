@@ -1,30 +1,75 @@
-import { Check, X, Edit3, ArrowLeft } from 'lucide-react';
+import { Check, X, ArrowLeft, Plus, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
+import {
+  getUserBeliefs,
+  addBelief,
+  setBeliefValidation,
+  type BeliefFull,
+} from '../lib/db';
 
 export function BeliefValidationScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [beliefs, setBeliefs] = useState([
-    {
-      id: 1,
-      text: 'Eu não sou competente o suficiente',
-      validated: null as boolean | null,
-      contexts: ['Trabalho', 'Apresentações'],
-    },
-    {
-      id: 2,
-      text: 'Preciso ser perfeita para ser aceita',
-      validated: null as boolean | null,
-      contexts: ['Relacionamentos', 'Trabalho'],
-    },
-  ]);
+  const { user } = useAuth();
 
-  const handleValidation = (id: number, action: 'confirm' | 'reject' | 'adjust') => {
-    if (action === 'adjust') return;
-    setBeliefs(beliefs.map((b) => (b.id === id ? { ...b, validated: action === 'confirm' } : b)));
-  };
+  const [beliefs, setBeliefs] = useState<BeliefFull[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newBelief, setNewBelief] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    setLoading(true);
+    getUserBeliefs(user.id).then((bs) => {
+      if (!active) return;
+      setBeliefs(bs);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  async function handleValidation(
+    id: string,
+    validation: 'confirmed' | 'rejected'
+  ) {
+    setBeliefs((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, validation } : b))
+    );
+    const ok = await setBeliefValidation(id, validation);
+    if (!ok) {
+      setBeliefs((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, validation: 'pending' } : b))
+      );
+    } else if (validation === 'rejected') {
+      // Remove from list after a beat
+      setTimeout(() => {
+        setBeliefs((prev) => prev.filter((b) => b.id !== id));
+      }, 350);
+    }
+  }
+
+  async function handleAdd() {
+    if (!user) return;
+    const trimmed = newBelief.trim();
+    if (!trimmed || adding) return;
+    setAdding(true);
+    const created = await addBelief(user.id, trimmed);
+    setAdding(false);
+    if (created) {
+      setBeliefs((prev) => [created, ...prev]);
+      setNewBelief('');
+      setIsAdding(false);
+    }
+  }
+
+  const hasAny = beliefs.length > 0;
 
   return (
     <div
@@ -38,7 +83,7 @@ export function BeliefValidationScreen() {
     >
       <div style={{ padding: '48px 24px 24px 24px', backgroundColor: 'var(--cam-bg-card)' }}>
         <button
-          onClick={() => navigate('/validacao-emocoes')}
+          onClick={() => navigate(-1)}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -61,117 +106,247 @@ export function BeliefValidationScreen() {
           {t('beliefValidation.title')}
         </h1>
         <p style={{ fontSize: '15px', color: 'var(--cam-text-secondary)', margin: 0, lineHeight: 1.4 }}>
-          {t('beliefValidation.subtitle')}
+          {hasAny ? t('beliefValidation.subtitle') : t('beliefValidation.subtitleManual')}
         </p>
       </div>
 
       <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-          {beliefs.map((belief) => (
-            <div
-              key={belief.id}
-              style={{
-                backgroundColor: 'var(--cam-bg-card)',
-                borderRadius: '24px',
-                padding: '20px',
-                boxShadow: 'var(--cam-shadow-card)',
-              }}
-            >
-              <div style={{ marginBottom: '20px' }}>
-                <p
-                  style={{
-                    color: 'var(--cam-text-primary)',
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    lineHeight: 1.5,
-                    margin: '0 0 12px 0',
-                  }}
-                >
-                  {belief.text}
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {belief.contexts.map((context, idx) => (
-                    <span
-                      key={idx}
+        {loading && (
+          <div
+            style={{
+              textAlign: 'center',
+              color: 'var(--cam-text-secondary)',
+              fontSize: '14px',
+              padding: '24px 0',
+            }}
+          >
+            <Loader2 size={20} className="animate-spin" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }} />
+            {t('common.loading')}
+          </div>
+        )}
+
+        {!loading && !hasAny && !isAdding && (
+          <div
+            style={{
+              textAlign: 'center',
+              color: 'var(--cam-text-secondary)',
+              fontSize: '14px',
+              padding: '16px 0 24px',
+              lineHeight: 1.6,
+            }}
+          >
+            {t('beliefValidation.empty')}
+          </div>
+        )}
+
+        {!loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+            {beliefs.map((belief) => (
+              <div
+                key={belief.id}
+                style={{
+                  backgroundColor: 'var(--cam-bg-card)',
+                  borderRadius: '24px',
+                  padding: '20px',
+                  boxShadow: 'var(--cam-shadow-card)',
+                  opacity: belief.validation === 'rejected' ? 0.5 : 1,
+                  transition: 'opacity 0.3s ease',
+                }}
+              >
+                <div style={{ marginBottom: '20px' }}>
+                  <p
+                    style={{
+                      color: 'var(--cam-text-primary)',
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      lineHeight: 1.5,
+                      margin: '0 0 12px 0',
+                    }}
+                  >
+                    {belief.content}
+                  </p>
+                  {belief.occurrence_count > 1 && (
+                    <p
                       style={{
-                        backgroundColor: 'var(--cam-bg-muted)',
-                        color: 'var(--cam-text-brand)',
-                        padding: '6px 12px',
-                        borderRadius: '9999px',
-                        fontSize: '13px',
-                        fontWeight: 500,
+                        fontSize: '12px',
+                        color: 'var(--cam-text-secondary)',
+                        margin: 0,
                       }}
                     >
-                      {context}
+                      {belief.occurrence_count}{' '}
+                      {belief.occurrence_count === 1
+                        ? t('common.occurrence')
+                        : t('common.occurrences')}
+                    </p>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => handleValidation(belief.id, 'confirmed')}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '12px 0',
+                      borderRadius: '16px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor:
+                        belief.validation === 'confirmed'
+                          ? 'var(--cam-color-accent)'
+                          : 'var(--cam-bg-accent-soft)',
+                      color:
+                        belief.validation === 'confirmed'
+                          ? '#FFFFFF'
+                          : 'var(--cam-text-accent)',
+                    }}
+                  >
+                    <Check size={20} strokeWidth={2.5} />
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                      {t('common.confirm')}
                     </span>
-                  ))}
+                  </button>
+
+                  <button
+                    onClick={() => handleValidation(belief.id, 'rejected')}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '12px 0',
+                      borderRadius: '16px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor:
+                        belief.validation === 'rejected'
+                          ? 'var(--cam-color-error)'
+                          : 'var(--cam-bg-error-soft)',
+                      color:
+                        belief.validation === 'rejected'
+                          ? '#FFFFFF'
+                          : 'var(--cam-text-error)',
+                    }}
+                  >
+                    <X size={20} strokeWidth={2.5} />
+                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                      {t('beliefValidation.discard')}
+                    </span>
+                  </button>
                 </div>
               </div>
+            ))}
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => handleValidation(belief.id, 'confirm')}
+            {!isAdding ? (
+              <button
+                onClick={() => setIsAdding(true)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: `2px dashed var(--cam-border)`,
+                  borderRadius: '24px',
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  color: 'var(--cam-text-brand)',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginTop: '4px',
+                }}
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                {t('beliefValidation.addBelief')}
+              </button>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: 'var(--cam-bg-card)',
+                  borderRadius: '24px',
+                  padding: '20px',
+                  boxShadow: 'var(--cam-shadow-card)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                }}
+              >
+                <textarea
+                  value={newBelief}
+                  onChange={(e) => setNewBelief(e.target.value)}
+                  placeholder={t('beliefValidation.newBeliefPlaceholder')}
+                  autoFocus
+                  disabled={adding}
+                  rows={3}
                   style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '12px 0',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    backgroundColor: belief.validated === true ? 'var(--cam-color-accent)' : 'var(--cam-bg-accent-soft)',
-                    color: belief.validated === true ? '#FFFFFF' : 'var(--cam-text-accent)',
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: `1px solid var(--cam-border)`,
+                    outline: 'none',
+                    fontSize: '15px',
+                    color: 'var(--cam-text-primary)',
+                    backgroundColor: 'var(--cam-bg-input)',
+                    resize: 'none',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box',
                   }}
-                >
-                  <Check size={20} strokeWidth={2.5} />
-                  <span style={{ fontSize: '13px', fontWeight: 600 }}>{t('common.confirm')}</span>
-                </button>
-
-                <button
-                  onClick={() => handleValidation(belief.id, 'adjust')}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '12px 0',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    backgroundColor: 'var(--cam-bg-warning-soft)',
-                    color: 'var(--cam-text-warning)',
-                  }}
-                >
-                  <Edit3 size={20} strokeWidth={2.5} />
-                  <span style={{ fontSize: '13px', fontWeight: 600 }}>{t('beliefValidation.adjust')}</span>
-                </button>
-
-                <button
-                  onClick={() => handleValidation(belief.id, 'reject')}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '12px 0',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    backgroundColor: belief.validated === false ? 'var(--cam-color-error)' : 'var(--cam-bg-error-soft)',
-                    color: belief.validated === false ? '#FFFFFF' : 'var(--cam-text-error)',
-                  }}
-                >
-                  <X size={20} strokeWidth={2.5} />
-                  <span style={{ fontSize: '13px', fontWeight: 600 }}>{t('beliefValidation.discard')}</span>
-                </button>
+                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => {
+                      setIsAdding(false);
+                      setNewBelief('');
+                    }}
+                    disabled={adding}
+                    style={{
+                      flex: 1,
+                      height: '44px',
+                      borderRadius: '9999px',
+                      backgroundColor: 'transparent',
+                      color: 'var(--cam-text-secondary)',
+                      border: `1.5px solid var(--cam-border)`,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: adding ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={handleAdd}
+                    disabled={adding || !newBelief.trim()}
+                    style={{
+                      flex: 1,
+                      height: '44px',
+                      borderRadius: '9999px',
+                      backgroundColor: 'var(--cam-color-brand)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: adding || !newBelief.trim() ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      opacity: adding || !newBelief.trim() ? 0.6 : 1,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {adding && <Loader2 size={14} className="animate-spin" />}
+                    {t('common.add')}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
 
         <div
           style={{
@@ -208,7 +383,7 @@ export function BeliefValidationScreen() {
             cursor: 'pointer',
           }}
         >
-          {t('beliefValidation.finish')}
+          {t('common.continue')}
         </button>
       </div>
     </div>

@@ -343,6 +343,144 @@ export async function getEntryThoughts(
   }
 }
 
+// ── Beliefs ────────────────────────────────────────────────────────────────
+
+export interface BeliefFull {
+  id: string;
+  content: string;
+  content_original: string;
+  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  occurrence_count: number;
+}
+
+export async function getUserBeliefs(userId: string): Promise<BeliefFull[]> {
+  try {
+    const { data, error } = await supabase
+      .from('beliefs')
+      .select('id, content, content_original, validation, occurrence_count')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .neq('validation', 'rejected')
+      .order('occurrence_count', { ascending: false });
+    if (error) {
+      console.error('[db.getUserBeliefs]', error);
+      return [];
+    }
+    return (data ?? []) as BeliefFull[];
+  } catch (err) {
+    console.error('[db.getUserBeliefs]', err);
+    return [];
+  }
+}
+
+export async function addBelief(
+  userId: string,
+  content: string
+): Promise<BeliefFull | null> {
+  try {
+    const trimmed = content.trim();
+    if (!trimmed) return null;
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('beliefs')
+      .insert({
+        user_id: userId,
+        content: trimmed,
+        content_original: trimmed,
+        validation: 'confirmed',
+        first_seen_at: now,
+        last_seen_at: now,
+        occurrence_count: 1,
+        version: 1,
+      })
+      .select('id, content, content_original, validation, occurrence_count')
+      .single();
+    if (error) {
+      console.error('[db.addBelief]', error);
+      return null;
+    }
+    return data as BeliefFull;
+  } catch (err) {
+    console.error('[db.addBelief]', err);
+    return null;
+  }
+}
+
+export async function setBeliefValidation(
+  beliefId: string,
+  validation: 'confirmed' | 'rejected' | 'adjusted'
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('beliefs')
+      .update({ validation })
+      .eq('id', beliefId);
+    if (error) {
+      console.error('[db.setBeliefValidation]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.setBeliefValidation]', err);
+    return false;
+  }
+}
+
+// ── Patterns ───────────────────────────────────────────────────────────────
+
+export interface PatternFull {
+  id: string;
+  description: string;
+  triggers: string[] | null;
+  emotions_involved: string[] | null;
+  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  occurrence_count: number;
+}
+
+export async function getPendingPattern(
+  userId: string
+): Promise<PatternFull | null> {
+  try {
+    const { data, error } = await supabase
+      .from('patterns')
+      .select('id, description, triggers, emotions_involved, validation, occurrence_count')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .eq('validation', 'pending')
+      .order('first_detected_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error('[db.getPendingPattern]', error);
+      return null;
+    }
+    return (data as PatternFull) ?? null;
+  } catch (err) {
+    console.error('[db.getPendingPattern]', err);
+    return null;
+  }
+}
+
+export async function setPatternValidation(
+  patternId: string,
+  validation: 'confirmed' | 'rejected' | 'adjusted'
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('patterns')
+      .update({ validation })
+      .eq('id', patternId);
+    if (error) {
+      console.error('[db.setPatternValidation]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.setPatternValidation]', err);
+    return false;
+  }
+}
+
 export async function createTextEntry(
   userId: string,
   rawText: string
