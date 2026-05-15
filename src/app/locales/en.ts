@@ -148,11 +148,14 @@ export const en = {
   emotionValidation: {
     title: 'Validation',
     subtitle: 'Validate the emotions and thoughts we identified.',
+    subtitleManual: 'Add the emotions you felt in this entry.',
     emotionsHeader: 'Identified emotions',
     addEmotion: 'Add emotion',
     newEmotionPlaceholder: 'Type an emotion...',
+    emptyEmotions: 'No emotions yet. Add one below.',
     thoughtsHeader: 'Identified thoughts',
     continue: 'Continue',
+    missingEntry: 'Entry not found. Go back and try again.',
   },
   beliefValidation: {
     title: 'Identified Beliefs',

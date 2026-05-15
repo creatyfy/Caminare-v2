@@ -148,11 +148,14 @@ export const ptBR = {
   emotionValidation: {
     title: 'Validação',
     subtitle: 'Valide as emoções e pensamentos que identificamos.',
+    subtitleManual: 'Adicione as emoções que sentiu nesse registro.',
     emotionsHeader: 'Emoções identificadas',
     addEmotion: 'Adicionar emoção',
     newEmotionPlaceholder: 'Digite uma emoção...',
+    emptyEmotions: 'Nenhuma emoção registrada ainda. Adicione abaixo.',
     thoughtsHeader: 'Pensamentos identificados',
     continue: 'Continuar',
+    missingEntry: 'Registro não encontrado. Volte e tente de novo.',
   },
   beliefValidation: {
     title: 'Crenças Identificadas',
