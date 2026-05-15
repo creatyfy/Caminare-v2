@@ -235,6 +235,114 @@ function parseThoughts(raw: unknown): string[] {
   return [];
 }
 
+// ── Entry validation: emotions + thoughts ──────────────────────────────────
+
+export interface EmotionFull {
+  id: string;
+  name: string;
+  name_original: string;
+  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  intensity: 'low' | 'medium' | 'high' | null;
+}
+
+export async function getEntryEmotions(
+  userId: string,
+  entryId: string
+): Promise<EmotionFull[]> {
+  try {
+    const { data, error } = await supabase
+      .from('emotions')
+      .select('id, name, name_original, validation, intensity')
+      .eq('user_id', userId)
+      .eq('entry_id', entryId)
+      .neq('validation', 'rejected')
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('[db.getEntryEmotions]', error);
+      return [];
+    }
+    return (data ?? []) as EmotionFull[];
+  } catch (err) {
+    console.error('[db.getEntryEmotions]', err);
+    return [];
+  }
+}
+
+export async function addEntryEmotion(
+  userId: string,
+  entryId: string,
+  name: string
+): Promise<EmotionFull | null> {
+  try {
+    const trimmed = name.trim();
+    if (!trimmed) return null;
+    const { data, error } = await supabase
+      .from('emotions')
+      .insert({
+        user_id: userId,
+        entry_id: entryId,
+        name: trimmed,
+        name_original: trimmed,
+        validation: 'confirmed',
+      })
+      .select('id, name, name_original, validation, intensity')
+      .single();
+    if (error) {
+      console.error('[db.addEntryEmotion]', error);
+      return null;
+    }
+    return data as EmotionFull;
+  } catch (err) {
+    console.error('[db.addEntryEmotion]', err);
+    return null;
+  }
+}
+
+export async function setEmotionValidation(
+  emotionId: string,
+  validation: 'confirmed' | 'rejected' | 'adjusted'
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('emotions')
+      .update({ validation })
+      .eq('id', emotionId);
+    if (error) {
+      console.error('[db.setEmotionValidation]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.setEmotionValidation]', err);
+    return false;
+  }
+}
+
+export async function getEntryThoughts(
+  userId: string,
+  entryId: string
+): Promise<string[] | null> {
+  try {
+    const { data, error } = await supabase
+      .from('entry_analysis_logs')
+      .select('parsed_thoughts')
+      .eq('user_id', userId)
+      .eq('entry_id', entryId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error('[db.getEntryThoughts]', error);
+      return null;
+    }
+    if (!data) return null;
+    return parseThoughts(data.parsed_thoughts);
+  } catch (err) {
+    console.error('[db.getEntryThoughts]', err);
+    return null;
+  }
+}
+
 export async function createTextEntry(
   userId: string,
   rawText: string
