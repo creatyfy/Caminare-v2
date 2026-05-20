@@ -11,6 +11,7 @@ import {
   EyeOff,
   Loader2,
   ChevronRight,
+  ChevronDown,
   AlertTriangle,
   Globe,
   Sun,
@@ -33,6 +34,7 @@ export function ProfileScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showAccountInfo, setShowAccountInfo] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -146,7 +148,7 @@ export function ProfileScreen() {
           </div>
         </div>
 
-        {/* Info card */}
+        {/* Info card — collapsible */}
         <div
           style={{
             backgroundColor: 'var(--cam-bg-card)',
@@ -155,21 +157,59 @@ export function ProfileScreen() {
             boxShadow: 'var(--cam-shadow-card)',
           }}
         >
-          <SectionLabel text={t('profile.accountSection')} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <InfoRow label={t('profile.name')} value={fullName} icon={<UserIcon size={16} color="var(--cam-text-secondary)" />} />
-            <InfoRow label={t('profile.email')} value={user?.email ?? '—'} icon={<Mail size={16} color="var(--cam-text-secondary)" />} />
-            <InfoRow
-              label={t('profile.memberSince')}
-              value={memberSince}
-              icon={<UserIcon size={16} color="var(--cam-text-secondary)" />}
+          <button
+            type="button"
+            onClick={() => setShowAccountInfo((v) => !v)}
+            aria-expanded={showAccountInfo}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              padding: 0,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <span
+              style={{
+                flex: 1,
+                textAlign: 'left',
+                fontSize: '13px',
+                color: 'var(--cam-text-secondary)',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {t('profile.accountSection')}
+            </span>
+            <ChevronDown
+              size={18}
+              color="var(--cam-text-secondary)"
+              style={{
+                transform: showAccountInfo ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }}
             />
-            <InfoRow
-              label={t('profile.loginMethod')}
-              value={isOAuthUser ? capitalize(provider) : t('profile.emailPassword')}
-              icon={<Lock size={16} color="var(--cam-text-secondary)" />}
-            />
-          </div>
+          </button>
+          {showAccountInfo && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+              <InfoRow label={t('profile.name')} value={fullName} icon={<UserIcon size={16} color="var(--cam-text-secondary)" />} />
+              <InfoRow label={t('profile.email')} value={user?.email ?? '—'} icon={<Mail size={16} color="var(--cam-text-secondary)" />} />
+              <InfoRow
+                label={t('profile.memberSince')}
+                value={memberSince}
+                icon={<UserIcon size={16} color="var(--cam-text-secondary)" />}
+              />
+              <InfoRow
+                label={t('profile.loginMethod')}
+                value={isOAuthUser ? capitalize(provider) : t('profile.emailPassword')}
+                icon={<Lock size={16} color="var(--cam-text-secondary)" />}
+              />
+            </div>
+          )}
         </div>
 
         {/* Preferences: language + theme */}
