@@ -38,7 +38,7 @@ export function LoginScreen() {
       style={{
         position: 'absolute',
         inset: 0,
-        backgroundColor: 'var(--cam-bg-page)',
+        backgroundColor: 'var(--cam-bg-login)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',

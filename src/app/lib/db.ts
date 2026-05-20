@@ -146,7 +146,7 @@ function mapEntryRow(row: EntryRow): EntryWithEmotions {
 
 export async function getEntries(
   userId: string,
-  filter: '7days' | '30days' | 'all' = 'all'
+  filter: '7days' | '15days' | '30days' | 'all' = 'all'
 ): Promise<EntryWithEmotions[] | null> {
   try {
     let query = supabase
@@ -158,8 +158,8 @@ export async function getEntries(
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
-    if (filter === '7days' || filter === '30days') {
-      const days = filter === '7days' ? 7 : 30;
+    if (filter !== 'all') {
+      const days = filter === '7days' ? 7 : filter === '15days' ? 15 : 30;
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
       query = query.gte('created_at', since);
     }
@@ -579,11 +579,11 @@ export interface PatternInsight {
   occurrence_count: number;
 }
 
-export type InsightsFilter = '7days' | '30days' | 'all';
+export type InsightsFilter = '7days' | '15days' | '30days' | 'all';
 
 function sinceFor(filter: InsightsFilter): string | null {
   if (filter === 'all') return null;
-  const days = filter === '7days' ? 7 : 30;
+  const days = filter === '7days' ? 7 : filter === '15days' ? 15 : 30;
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
 
