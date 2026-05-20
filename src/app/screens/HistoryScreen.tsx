@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getEntries, type EntryWithEmotions } from '../lib/db';
 import { formatDate } from '../lib/format';
 
-type FilterValue = '7days' | '30days' | 'all';
+type FilterValue = '7days' | '15days' | '30days' | 'all';
 
 export function HistoryScreen() {
   const navigate = useNavigate();
@@ -110,6 +110,7 @@ export function HistoryScreen() {
           >
             <option value="all">{t('history.filterAll')}</option>
             <option value="7days">{t('history.filter7')}</option>
+            <option value="15days">{t('history.filter15')}</option>
             <option value="30days">{t('history.filter30')}</option>
           </select>
           <ChevronDown

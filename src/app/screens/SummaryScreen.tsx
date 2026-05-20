@@ -5,17 +5,22 @@ import { useAuth } from '../contexts/AuthContext';
 import { getEntriesForSummary, type EntryDetail } from '../lib/db';
 import { formatDate } from '../lib/format';
 
+type SummaryPeriod = '7days' | '15days' | '30days';
+
 export function SummaryScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [entries, setEntries] = useState<EntryDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<SummaryPeriod>('30days');
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     setLoading(true);
-    getEntriesForSummary(user.id).then((data) => {
+    const days = period === '7days' ? 7 : period === '15days' ? 15 : 30;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    getEntriesForSummary(user.id, since).then((data) => {
       if (!active) return;
       setEntries(data ?? []);
       setLoading(false);
@@ -23,7 +28,7 @@ export function SummaryScreen() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, period]);
 
   const periodLabel = useMemo(() => {
     if (entries.length === 0) return '—';
@@ -33,9 +38,17 @@ export function SummaryScreen() {
     return first === last ? first : `${first} - ${last}`;
   }, [entries, i18n.language]);
 
-  const activeDays = useMemo(() => {
-    const set = new Set(entries.map((e) => new Date(e.created_at).toISOString().slice(0, 10)));
-    return set.size;
+  const topEmotions = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const entry of entries) {
+      for (const emotion of entry.emotions) {
+        counts[emotion.name] = (counts[emotion.name] ?? 0) + 1;
+      }
+    }
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
   }, [entries]);
 
   const handleDownloadPdf = () => {
@@ -102,7 +115,11 @@ export function SummaryScreen() {
   <h2>${escapeHtml(t('summary.pdfStats'))}</h2>
   <div class="stats">
     <div class="stat"><strong>${entries.length}</strong> ${escapeHtml(t('summary.pdfRecords'))}</div>
-    <div class="stat"><strong>${activeDays}</strong> ${escapeHtml(t('summary.pdfDays'))}</div>
+  </div>
+
+  <h2>${escapeHtml(t('summary.topEmotions'))}</h2>
+  <div class="tags">
+    ${topEmotions.map((e) => `<span class="tag">${escapeHtml(e.name)} (${e.count})</span>`).join('') || '—'}
   </div>
 
   <h2>${escapeHtml(t('summary.pdfEvents'))}</h2>
@@ -150,6 +167,8 @@ export function SummaryScreen() {
             <Calendar size={20} color="var(--cam-text-brand)" />
             <div style={{ flex: 1, position: 'relative' }}>
               <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as SummaryPeriod)}
                 style={{
                   width: '100%',
                   height: '44px',
@@ -165,9 +184,9 @@ export function SummaryScreen() {
                   appearance: 'none',
                 }}
               >
-                <option value="30days">{t('summary.period30')}</option>
                 <option value="7days">{t('summary.period7')}</option>
-                <option value="90days">{t('summary.period90')}</option>
+                <option value="15days">{t('summary.period15')}</option>
+                <option value="30days">{t('summary.period30')}</option>
               </select>
               <ChevronDown
                 size={16}
@@ -215,20 +234,46 @@ export function SummaryScreen() {
               <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-primary)', margin: '0 0 16px 0' }}>
                 {t('summary.statsHeader')}
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={{ backgroundColor: 'var(--cam-bg-tint)', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--cam-text-brand)', marginBottom: '4px' }}>
-                    {loading ? '—' : entries.length}
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)' }}>{t('summary.totalEntries')}</div>
+              <div
+                style={{
+                  backgroundColor: 'var(--cam-bg-tint)',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                }}
+              >
+                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--cam-text-brand)', marginBottom: '4px' }}>
+                  {loading ? '—' : entries.length}
                 </div>
-                <div style={{ backgroundColor: 'var(--cam-bg-tint)', borderRadius: '16px', padding: '16px' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--cam-text-accent)', marginBottom: '4px' }}>
-                    {loading ? '—' : activeDays}
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)' }}>{t('summary.activeDays')}</div>
-                </div>
+                <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)' }}>{t('summary.totalEntries')}</div>
               </div>
+
+              <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-primary)', margin: '0 0 12px 0' }}>
+                {t('summary.topEmotions')}
+              </h4>
+              {loading ? (
+                <div style={{ fontSize: '14px', color: 'var(--cam-text-secondary)' }}>—</div>
+              ) : topEmotions.length === 0 ? (
+                <div style={{ fontSize: '14px', color: 'var(--cam-text-secondary)' }}>{t('summary.empty')}</div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {topEmotions.map((e) => (
+                    <span
+                      key={e.name}
+                      style={{
+                        backgroundColor: 'var(--cam-bg-muted)',
+                        color: 'var(--cam-text-brand)',
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {e.name} ({e.count})
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

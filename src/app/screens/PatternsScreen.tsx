@@ -104,6 +104,7 @@ export function PatternsScreen() {
           >
             <option value="all">{t('history.filterAll')}</option>
             <option value="7days">{t('history.filter7')}</option>
+            <option value="15days">{t('history.filter15')}</option>
             <option value="30days">{t('history.filter30')}</option>
           </select>
           <ChevronDown

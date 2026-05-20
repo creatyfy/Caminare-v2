@@ -5,6 +5,7 @@
 
   /* Caminare design tokens — light theme (default) */
   --cam-bg-page: #F8F7FF;
+  --cam-bg-login: #F4F5F7;
   --cam-bg-card: #FFFFFF;
   --cam-bg-elevated: #FFFFFF;
   --cam-bg-tint: #F8F7FF;
@@ -82,6 +83,7 @@ html.dark,
 :root.dark,
 [data-theme='dark'] {
   --cam-bg-page: #0F0E1A;
+  --cam-bg-login: #0F0E1A;
   --cam-bg-card: #1C1B2E;
   --cam-bg-elevated: #252339;
   --cam-bg-tint: #161525;
