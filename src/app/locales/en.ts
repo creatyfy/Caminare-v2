@@ -52,6 +52,8 @@ export const en = {
     hasAccount: 'Already have an account?',
     goToLogin: 'Sign in',
     google: 'Sign up with Google',
+    acceptTerms:
+      'I have read and agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>.',
     successTitle: 'Account created!',
     successMessage: 'We sent a confirmation link to <strong>{{email}}</strong>. Check your inbox to continue.',
     goLogin: 'Go to sign in',
@@ -229,6 +231,7 @@ export const en = {
     changePassword: 'Change password',
     signOut: 'Sign out',
     deleteAccount: 'Delete account',
+    legalSection: 'Documents',
     settingsSection: 'Preferences',
     language: 'Language',
     theme: 'Theme',
@@ -258,6 +261,10 @@ export const en = {
       submitting: 'Deleting',
       errorGeneric: 'Error deleting the account.',
     },
+  },
+  legal: {
+    termsLink: 'Terms of Use',
+    privacyLink: 'Privacy Policy',
   },
   nav: {
     home: 'Home',

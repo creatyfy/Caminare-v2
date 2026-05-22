@@ -18,6 +18,8 @@ import {
   Moon,
   Monitor,
   Check,
+  FileText,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
@@ -250,6 +252,30 @@ export function ProfileScreen() {
             onToggle={() => setShowThemePicker((v) => !v)}
           />
           {showThemePicker && <ThemePicker onClose={() => setShowThemePicker(false)} />}
+        </div>
+
+        {/* Legal documents */}
+        <div
+          style={{
+            backgroundColor: 'var(--cam-bg-card)',
+            borderRadius: '20px',
+            boxShadow: 'var(--cam-shadow-card)',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ padding: '16px 20px 8px 20px' }}>
+            <SectionLabel text={t('profile.legalSection')} />
+          </div>
+          <ActionRow
+            icon={<FileText size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
+            label={t('legal.termsLink')}
+            onClick={() => navigate('/termos')}
+          />
+          <ActionRow
+            icon={<Shield size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
+            label={t('legal.privacyLink')}
+            onClick={() => navigate('/privacidade')}
+          />
         </div>
 
         {/* Actions */}

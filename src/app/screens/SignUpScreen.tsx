@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Trans, useTranslation } from 'react-i18next';
-import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Loader2, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 
@@ -13,6 +13,7 @@ export function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -259,9 +260,67 @@ export function SignUpScreen() {
           </div>
         )}
 
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            cursor: 'pointer',
+            marginTop: '4px',
+          }}
+        >
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={acceptedTerms}
+            onClick={() => setAcceptedTerms((v) => !v)}
+            style={{
+              flexShrink: 0,
+              width: '22px',
+              height: '22px',
+              marginTop: '1px',
+              borderRadius: '6px',
+              border: acceptedTerms ? 'none' : `1.5px solid var(--cam-border)`,
+              backgroundColor: acceptedTerms ? 'var(--cam-color-brand)' : 'var(--cam-bg-input)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            {acceptedTerms && <Check size={15} color="#FFFFFF" strokeWidth={3} />}
+          </button>
+          <span
+            style={{
+              fontSize: '13px',
+              color: 'var(--cam-text-secondary)',
+              lineHeight: 1.5,
+              fontWeight: 500,
+            }}
+          >
+            <Trans
+              i18nKey="signup.acceptTerms"
+              components={{
+                terms: (
+                  <a href="/termos" target="_blank" rel="noopener noreferrer" style={legalLinkStyle} />
+                ),
+                privacy: (
+                  <a
+                    href="/privacidade"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={legalLinkStyle}
+                  />
+                ),
+              }}
+            />
+          </span>
+        </label>
+
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !acceptedTerms}
           style={{
             marginTop: '8px',
             height: '56px',
@@ -271,13 +330,13 @@ export function SignUpScreen() {
             border: 'none',
             fontSize: '16px',
             fontWeight: 600,
-            cursor: submitting ? 'not-allowed' : 'pointer',
+            cursor: submitting || !acceptedTerms ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
             boxShadow: 'var(--cam-shadow-brand)',
-            opacity: submitting ? 0.85 : 1,
+            opacity: !acceptedTerms ? 0.55 : submitting ? 0.85 : 1,
             transition: 'transform 0.15s ease, opacity 0.15s ease',
           }}
           onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.98)')}
@@ -298,6 +357,7 @@ export function SignUpScreen() {
 
         <GoogleSignInButton
           label={t('signup.google')}
+          disabled={!acceptedTerms}
           onError={(msg) => setError(translateSignupError(msg, t))}
         />
 
@@ -394,6 +454,12 @@ const trailingButtonStyle: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   cursor: 'pointer',
+};
+
+const legalLinkStyle: React.CSSProperties = {
+  color: 'var(--cam-text-brand)',
+  fontWeight: 700,
+  textDecoration: 'underline',
 };
 
 function calcAge(birthDate: string): number {
