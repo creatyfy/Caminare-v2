@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Trans, useTranslation } from 'react-i18next';
-import { Eye, EyeOff, Mail, Lock, User as UserIcon, Loader2, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 
@@ -11,6 +11,7 @@ export function SignUpScreen() {
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +23,7 @@ export function SignUpScreen() {
     if (submitting) return;
     setError(null);
 
-    if (!name.trim() || !email || !password) {
+    if (!name.trim() || !email || !birthDate || !password) {
       setError(t('signup.errors.missingFields'));
       return;
     }
@@ -30,9 +31,13 @@ export function SignUpScreen() {
       setError(t('signup.errors.shortPassword'));
       return;
     }
+    if (calcAge(birthDate) < 18) {
+      setError(t('signup.errors.underage'));
+      return;
+    }
 
     setSubmitting(true);
-    const { error: err } = await signUp(name.trim(), email.trim(), password);
+    const { error: err } = await signUp(name.trim(), email.trim(), password, birthDate);
     setSubmitting(false);
 
     if (err) {
@@ -204,6 +209,15 @@ export function SignUpScreen() {
           value={email}
           onChange={setEmail}
           autoComplete="email"
+        />
+
+        <InputField
+          icon={<Calendar size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}
+          type="date"
+          placeholder={t('signup.birthDatePlaceholder')}
+          value={birthDate}
+          onChange={setBirthDate}
+          autoComplete="bday"
         />
 
         <InputField
@@ -381,6 +395,18 @@ const trailingButtonStyle: React.CSSProperties = {
   justifyContent: 'center',
   cursor: 'pointer',
 };
+
+function calcAge(birthDate: string): number {
+  const birth = new Date(birthDate);
+  if (Number.isNaN(birth.getTime())) return 0;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const monthDiff = now.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
 
 function translateSignupError(msg: string, t: (k: string) => string): string {
   const m = msg.toLowerCase();
