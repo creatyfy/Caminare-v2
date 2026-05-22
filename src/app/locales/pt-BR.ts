@@ -45,6 +45,7 @@ export const ptBR = {
     subtitle: 'Comece a registrar suas emoções hoje.',
     namePlaceholder: 'Nome',
     emailPlaceholder: 'Email',
+    birthDatePlaceholder: 'Data de nascimento',
     passwordPlaceholder: 'Senha (mín. 6 caracteres)',
     submit: 'Criar conta',
     submitting: 'Criando...',
@@ -57,6 +58,7 @@ export const ptBR = {
     errors: {
       missingFields: 'Preencha todos os campos.',
       shortPassword: 'A senha deve ter ao menos 6 caracteres.',
+      underage: 'É necessário ter 18 anos ou mais para criar uma conta.',
       alreadyRegistered: 'Este email já está cadastrado.',
       invalidEmail: 'Email inválido.',
       passwordInvalid: 'Senha inválida — mínimo 6 caracteres.',

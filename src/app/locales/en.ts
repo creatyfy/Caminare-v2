@@ -45,6 +45,7 @@ export const en = {
     subtitle: 'Start logging your emotions today.',
     namePlaceholder: 'Name',
     emailPlaceholder: 'Email',
+    birthDatePlaceholder: 'Date of birth',
     passwordPlaceholder: 'Password (min. 6 characters)',
     submit: 'Create account',
     submitting: 'Creating...',
@@ -57,6 +58,7 @@ export const en = {
     errors: {
       missingFields: 'Fill in all fields.',
       shortPassword: 'Password must be at least 6 characters.',
+      underage: 'You must be 18 or older to create an account.',
       alreadyRegistered: 'This email is already registered.',
       invalidEmail: 'Invalid email.',
       passwordInvalid: 'Invalid password — minimum 6 characters.',
