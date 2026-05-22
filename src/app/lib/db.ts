@@ -74,6 +74,28 @@ export async function deleteAccount(): Promise<{ error: string | null }> {
   }
 }
 
+// Envia uma sugestão do usuário (canal de sugestões dentro do app)
+export async function submitFeedback(
+  userId: string,
+  message: string
+): Promise<{ error: string | null }> {
+  try {
+    const trimmed = message.trim();
+    if (!trimmed) return { error: 'empty' };
+    const { error } = await supabase
+      .from('feedback')
+      .insert({ user_id: userId, message: trimmed });
+    if (error) {
+      console.error('[db.submitFeedback]', error);
+      return { error: error.message };
+    }
+    return { error: null };
+  } catch (err) {
+    console.error('[db.submitFeedback]', err);
+    return { error: 'Erro ao enviar a sugestão.' };
+  }
+}
+
 export async function getHomeStats(userId: string): Promise<HomeStats | null> {
   try {
     const [emotionsRes, patternsRes, entriesRes, datesRes] = await Promise.all([

@@ -20,10 +20,12 @@ import {
   Check,
   FileText,
   Shield,
+  Lightbulb,
+  Send,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
-import { getProfile, deleteAccount, type Profile } from '../lib/db';
+import { getProfile, deleteAccount, submitFeedback, type Profile } from '../lib/db';
 import { setLanguage, type Lang } from '../lib/i18n';
 
 export function ProfileScreen() {
@@ -37,6 +39,7 @@ export function ProfileScreen() {
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -287,6 +290,15 @@ export function ProfileScreen() {
             overflow: 'hidden',
           }}
         >
+          <ActionRow
+            icon={<Lightbulb size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
+            label={t('profile.sendFeedback')}
+            onClick={() => setShowFeedbackForm((v) => !v)}
+            expanded={showFeedbackForm}
+          />
+
+          {showFeedbackForm && <FeedbackForm onClose={() => setShowFeedbackForm(false)} />}
+
           {!isOAuthUser && (
             <ActionRow
               icon={<Lock size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
@@ -616,6 +628,158 @@ function OptionList({
         </button>
       ))}
     </div>
+  );
+}
+
+function FeedbackForm({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setError(null);
+    if (!message.trim()) {
+      setError(t('profile.feedback.empty'));
+      return;
+    }
+    if (!user) {
+      setError(t('profile.errors.invalidSession'));
+      return;
+    }
+    setSubmitting(true);
+    const { error: err } = await submitFeedback(user.id, message);
+    setSubmitting(false);
+    if (err) {
+      setError(t('profile.feedback.errorGeneric'));
+      return;
+    }
+    setSuccess(true);
+    setMessage('');
+    setTimeout(() => {
+      setSuccess(false);
+      onClose();
+    }, 1800);
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        padding: '16px 20px 20px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        borderBottom: `1px solid var(--cam-border)`,
+      }}
+    >
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder={t('profile.feedback.placeholder')}
+        rows={4}
+        style={{
+          width: '100%',
+          resize: 'vertical',
+          minHeight: '96px',
+          padding: '12px 14px',
+          borderRadius: '14px',
+          border: `1.5px solid var(--cam-border)`,
+          backgroundColor: 'var(--cam-bg-input)',
+          fontSize: '14px',
+          color: 'var(--cam-text-primary)',
+          outline: 'none',
+          boxSizing: 'border-box',
+          fontFamily: 'inherit',
+          lineHeight: 1.5,
+        }}
+      />
+
+      {error && (
+        <div
+          role="alert"
+          style={{
+            backgroundColor: 'var(--cam-bg-error-soft)',
+            color: 'var(--cam-text-error)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div
+          style={{
+            backgroundColor: 'var(--cam-bg-accent-soft)',
+            color: 'var(--cam-text-accent)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+        >
+          {t('profile.feedback.success')}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          style={{
+            flex: 1,
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'transparent',
+            color: 'var(--cam-text-secondary)',
+            border: `1.5px solid var(--cam-border)`,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {t('common.cancel')}
+        </button>
+        <button
+          type="submit"
+          disabled={submitting}
+          style={{
+            flex: 1,
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            opacity: submitting ? 0.85 : 1,
+            fontFamily: 'inherit',
+          }}
+        >
+          {submitting ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Send size={14} strokeWidth={2.5} />
+          )}
+          {submitting ? t('profile.feedback.submitting') : t('profile.feedback.submit')}
+        </button>
+      </div>
+    </form>
   );
 }
 
