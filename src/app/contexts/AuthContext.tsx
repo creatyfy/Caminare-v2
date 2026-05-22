@@ -8,6 +8,7 @@ import {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { TERMS_VERSION } from '../content/legal';
 
 type AuthContextValue = {
   session: Session | null;
@@ -68,7 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name, birth_date: birthDate } },
+          options: {
+            data: {
+              full_name: name,
+              birth_date: birthDate,
+              terms_accepted_at: new Date().toISOString(),
+              terms_version: TERMS_VERSION,
+            },
+          },
         });
         return { error: error?.message ?? null };
       },

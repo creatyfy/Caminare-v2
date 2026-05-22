@@ -6,16 +6,18 @@ import { useAuth } from '../contexts/AuthContext';
 export function GoogleSignInButton({
   label,
   onError,
+  disabled = false,
 }: {
   label?: string;
   onError?: (msg: string) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
-    if (loading) return;
+    if (loading || disabled) return;
     setLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
@@ -24,11 +26,13 @@ export function GoogleSignInButton({
     }
   }
 
+  const isDisabled = loading || disabled;
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={loading}
+      disabled={isDisabled}
       style={{
         height: '56px',
         width: '100%',
@@ -38,13 +42,13 @@ export function GoogleSignInButton({
         border: `1.5px solid var(--cam-border)`,
         fontSize: '15px',
         fontWeight: 600,
-        cursor: loading ? 'not-allowed' : 'pointer',
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: '12px',
         boxShadow: 'var(--cam-shadow-card)',
-        opacity: loading ? 0.85 : 1,
+        opacity: disabled ? 0.55 : loading ? 0.85 : 1,
         transition: 'transform 0.15s ease, opacity 0.15s ease',
         fontFamily: 'inherit',
       }}

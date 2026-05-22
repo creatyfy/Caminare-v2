@@ -52,6 +52,8 @@ export const ptBR = {
     hasAccount: 'Já tem conta?',
     goToLogin: 'Já tenho conta',
     google: 'Cadastrar com Google',
+    acceptTerms:
+      'Li e concordo com os <terms>Termos de Uso</terms> e a <privacy>Política de Privacidade</privacy>.',
     successTitle: 'Conta criada!',
     successMessage: 'Enviamos um link de confirmação para <strong>{{email}}</strong>. Verifique sua caixa de entrada para continuar.',
     goLogin: 'Ir para o login',
@@ -229,6 +231,7 @@ export const ptBR = {
     changePassword: 'Alterar senha',
     signOut: 'Sair da conta',
     deleteAccount: 'Excluir conta',
+    legalSection: 'Documentos',
     settingsSection: 'Preferências',
     language: 'Idioma',
     theme: 'Tema',
@@ -258,6 +261,10 @@ export const ptBR = {
       submitting: 'Excluindo',
       errorGeneric: 'Erro ao excluir a conta.',
     },
+  },
+  legal: {
+    termsLink: 'Termos de Uso',
+    privacyLink: 'Política de Privacidade',
   },
   nav: {
     home: 'Início',

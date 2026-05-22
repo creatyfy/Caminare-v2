@@ -20,6 +20,7 @@ import { PatternsScreen } from './screens/PatternsScreen';
 import { NewPatternScreen } from './screens/NewPatternScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import { LegalScreen } from './screens/LegalScreen';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -38,6 +39,8 @@ function AppRoutes() {
         <Route path="/cadastro" element={<SignUpScreen />} />
         <Route path="/esqueci-senha" element={<ForgotPasswordScreen />} />
         <Route path="/redefinir-senha" element={<ResetPasswordScreen />} />
+        <Route path="/termos" element={<LegalScreen kind="terms" />} />
+        <Route path="/privacidade" element={<LegalScreen kind="privacy" />} />
 
         <Route path="/home" element={<RequireAuth><HomeScreen /></RequireAuth>} />
         <Route path="/gravacao" element={<RequireAuth><RecordingScreen /></RequireAuth>} />
