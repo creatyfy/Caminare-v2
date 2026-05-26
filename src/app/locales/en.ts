@@ -292,10 +292,25 @@ export const en = {
   },
   admin: {
     title: 'Admin Panel',
+    adminBadge: 'Admin mode',
     profileSubtitle: 'Stats, users and suggestions',
     backToApp: 'Back to app',
     refresh: 'Refresh',
     errorLoad: 'Could not load admin data.',
+    nav: {
+      overview: 'Overview',
+      feedback: 'Suggestions',
+      users: 'Users',
+    },
+    menu: {
+      viewAsUser: 'View as user',
+      signOut: 'Sign out',
+    },
+    users: {
+      placeholderTitle: 'User management',
+      placeholderBody:
+        'Coming soon: a list of users, subscription status, signup dates and moderation actions.',
+    },
     sections: {
       users: 'Users',
       engagement: 'Engagement',

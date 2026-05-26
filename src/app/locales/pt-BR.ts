@@ -292,10 +292,25 @@ export const ptBR = {
   },
   admin: {
     title: 'Painel Admin',
+    adminBadge: 'Modo admin',
     profileSubtitle: 'Estatísticas, usuários e sugestões',
     backToApp: 'Voltar ao app',
     refresh: 'Atualizar',
     errorLoad: 'Não foi possível carregar os dados do painel.',
+    nav: {
+      overview: 'Visão geral',
+      feedback: 'Sugestões',
+      users: 'Usuários',
+    },
+    menu: {
+      viewAsUser: 'Ver como usuário',
+      signOut: 'Sair da conta',
+    },
+    users: {
+      placeholderTitle: 'Gestão de usuários',
+      placeholderBody:
+        'Em breve aqui você vai poder ver a lista de usuários, status de assinatura, datas de cadastro e ações de moderação.',
+    },
     sections: {
       users: 'Usuários',
       engagement: 'Engajamento',
