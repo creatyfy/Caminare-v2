@@ -292,6 +292,7 @@ export const ptBR = {
   },
   admin: {
     title: 'Painel Admin',
+    profileSubtitle: 'Estatísticas, usuários e sugestões',
     backToApp: 'Voltar ao app',
     refresh: 'Atualizar',
     errorLoad: 'Não foi possível carregar os dados do painel.',

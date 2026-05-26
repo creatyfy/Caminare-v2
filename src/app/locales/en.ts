@@ -292,6 +292,7 @@ export const en = {
   },
   admin: {
     title: 'Admin Panel',
+    profileSubtitle: 'Stats, users and suggestions',
     backToApp: 'Back to app',
     refresh: 'Refresh',
     errorLoad: 'Could not load admin data.',

@@ -22,6 +22,7 @@ import {
   Shield,
   Lightbulb,
   Send,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
@@ -152,6 +153,51 @@ export function ProfileScreen() {
             </div>
           </div>
         </div>
+
+        {/* Admin entry (apenas pra admins) */}
+        {profile?.is_admin && (
+          <button
+            type="button"
+            onClick={() => navigate('/admin')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              width: '100%',
+              padding: '16px 20px',
+              backgroundColor: 'var(--cam-color-brand)',
+              color: 'var(--cam-text-on-brand)',
+              borderRadius: '20px',
+              boxShadow: 'var(--cam-shadow-brand)',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              fontFamily: 'inherit',
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <LayoutDashboard size={20} color="#FFFFFF" strokeWidth={2.2} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '15px', fontWeight: 700 }}>{t('admin.title')}</div>
+              <div style={{ fontSize: '12px', opacity: 0.85, marginTop: '2px' }}>
+                {t('admin.profileSubtitle')}
+              </div>
+            </div>
+            <ChevronRight size={18} color="#FFFFFF" />
+          </button>
+        )}
 
         {/* Info card — collapsible */}
         <div
