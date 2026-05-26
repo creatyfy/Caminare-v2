@@ -59,7 +59,6 @@ export function HomeScreen() {
           borderBottomLeftRadius: '32px',
           borderBottomRightRadius: '32px',
           color: 'var(--cam-text-on-brand)',
-          position: 'relative',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
@@ -120,6 +119,8 @@ export function HomeScreen() {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         <div
