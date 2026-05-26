@@ -146,14 +146,9 @@ export function ResetPasswordScreen() {
         }}
       >
         <img
-          src="/owl_cropped.png"
+          src="/logoatualizado.png"
           alt="Caminare"
-          style={{ width: 72, height: 'auto', objectFit: 'contain', display: 'block' }}
-        />
-        <img
-          src="/text_cropped.png"
-          alt="Caminare"
-          style={{ width: 140, height: 'auto', objectFit: 'contain', display: 'block' }}
+          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </div>
 
