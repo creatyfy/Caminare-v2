@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Mic, Heart, Brain, TrendingUp, BookOpen, Edit3 } from 'lucide-react';
+import { Mic, Heart, Brain, TrendingUp, BookOpen, Edit3, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -59,22 +59,58 @@ export function HomeScreen() {
           borderBottomLeftRadius: '32px',
           borderBottomRightRadius: '32px',
           color: 'var(--cam-text-on-brand)',
+          position: 'relative',
         }}
       >
-        <h1
-          style={{
-            fontSize: '26px',
-            fontWeight: 700,
-            margin: '0 0 6px 0',
-            letterSpacing: '-0.5px',
-            color: 'var(--cam-text-on-brand)',
-          }}
-        >
-          {t('home.greeting', { name: firstName })}
-        </h1>
-        <p style={{ fontSize: '15px', margin: 0, opacity: 0.9, fontWeight: 400 }}>
-          {t('home.prompt')}
-        </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1
+              style={{
+                fontSize: '26px',
+                fontWeight: 700,
+                margin: '0 0 6px 0',
+                letterSpacing: '-0.5px',
+                color: 'var(--cam-text-on-brand)',
+              }}
+            >
+              {t('home.greeting', { name: firstName })}
+            </h1>
+            <p style={{ fontSize: '15px', margin: 0, opacity: 0.9, fontWeight: 400 }}>
+              {t('home.prompt')}
+            </p>
+          </div>
+
+          {profile?.is_admin && (
+            <button
+              type="button"
+              onClick={() => navigate('/admin')}
+              aria-label={t('admin.title')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '9999px',
+                backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                flexShrink: 0,
+                marginTop: '2px',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              <Shield size={13} strokeWidth={2.5} />
+              Admin
+            </button>
+          )}
+        </div>
       </div>
 
       <div
