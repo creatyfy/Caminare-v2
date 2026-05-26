@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import './lib/i18n';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -21,12 +21,43 @@ import { NewPatternScreen } from './screens/NewPatternScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { LegalScreen } from './screens/LegalScreen';
+import { AdminScreen } from './screens/AdminScreen';
+import { getProfile } from './lib/db';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
   const location = useLocation();
   if (loading) return null;
   if (!session) return <Navigate to="/login" replace state={{ from: location }} />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  const location = useLocation();
+  const [checking, setChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!session?.user) {
+      setChecking(false);
+      return;
+    }
+    setChecking(true);
+    getProfile(session.user.id).then((p) => {
+      if (!active) return;
+      setIsAdmin(!!p?.is_admin);
+      setChecking(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [session]);
+
+  if (loading || checking) return null;
+  if (!session) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!isAdmin) return <Navigate to="/home" replace />;
   return <>{children}</>;
 }
 
@@ -53,6 +84,7 @@ function AppRoutes() {
         <Route path="/novo-padrao" element={<RequireAuth><NewPatternScreen /></RequireAuth>} />
         <Route path="/resumo" element={<RequireAuth><SummaryScreen /></RequireAuth>} />
         <Route path="/perfil" element={<RequireAuth><ProfileScreen /></RequireAuth>} />
+        <Route path="/admin" element={<RequireAdmin><AdminScreen /></RequireAdmin>} />
       </Routes>
 
       <Routes>
