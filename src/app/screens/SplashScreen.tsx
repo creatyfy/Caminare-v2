@@ -9,18 +9,17 @@ export function SplashScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { session, loading, user } = useAuth();
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
   const [adminChecked, setAdminChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Tempos: 0 = entrada animada, 1 = hold mostrando a logo, 2 = saída e navega
   useEffect(() => {
-    const t1 = setTimeout(() => setStep(1), 900);
-    const t2 = setTimeout(() => setStep(2), 1900);
-    const t3 = setTimeout(() => setStep(3), 3100);
+    const t1 = setTimeout(() => setStep(1), 1600);
+    const t2 = setTimeout(() => setStep(2), 2300);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
-      clearTimeout(t3);
     };
   }, []);
 
@@ -43,16 +42,14 @@ export function SplashScreen() {
   }, [loading, user]);
 
   useEffect(() => {
-    if (step === 3 && !loading && adminChecked) {
+    if (step === 2 && !loading && adminChecked) {
       if (!session) navigate('/login', { replace: true });
       else if (isAdmin) navigate('/admin', { replace: true });
       else navigate('/home', { replace: true });
     }
   }, [step, loading, session, adminChecked, isAdmin, navigate]);
 
-  const owlVisible = step >= 0;
-  const textVisible = step >= 1;
-  const exiting = step >= 3;
+  const exiting = step >= 2;
 
   return (
     <div
@@ -69,68 +66,46 @@ export function SplashScreen() {
       <AnimatePresence>
         {!exiting && (
           <motion.div
-            key="splash-content"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.45, ease: 'easeOut' } }}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
+            key="splash-logo"
+            initial={{ opacity: 0, scale: 0.78 }}
+            animate={{
+              opacity: 1,
+              scale: [0.82, 1.06, 0.99, 1.02, 1],
             }}
+            exit={{
+              opacity: 0,
+              scale: 0.94,
+              transition: { duration: 0.45, ease: 'easeOut' },
+            }}
+            transition={{
+              opacity: { duration: 0.55, ease: 'easeOut' },
+              scale: {
+                duration: 1.8,
+                times: [0, 0.3, 0.55, 0.8, 1],
+                ease: 'easeInOut',
+              },
+            }}
+            style={{ display: 'flex' }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={
-                owlVisible
-                  ? { opacity: 1, scale: [0.95, 1.05, 0.98, 1.04, 1] }
-                  : {}
-              }
-              transition={{
-                opacity: { duration: 0.5, ease: 'easeOut' },
-                scale: {
-                  duration: 2.2,
-                  times: [0, 0.25, 0.5, 0.75, 1],
-                  ease: 'easeInOut',
-                },
+            <img
+              src="/logoatualizado.png"
+              alt="Caminare"
+              style={{
+                width: 260,
+                maxWidth: '70vw',
+                height: 'auto',
+                objectFit: 'contain',
+                display: 'block',
               }}
-              style={{ display: 'flex' }}
-            >
-              <img
-                src="/alinhadapng.png"
-                alt="Caminare"
-                style={{ width: 180, height: 'auto', objectFit: 'contain' }}
-              />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.9 }}
-              animate={
-                textVisible
-                  ? { opacity: 1, y: 0, scale: [0.95, 1.04, 1] }
-                  : { opacity: 0, y: 14, scale: 0.9 }
-              }
-              transition={{
-                opacity: { duration: 0.5, ease: 'easeOut' },
-                y: { duration: 0.5, ease: 'easeOut' },
-                scale: { duration: 1.6, times: [0, 0.5, 1], ease: 'easeInOut' },
-              }}
-              style={{ display: 'flex' }}
-            >
-              <img
-                src="/caminarecomp.png"
-                alt="Caminare"
-                style={{ width: 240, height: 'auto', objectFit: 'contain' }}
-              />
-            </motion.div>
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: textVisible && !exiting ? 0.6 : 0 }}
-        transition={{ duration: 0.6 }}
+        animate={{ opacity: step >= 1 && !exiting ? 0.6 : 0 }}
+        transition={{ duration: 0.5 }}
         style={{
           position: 'absolute',
           bottom: 40,
