@@ -97,9 +97,9 @@ export function SplashScreen() {
               style={{ display: 'flex' }}
             >
               <img
-                src="/owl_cropped.png"
+                src="/alinhadapng.png"
                 alt="Caminare"
-                style={{ width: 120, height: 'auto', objectFit: 'contain' }}
+                style={{ width: 180, height: 'auto', objectFit: 'contain' }}
               />
             </motion.div>
 
@@ -118,9 +118,9 @@ export function SplashScreen() {
               style={{ display: 'flex' }}
             >
               <img
-                src="/text_cropped.png"
+                src="/caminarecomp.png"
                 alt="Caminare"
-                style={{ width: 180, height: 'auto', objectFit: 'contain' }}
+                style={{ width: 240, height: 'auto', objectFit: 'contain' }}
               />
             </motion.div>
           </motion.div>
