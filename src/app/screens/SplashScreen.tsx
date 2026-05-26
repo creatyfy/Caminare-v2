@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { getProfile } from '../lib/db';
 
 export function SplashScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { session, loading } = useAuth();
+  const { session, loading, user } = useAuth();
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [adminChecked, setAdminChecked] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setStep(1), 900);
@@ -21,11 +24,31 @@ export function SplashScreen() {
     };
   }, []);
 
+  // Verifica se o usuário logado é admin (pra rotear pro painel direto)
   useEffect(() => {
-    if (step === 3 && !loading) {
-      navigate(session ? '/home' : '/login', { replace: true });
+    if (loading) return;
+    if (!user) {
+      setAdminChecked(true);
+      return;
     }
-  }, [step, loading, session, navigate]);
+    let active = true;
+    getProfile(user.id).then((p) => {
+      if (!active) return;
+      setIsAdmin(!!p?.is_admin);
+      setAdminChecked(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [loading, user]);
+
+  useEffect(() => {
+    if (step === 3 && !loading && adminChecked) {
+      if (!session) navigate('/login', { replace: true });
+      else if (isAdmin) navigate('/admin', { replace: true });
+      else navigate('/home', { replace: true });
+    }
+  }, [step, loading, session, adminChecked, isAdmin, navigate]);
 
   const owlVisible = step >= 0;
   const textVisible = step >= 1;
