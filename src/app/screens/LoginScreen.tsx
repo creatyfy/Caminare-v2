@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
+import { getProfile } from '../lib/db';
 
 export function LoginScreen() {
   const navigate = useNavigate();
@@ -24,13 +25,20 @@ export function LoginScreen() {
       return;
     }
     setSubmitting(true);
-    const { error: err } = await signIn(email.trim(), password);
-    setSubmitting(false);
+    const { error: err, userId } = await signIn(email.trim(), password);
     if (err) {
+      setSubmitting(false);
       setError(translateLoginError(err, t));
       return;
     }
-    navigate('/home', { replace: true });
+    // Admin vai direto pro painel; usuário comum, pro home
+    let target = '/home';
+    if (userId) {
+      const profile = await getProfile(userId);
+      if (profile?.is_admin) target = '/admin';
+    }
+    setSubmitting(false);
+    navigate(target, { replace: true });
   }
 
   return (

@@ -14,7 +14,10 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<{ error: string | null; userId: string | null }>;
   signUp: (
     name: string,
     email: string,
@@ -62,8 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       loading,
       async signIn(email, password) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        return { error: error?.message ?? null };
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        return {
+          error: error?.message ?? null,
+          userId: data?.user?.id ?? null,
+        };
       },
       async signUp(name, email, password, birthDate) {
         const { error } = await supabase.auth.signUp({
@@ -114,7 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: updateErr?.message ?? null };
       },
       async signInWithGoogle() {
-        const redirectTo = `${window.location.origin}/home`;
+        // Redirecionando para '/' para que a SplashScreen faça o roteamento
+        // baseado em admin/usuário após a autenticação OAuth.
+        const redirectTo = `${window.location.origin}/`;
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: { redirectTo },
