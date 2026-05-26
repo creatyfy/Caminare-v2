@@ -142,9 +142,12 @@ export function RecordingScreen() {
     recognition.lang = recLang;
 
     recognition.onresult = (event) => {
+      // Reconstrói o texto completo a partir do estado atual de TODOS os
+      // resultados, em vez de anexar. Evita duplicação quando o engine
+      // emite o mesmo final mais de uma vez (acontece no Safari iOS).
       let interim = '';
       let final = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
           final += result[0].transcript;
@@ -152,12 +155,10 @@ export function RecordingScreen() {
           interim += result[0].transcript;
         }
       }
-      if (final) {
-        accumulatedRef.current = (accumulatedRef.current + ' ' + final).trim();
-        setFinalText(accumulatedRef.current);
-      }
-      interimRef.current = interim;
-      setInterimText(interim);
+      accumulatedRef.current = final.trim();
+      setFinalText(accumulatedRef.current);
+      interimRef.current = interim.trim();
+      setInterimText(interim.trim());
     };
 
     recognition.onerror = (event) => {
