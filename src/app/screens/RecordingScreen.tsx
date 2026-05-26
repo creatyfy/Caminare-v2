@@ -38,7 +38,39 @@ type SpeechRecognitionEventLike = {
 type SpeechRecognitionErrorEventLike = { error: string };
 
 type RecState = 'idle' | 'recording' | 'review' | 'saving';
+type RecLang = 'pt-BR' | 'en-US';
 const MAX_SECONDS = 120;
+const LANG_STORAGE_KEY = 'caminare_rec_lang';
+
+function getInitialRecLang(appLang: string): RecLang {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
+      if (saved === 'pt-BR' || saved === 'en-US') return saved;
+    } catch {
+      // ignore
+    }
+  }
+  return appLang.startsWith('en') ? 'en-US' : 'pt-BR';
+}
+
+function langChipStyle(active: boolean): React.CSSProperties {
+  return {
+    padding: '10px 16px',
+    borderRadius: '9999px',
+    border: active ? 'none' : `1.5px solid var(--cam-border)`,
+    backgroundColor: active ? 'var(--cam-color-brand)' : 'var(--cam-bg-card)',
+    color: active ? '#FFFFFF' : 'var(--cam-text-primary)',
+    fontSize: '13px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontFamily: 'inherit',
+    boxShadow: active ? 'var(--cam-shadow-brand)' : 'none',
+  };
+}
 
 export function RecordingScreen() {
   const navigate = useNavigate();
@@ -50,6 +82,16 @@ export function RecordingScreen() {
   const [interimText, setInterimText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(0);
+  const [recLang, setRecLang] = useState<RecLang>(() => getInitialRecLang(i18n.language));
+
+  function changeRecLang(lang: RecLang) {
+    setRecLang(lang);
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+      // ignore
+    }
+  }
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -97,7 +139,7 @@ export function RecordingScreen() {
     const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = i18n.language.startsWith('en') ? 'en-US' : 'pt-BR';
+    recognition.lang = recLang;
 
     recognition.onresult = (event) => {
       let interim = '';
@@ -374,6 +416,26 @@ export function RecordingScreen() {
           >
             {t('recording.startPrompt')}
           </p>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+            <button
+              type="button"
+              onClick={() => changeRecLang('pt-BR')}
+              aria-pressed={recLang === 'pt-BR'}
+              style={langChipStyle(recLang === 'pt-BR')}
+            >
+              🇧🇷 Português
+            </button>
+            <button
+              type="button"
+              onClick={() => changeRecLang('en-US')}
+              aria-pressed={recLang === 'en-US'}
+              style={langChipStyle(recLang === 'en-US')}
+            >
+              🇺🇸 English
+            </button>
+          </div>
+
           <p
             style={{
               fontSize: '13px',
@@ -449,6 +511,20 @@ export function RecordingScreen() {
                 }}
               >
                 {t('recording.recording')}
+              </span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: 'var(--cam-text-secondary)',
+                  backgroundColor: 'var(--cam-bg-muted)',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {recLang === 'pt-BR' ? 'PT' : 'EN'}
               </span>
             </div>
             <span
