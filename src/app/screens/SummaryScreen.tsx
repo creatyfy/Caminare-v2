@@ -1,18 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FileText, Download, Share2, Calendar, ChevronDown } from 'lucide-react';
+import { FileText, Download, Share2, Calendar, ChevronDown, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { getEntriesForSummary, type EntryDetail } from '../lib/db';
+import { getEntriesForSummary, getProfile, type EntryDetail, type Profile } from '../lib/db';
 import { formatDate } from '../lib/format';
+import type { TherapyReportData } from '../lib/pdf/TherapyReportPDF';
 
 type SummaryPeriod = '7days' | '15days' | '30days';
+type PdfBusy = 'idle' | 'downloading' | 'sharing';
 
 export function SummaryScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [entries, setEntries] = useState<EntryDetail[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<SummaryPeriod>('30days');
+  const [pdfBusy, setPdfBusy] = useState<PdfBusy>('idle');
+  const [pdfError, setPdfError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getProfile(user.id).then(setProfile);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -51,90 +61,132 @@ export function SummaryScreen() {
       .slice(0, 5);
   }, [entries]);
 
-  const handleDownloadPdf = () => {
-    const printWindow = window.open('', '_blank', 'width=800,height=900');
-    if (!printWindow) return;
-
-    const escapeHtml = (value: string) =>
-      value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-    const eventsHtml = entries
-      .map((entry) => {
+  function buildReportData(): TherapyReportData {
+    const userName =
+      profile?.full_name?.trim() ||
+      user?.email ||
+      t('admin.feedback.noName');
+    const now = new Date();
+    const generatedAt = now.toLocaleString(i18n.language, {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return {
+      title: t('summary.pdfTitle'),
+      userName,
+      periodLabel,
+      generatedLabel: `${t('summary.pdfGeneratedAt')} ${generatedAt}`,
+      totalEntries: entries.length,
+      totalEntriesLabel: t('summary.pdfRecords'),
+      topEmotionsLabel: t('summary.topEmotions'),
+      topEmotions,
+      eventsHeader: t('summary.pdfEvents'),
+      events: entries.map((entry) => {
         const { date, time } = formatDate(entry.created_at, i18n.language);
-        const summary =
-          entry.raw_text.length > 120
-            ? entry.raw_text.slice(0, 120).trimEnd() + '…'
-            : entry.raw_text;
-        const emotionNames = entry.emotions.map((e) => e.name);
-        return `
-          <section class="event">
-            <div class="event-meta">${escapeHtml(date)} • ${escapeHtml(time)}</div>
-            <h3 class="event-title">${escapeHtml(summary)}</h3>
-            <p class="event-text">${escapeHtml(entry.raw_text)}</p>
-            <div class="tags">
-              ${emotionNames.map((e) => `<span class="tag">${escapeHtml(e)}</span>`).join('')}
-            </div>
-          </section>
-        `;
-      })
-      .join('');
-
-    const doc = `<!doctype html>
-<html lang="${i18n.language.startsWith('en') ? 'en' : 'pt-BR'}">
-<head>
-<meta charset="utf-8" />
-<title>${escapeHtml(t('summary.pdfTitle'))} — ${escapeHtml(periodLabel)}</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    color: #2D2A45;
-    margin: 32px;
-    line-height: 1.5;
+        return {
+          date,
+          time,
+          text: entry.raw_text,
+          emotions: entry.emotions.map((e) => e.name),
+        };
+      }),
+      labels: {
+        forLabel: t('summary.pdfFor'),
+        periodLabelKey: t('summary.pdfPeriodLabel'),
+        generatedLabelKey: t('summary.pdfGeneratedAt'),
+        pageLabel: t('summary.pdfPage'),
+        emptyEvents: t('summary.empty'),
+        confidentialNote: t('summary.pdfConfidential'),
+      },
+      logoSrc: `${window.location.origin}/logoatualizado.png`,
+    };
   }
-  h1 { font-size: 24px; margin: 0 0 4px 0; color: #2D2A45; }
-  .period { font-size: 14px; color: #6B7280; margin-bottom: 24px; }
-  h2 { font-size: 18px; margin: 24px 0 12px 0; color: #534AB7; border-bottom: 1px solid #E5E7EB; padding-bottom: 8px; }
-  .stats { display: flex; gap: 24px; margin-bottom: 16px; }
-  .stat { font-size: 14px; }
-  .stat strong { color: #534AB7; }
-  .event { padding: 16px 0; border-bottom: 1px solid #E5E7EB; page-break-inside: avoid; }
-  .event:last-child { border-bottom: none; }
-  .event-meta { font-size: 12px; color: #8B87A8; margin-bottom: 4px; }
-  .event-title { font-size: 15px; font-weight: 600; margin: 0 0 8px 0; color: #2D2A45; }
-  .event-text { font-size: 14px; color: #2D2A45; margin: 0 0 12px 0; white-space: pre-wrap; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag { background: #F0EFFF; color: #534AB7; padding: 4px 10px; border-radius: 9999px; font-size: 12px; }
-  @media print { body { margin: 16mm; } .event { page-break-inside: avoid; } }
-</style>
-</head>
-<body>
-  <h1>${escapeHtml(t('summary.pdfTitle'))}</h1>
-  <div class="period">${escapeHtml(periodLabel)}</div>
 
-  <h2>${escapeHtml(t('summary.pdfStats'))}</h2>
-  <div class="stats">
-    <div class="stat"><strong>${entries.length}</strong> ${escapeHtml(t('summary.pdfRecords'))}</div>
-  </div>
+  async function buildPdfBlob(): Promise<Blob> {
+    // Lazy load: @react-pdf/renderer só é baixado quando o usuário
+    // clica em Baixar ou Compartilhar
+    const [{ pdf }, { TherapyReportPDF }] = await Promise.all([
+      import('@react-pdf/renderer'),
+      import('../lib/pdf/TherapyReportPDF'),
+    ]);
+    const data = buildReportData();
+    return await pdf(<TherapyReportPDF data={data} />).toBlob();
+  }
 
-  <h2>${escapeHtml(t('summary.topEmotions'))}</h2>
-  <div class="tags">
-    ${topEmotions.map((e) => `<span class="tag">${escapeHtml(e.name)} (${e.count})</span>`).join('') || '—'}
-  </div>
+  function buildFilename(): string {
+    const ts = new Date().toISOString().slice(0, 10);
+    const base = i18n.language.startsWith('en') ? 'caminare-summary' : 'caminare-resumo';
+    return `${base}-${ts}.pdf`;
+  }
 
-  <h2>${escapeHtml(t('summary.pdfEvents'))}</h2>
-  ${eventsHtml}
+  function triggerDownload(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
 
-  <script>
-    window.addEventListener('load', () => { setTimeout(() => { window.print(); }, 200); });
-  </script>
-</body>
-</html>`;
+  async function handleDownloadPdf() {
+    if (pdfBusy !== 'idle' || loading || entries.length === 0) return;
+    setPdfBusy('downloading');
+    setPdfError(null);
+    try {
+      const blob = await buildPdfBlob();
+      triggerDownload(blob, buildFilename());
+    } catch (err) {
+      console.error('[pdf.download]', err);
+      setPdfError(t('summary.pdfError'));
+    } finally {
+      setPdfBusy('idle');
+    }
+  }
 
-    printWindow.document.open();
-    printWindow.document.write(doc);
-    printWindow.document.close();
-  };
+  async function handleShare() {
+    if (pdfBusy !== 'idle' || loading || entries.length === 0) return;
+    setPdfBusy('sharing');
+    setPdfError(null);
+    try {
+      const blob = await buildPdfBlob();
+      const filename = buildFilename();
+      const file = new File([blob], filename, { type: 'application/pdf' });
+
+      const canShareFiles =
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [file] });
+
+      if (canShareFiles) {
+        try {
+          await navigator.share({
+            title: t('summary.pdfTitle'),
+            text: t('summary.shareText'),
+            files: [file],
+          });
+        } catch (shareErr) {
+          // Usuário cancelou: ignore. Outros erros: cai pro download.
+          const name = (shareErr as Error).name;
+          if (name === 'AbortError') return;
+          triggerDownload(blob, filename);
+        }
+      } else {
+        // Navegador sem suporte a Web Share de arquivos: download direto
+        triggerDownload(blob, filename);
+      }
+    } catch (err) {
+      console.error('[pdf.share]', err);
+      setPdfError(t('summary.pdfError'));
+    } finally {
+      setPdfBusy('idle');
+    }
+  }
 
   return (
     <div
@@ -360,10 +412,27 @@ export function SummaryScreen() {
             </div>
           </div>
 
+          {pdfError && (
+            <div
+              role="alert"
+              style={{
+                backgroundColor: 'var(--cam-bg-error-soft)',
+                color: 'var(--cam-text-error)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                fontSize: '13px',
+                fontWeight: 500,
+                marginBottom: '12px',
+              }}
+            >
+              {pdfError}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={handleDownloadPdf}
-              disabled={loading || entries.length === 0}
+              disabled={loading || entries.length === 0 || pdfBusy !== 'idle'}
               style={{
                 flex: 1,
                 height: '56px',
@@ -377,15 +446,22 @@ export function SummaryScreen() {
                 gap: '8px',
                 fontSize: '15px',
                 fontWeight: 600,
-                cursor: loading || entries.length === 0 ? 'not-allowed' : 'pointer',
-                opacity: loading || entries.length === 0 ? 0.5 : 1,
+                cursor: loading || entries.length === 0 || pdfBusy !== 'idle' ? 'not-allowed' : 'pointer',
+                opacity: loading || entries.length === 0 || pdfBusy !== 'idle' ? 0.5 : 1,
+                fontFamily: 'inherit',
               }}
             >
-              <Download size={18} strokeWidth={2.5} />
-              {t('summary.downloadPdf')}
+              {pdfBusy === 'downloading' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Download size={18} strokeWidth={2.5} />
+              )}
+              {pdfBusy === 'downloading' ? t('summary.generating') : t('summary.downloadPdf')}
             </button>
 
             <button
+              onClick={handleShare}
+              disabled={loading || entries.length === 0 || pdfBusy !== 'idle'}
               style={{
                 flex: 1,
                 height: '56px',
@@ -399,12 +475,18 @@ export function SummaryScreen() {
                 gap: '8px',
                 fontSize: '15px',
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: loading || entries.length === 0 || pdfBusy !== 'idle' ? 'not-allowed' : 'pointer',
                 boxShadow: 'var(--cam-shadow-brand)',
+                opacity: loading || entries.length === 0 || pdfBusy !== 'idle' ? 0.7 : 1,
+                fontFamily: 'inherit',
               }}
             >
-              <Share2 size={18} strokeWidth={2.5} />
-              {t('summary.share')}
+              {pdfBusy === 'sharing' ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Share2 size={18} strokeWidth={2.5} />
+              )}
+              {pdfBusy === 'sharing' ? t('summary.generating') : t('summary.share')}
             </button>
           </div>
         </div>
