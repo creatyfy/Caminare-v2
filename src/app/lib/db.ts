@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
+  is_admin?: boolean | null;
 }
 
 export interface HomeStats {
@@ -37,7 +38,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     // Busca na tabela profiles
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name, avatar_url')
+      .select('full_name, avatar_url, is_admin')
       .eq('id', userId)
       .is('deleted_at', null)
       .maybeSingle();
@@ -53,6 +54,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     return {
       full_name: metaName ?? data?.full_name ?? null,
       avatar_url: data?.avatar_url ?? null,
+      is_admin: data?.is_admin ?? false,
     };
   } catch (err) {
     console.error('[db.getProfile]', err);
@@ -658,6 +660,104 @@ export async function getBeliefs(
   } catch (err) {
     console.error('[db.getBeliefs]', err);
     return [];
+  }
+}
+
+// ── Admin ──────────────────────────────────────────────────────────────────
+
+export interface AdminStats {
+  total_users: number;
+  users_trial: number;
+  users_active: number;
+  subs_annual_active: number;
+  subs_monthly_active: number;
+  users_apple: number;
+  users_google: number;
+  total_entries: number;
+  avg_weekly_entries_per_user: number;
+  emotions_total: number;
+  emotions_confirmed: number;
+  emotions_rejected: number;
+  emotions_adjusted: number;
+  thoughts_total: number;
+  thoughts_confirmed: number;
+  thoughts_rejected: number;
+  thoughts_adjusted: number;
+  beliefs_total: number;
+  beliefs_confirmed: number;
+  beliefs_rejected: number;
+  beliefs_adjusted: number;
+  patterns_total: number;
+  patterns_confirmed: number;
+  patterns_rejected: number;
+  patterns_adjusted: number;
+  feedback_total: number;
+  feedback_new: number;
+  feedback_read: number;
+  feedback_resolved: number;
+}
+
+export type FeedbackStatus = 'new' | 'read' | 'resolved';
+
+export interface FeedbackItem {
+  id: string;
+  user_id: string;
+  message: string;
+  status: FeedbackStatus;
+  created_at: string;
+  user_email: string | null;
+  user_name: string | null;
+}
+
+export async function getAdminStats(): Promise<AdminStats | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_admin_stats');
+    if (error) {
+      console.error('[db.getAdminStats]', error);
+      return null;
+    }
+    return data as AdminStats;
+  } catch (err) {
+    console.error('[db.getAdminStats]', err);
+    return null;
+  }
+}
+
+export async function getAdminFeedback(
+  status?: FeedbackStatus
+): Promise<FeedbackItem[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_admin_feedback', {
+      p_status: status ?? null,
+    });
+    if (error) {
+      console.error('[db.getAdminFeedback]', error);
+      return [];
+    }
+    return (data ?? []) as FeedbackItem[];
+  } catch (err) {
+    console.error('[db.getAdminFeedback]', err);
+    return [];
+  }
+}
+
+export async function updateFeedbackStatus(
+  feedbackId: string,
+  status: FeedbackStatus
+): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc('update_feedback_status', {
+      p_feedback_id: feedbackId,
+      p_status: status,
+    });
+    if (error) {
+      console.error('[db.updateFeedbackStatus]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.updateFeedbackStatus]', err);
+    return false;
   }
 }
 
