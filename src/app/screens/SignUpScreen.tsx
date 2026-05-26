@@ -153,14 +153,9 @@ export function SignUpScreen() {
         }}
       >
         <img
-          src="/owl_cropped.png"
+          src="/logoatualizado.png"
           alt="Caminare"
-          style={{ width: 100, height: 100, objectFit: 'contain', display: 'block' }}
-        />
-        <img
-          src="/text_cropped.png"
-          alt="Caminare"
-          style={{ width: 160, height: 'auto', objectFit: 'contain', display: 'block', marginTop: '-12px' }}
+          style={{ width: 180, height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </div>
 
