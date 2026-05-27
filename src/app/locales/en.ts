@@ -320,6 +320,12 @@ export const en = {
       placeholderTitle: 'User management',
       placeholderBody:
         'Coming soon: a list of users, subscription status, signup dates and moderation actions.',
+      searchPlaceholder: 'Search by name or email...',
+      count_one: '{{count}} user',
+      count_other: '{{count}} users',
+      emptyAll: 'No users registered yet.',
+      emptySearch: 'No users found for that search.',
+      entries: 'reg',
     },
     sections: {
       users: 'Users',

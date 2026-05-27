@@ -6,8 +6,10 @@ export type LegalBlock = { t: 'h' | 'h2' | 'p' | 'li'; s: string };
 export type LegalDoc = { title: string; updated: string; blocks: LegalBlock[] };
 export type LegalKind = 'terms' | 'privacy';
 
-// Versão dos termos aceita no cadastro (data da última atualização dos documentos).
-export const TERMS_VERSION = '2026-05-21';
+// TERMS_VERSION mudou-se para src/app/content/termsVersion.ts para permitir
+// que o AuthContext importe a versão sem carregar todo o conteúdo legal
+// no bundle principal. Re-exportamos aqui só por compatibilidade.
+export { TERMS_VERSION } from './termsVersion';
 
 export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
   "terms": {

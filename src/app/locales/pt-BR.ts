@@ -320,6 +320,12 @@ export const ptBR = {
       placeholderTitle: 'Gestão de usuários',
       placeholderBody:
         'Em breve aqui você vai poder ver a lista de usuários, status de assinatura, datas de cadastro e ações de moderação.',
+      searchPlaceholder: 'Buscar por nome ou email...',
+      count_one: '{{count}} usuário',
+      count_other: '{{count}} usuários',
+      emptyAll: 'Nenhum usuário cadastrado ainda.',
+      emptySearch: 'Nenhum usuário encontrado para essa busca.',
+      entries: 'reg',
     },
     sections: {
       users: 'Usuários',

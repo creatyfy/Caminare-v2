@@ -699,6 +699,15 @@ export interface AdminStats {
 
 export type FeedbackStatus = 'new' | 'read' | 'resolved';
 
+export interface AdminUser {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  is_admin: boolean;
+  created_at: string;
+  entries_count: number;
+}
+
 export interface FeedbackItem {
   id: string;
   user_id: string;
@@ -737,6 +746,20 @@ export async function getAdminFeedback(
     return (data ?? []) as FeedbackItem[];
   } catch (err) {
     console.error('[db.getAdminFeedback]', err);
+    return [];
+  }
+}
+
+export async function getAdminUsers(): Promise<AdminUser[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_admin_users');
+    if (error) {
+      console.error('[db.getAdminUsers]', error);
+      return [];
+    }
+    return (data ?? []) as AdminUser[];
+  } catch (err) {
+    console.error('[db.getAdminUsers]', err);
     return [];
   }
 }
