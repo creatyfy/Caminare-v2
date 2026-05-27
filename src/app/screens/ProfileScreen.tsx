@@ -23,6 +23,7 @@ import {
   Lightbulb,
   Send,
   LayoutDashboard,
+  CreditCard,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
@@ -324,6 +325,32 @@ export function ProfileScreen() {
             icon={<Shield size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
             label={t('legal.privacyLink')}
             onClick={() => navigate('/privacidade')}
+          />
+        </div>
+
+        {/* Subscription management */}
+        <div
+          style={{
+            backgroundColor: 'var(--cam-bg-card)',
+            borderRadius: '20px',
+            boxShadow: 'var(--cam-shadow-card)',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ padding: '16px 20px 8px 20px' }}>
+            <SectionLabel text={t('profile.subscriptionSection')} />
+          </div>
+          <ActionRow
+            icon={<CreditCard size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
+            label={t('profile.manageSubscription')}
+            onClick={() => {
+              const ua =
+                typeof window !== 'undefined' ? window.navigator.userAgent : '';
+              const url = /Android/.test(ua)
+                ? 'https://play.google.com/store/account/subscriptions'
+                : 'https://apps.apple.com/account/subscriptions';
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
           />
         </div>
 
