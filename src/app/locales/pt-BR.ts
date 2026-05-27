@@ -264,6 +264,8 @@ export const ptBR = {
     signOut: 'Sair da conta',
     deleteAccount: 'Excluir conta',
     legalSection: 'Documentos',
+    subscriptionSection: 'Assinatura',
+    manageSubscription: 'Gerenciar assinatura',
     settingsSection: 'Preferências',
     language: 'Idioma',
     theme: 'Tema',

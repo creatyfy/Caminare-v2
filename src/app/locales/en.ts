@@ -264,6 +264,8 @@ export const en = {
     signOut: 'Sign out',
     deleteAccount: 'Delete account',
     legalSection: 'Documents',
+    subscriptionSection: 'Subscription',
+    manageSubscription: 'Manage subscription',
     settingsSection: 'Preferences',
     language: 'Language',
     theme: 'Theme',

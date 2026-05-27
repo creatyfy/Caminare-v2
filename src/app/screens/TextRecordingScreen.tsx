@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createTextEntry } from '../lib/db';
 
+// Equivalente a aproximadamente 2 min de fala (150 wpm × ~5 chars por palavra)
+const MAX_CHARS = 1500;
+
 export function TextRecordingScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -82,9 +85,10 @@ export function TextRecordingScreen() {
       >
         <textarea
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
           placeholder={t('textRecording.placeholder')}
           disabled={submitting}
+          maxLength={MAX_CHARS}
           style={{
             flex: 1,
             width: '100%',
@@ -100,10 +104,29 @@ export function TextRecordingScreen() {
             boxShadow: 'var(--cam-shadow-card)',
             fontFamily: 'inherit',
             boxSizing: 'border-box',
-            marginBottom: '16px',
+            marginBottom: '8px',
             minHeight: 0,
           }}
         />
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginBottom: '12px',
+            fontSize: '12px',
+            fontWeight: 600,
+            color:
+              text.length >= MAX_CHARS
+                ? 'var(--cam-text-error)'
+                : text.length >= MAX_CHARS * 0.9
+                  ? 'var(--cam-text-warning)'
+                  : 'var(--cam-text-secondary)',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {text.length} / {MAX_CHARS}
+        </div>
 
         {error && (
           <div
