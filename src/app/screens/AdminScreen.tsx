@@ -28,10 +28,12 @@ import {
   getAdminStats,
   getAdminFeedback,
   updateFeedbackStatus,
+  getAdminUsers,
   getProfile,
   type AdminStats,
   type FeedbackItem,
   type FeedbackStatus,
+  type AdminUser,
   type Profile,
 } from '../lib/db';
 import { formatDate } from '../lib/format';
@@ -50,6 +52,8 @@ export function AdminScreen() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>('all');
+  const [users, setUsers] = useState<AdminUser[] | null>(null);
+  const [usersLoading, setUsersLoading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,6 +100,22 @@ export function AdminScreen() {
   useEffect(() => {
     load(true);
   }, [load]);
+
+  // Carrega lista de usuários só quando o admin abrir essa seção
+  useEffect(() => {
+    if (section !== 'users') return;
+    if (users !== null) return; // já carregou
+    let active = true;
+    setUsersLoading(true);
+    getAdminUsers().then((u) => {
+      if (!active) return;
+      setUsers(u);
+      setUsersLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [section, users]);
 
   async function handleStatusChange(feedbackId: string, status: FeedbackStatus) {
     const ok = await updateFeedbackStatus(feedbackId, status);
@@ -458,7 +478,9 @@ export function AdminScreen() {
                 lang={i18n.language}
               />
             )}
-            {!loading && section === 'users' && <UsersView />}
+            {!loading && section === 'users' && (
+              <UsersView users={users} loading={usersLoading} lang={i18n.language} />
+            )}
           </div>
         </main>
       </div>
@@ -1178,57 +1200,260 @@ function FeedbackRow({
   );
 }
 
-// ── Users (placeholder) ───────────────────────────────────────────────────────
+// ── Users ─────────────────────────────────────────────────────────────────────
 
-function UsersView() {
+function UsersView({
+  users,
+  loading,
+  lang,
+}: {
+  users: AdminUser[] | null;
+  loading: boolean;
+  lang: string;
+}) {
   const { t } = useTranslation();
+  const [search, setSearch] = useState('');
+
+  if (loading || users === null) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '60px 20px',
+          gap: '10px',
+          color: 'var(--cam-text-secondary)',
+        }}
+      >
+        <Loader2 size={18} className="animate-spin" />
+        <span style={{ fontSize: '14px' }}>{t('common.loading')}</span>
+      </div>
+    );
+  }
+
+  const filtered = search.trim()
+    ? users.filter((u) => {
+        const term = search.toLowerCase();
+        return (
+          (u.email ?? '').toLowerCase().includes(term) ||
+          (u.full_name ?? '').toLowerCase().includes(term)
+        );
+      })
+    : users;
+
+  return (
+    <div>
+      {/* Search */}
+      <div style={{ marginBottom: '16px', position: 'relative' }}>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t('admin.users.searchPlaceholder')}
+          style={{
+            width: '100%',
+            height: '44px',
+            padding: '0 16px',
+            borderRadius: '12px',
+            border: `1px solid var(--cam-border-subtle)`,
+            backgroundColor: 'var(--cam-bg-card)',
+            fontSize: '14px',
+            color: 'var(--cam-text-primary)',
+            outline: 'none',
+            fontFamily: 'inherit',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
+
+      {/* Count */}
+      <div
+        style={{
+          fontSize: '12px',
+          color: 'var(--cam-text-secondary)',
+          marginBottom: '12px',
+          fontWeight: 600,
+        }}
+      >
+        {t('admin.users.count', { count: filtered.length })}
+      </div>
+
+      {/* List */}
+      {filtered.length === 0 ? (
+        <div
+          style={{
+            backgroundColor: 'var(--cam-bg-card)',
+            borderRadius: '16px',
+            padding: '40px 20px',
+            textAlign: 'center',
+            color: 'var(--cam-text-secondary)',
+            fontSize: '14px',
+            boxShadow: 'var(--cam-shadow-card)',
+          }}
+        >
+          {search.trim()
+            ? t('admin.users.emptySearch')
+            : t('admin.users.emptyAll')}
+        </div>
+      ) : (
+        <div
+          style={{
+            backgroundColor: 'var(--cam-bg-card)',
+            borderRadius: '16px',
+            boxShadow: 'var(--cam-shadow-card)',
+            overflow: 'hidden',
+          }}
+        >
+          {filtered.map((u, i) => (
+            <UserRow
+              key={u.id}
+              user={u}
+              lang={lang}
+              isLast={i === filtered.length - 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UserRow({
+  user,
+  lang,
+  isLast,
+}: {
+  user: AdminUser;
+  lang: string;
+  isLast: boolean;
+}) {
+  const { t } = useTranslation();
+  const initial = (user.full_name?.[0] ?? user.email?.[0] ?? '?').toUpperCase();
+  const signupDate = new Date(user.created_at).toLocaleDateString(lang, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
   return (
     <div
       style={{
-        backgroundColor: 'var(--cam-bg-card)',
-        borderRadius: '16px',
-        padding: '48px 24px',
-        textAlign: 'center',
-        boxShadow: 'var(--cam-shadow-card)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '14px',
+        padding: '14px 18px',
+        borderBottom: isLast ? 'none' : `1px solid var(--cam-border-subtle)`,
       }}
     >
       <div
         style={{
-          width: 64,
-          height: 64,
+          width: 40,
+          height: 40,
           borderRadius: '50%',
           backgroundColor: 'var(--cam-bg-muted)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 16px auto',
-        }}
-      >
-        <Users size={28} color="var(--cam-text-brand)" strokeWidth={2} />
-      </div>
-      <h3
-        style={{
-          fontSize: '17px',
+          flexShrink: 0,
+          fontSize: '15px',
           fontWeight: 700,
-          color: 'var(--cam-text-primary)',
-          margin: '0 0 8px 0',
+          color: 'var(--cam-text-brand)',
         }}
       >
-        {t('admin.users.placeholderTitle')}
-      </h3>
-      <p
+        {initial}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '2px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: 'var(--cam-text-primary)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {user.full_name || t('admin.feedback.noName')}
+          </span>
+          {user.is_admin && (
+            <span
+              style={{
+                fontSize: '9px',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                backgroundColor: 'var(--cam-color-brand)',
+                padding: '2px 6px',
+                borderRadius: '9999px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.4px',
+                flexShrink: 0,
+              }}
+            >
+              Admin
+            </span>
+          )}
+        </div>
+        <div
+          style={{
+            fontSize: '12px',
+            color: 'var(--cam-text-secondary)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {user.email || '—'}
+        </div>
+      </div>
+      <div
         style={{
-          fontSize: '14px',
-          color: 'var(--cam-text-secondary)',
-          margin: 0,
-          lineHeight: 1.5,
-          maxWidth: 360,
-          marginLeft: 'auto',
-          marginRight: 'auto',
+          textAlign: 'right',
+          flexShrink: 0,
         }}
       >
-        {t('admin.users.placeholderBody')}
-      </p>
+        <div
+          style={{
+            fontSize: '13px',
+            fontWeight: 700,
+            color: 'var(--cam-text-primary)',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {user.entries_count}
+        </div>
+        <div
+          style={{
+            fontSize: '10px',
+            color: 'var(--cam-text-secondary)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.4px',
+            fontWeight: 600,
+            marginTop: '1px',
+          }}
+        >
+          {t('admin.users.entries')}
+        </div>
+      </div>
+      <div
+        style={{
+          fontSize: '11px',
+          color: 'var(--cam-text-secondary)',
+          minWidth: '70px',
+          textAlign: 'right',
+          flexShrink: 0,
+        }}
+      >
+        {signupDate}
+      </div>
     </div>
   );
 }

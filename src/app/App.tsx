@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, lazy, Suspense, type ReactNode } from 'react';
 import './lib/i18n';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -20,9 +20,17 @@ import { PatternsScreen } from './screens/PatternsScreen';
 import { NewPatternScreen } from './screens/NewPatternScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
-import { LegalScreen } from './screens/LegalScreen';
-import { AdminScreen } from './screens/AdminScreen';
 import { getProfile } from './lib/db';
+
+// Telas pesadas carregadas sob demanda (code splitting):
+// - LegalScreen tem o conteúdo completo dos Termos e Política em PT e EN
+// - AdminScreen tem todo o painel administrativo + queries
+const LegalScreen = lazy(() =>
+  import('./screens/LegalScreen').then((m) => ({ default: m.LegalScreen }))
+);
+const AdminScreen = lazy(() =>
+  import('./screens/AdminScreen').then((m) => ({ default: m.AdminScreen }))
+);
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -70,8 +78,22 @@ function AppRoutes() {
         <Route path="/cadastro" element={<SignUpScreen />} />
         <Route path="/esqueci-senha" element={<ForgotPasswordScreen />} />
         <Route path="/redefinir-senha" element={<ResetPasswordScreen />} />
-        <Route path="/termos" element={<LegalScreen kind="terms" />} />
-        <Route path="/privacidade" element={<LegalScreen kind="privacy" />} />
+        <Route
+          path="/termos"
+          element={
+            <Suspense fallback={null}>
+              <LegalScreen kind="terms" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/privacidade"
+          element={
+            <Suspense fallback={null}>
+              <LegalScreen kind="privacy" />
+            </Suspense>
+          }
+        />
 
         <Route path="/home" element={<RequireAuth><HomeScreen /></RequireAuth>} />
         <Route path="/gravacao" element={<RequireAuth><RecordingScreen /></RequireAuth>} />
@@ -84,7 +106,16 @@ function AppRoutes() {
         <Route path="/novo-padrao" element={<RequireAuth><NewPatternScreen /></RequireAuth>} />
         <Route path="/resumo" element={<RequireAuth><SummaryScreen /></RequireAuth>} />
         <Route path="/perfil" element={<RequireAuth><ProfileScreen /></RequireAuth>} />
-        <Route path="/admin" element={<RequireAdmin><AdminScreen /></RequireAdmin>} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <Suspense fallback={null}>
+                <AdminScreen />
+              </Suspense>
+            </RequireAdmin>
+          }
+        />
       </Routes>
 
       <Routes>

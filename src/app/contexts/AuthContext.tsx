@@ -8,7 +8,7 @@ import {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { TERMS_VERSION } from '../content/legal';
+import { TERMS_VERSION } from '../content/termsVersion';
 
 type AuthContextValue = {
   session: Session | null;
