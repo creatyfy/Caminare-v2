@@ -155,6 +155,7 @@ export const en = {
     save: 'Save',
     discard: 'Discard',
     rerecord: 'Record again',
+    continueRecording: 'Continue recording',
     reviewSubtitle: 'Review your recording. You can save, record again, or discard.',
     saving: 'Saving entry...',
     limitNote: 'Maximum 2 minutes per recording.',

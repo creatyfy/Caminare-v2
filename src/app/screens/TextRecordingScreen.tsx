@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -17,9 +17,20 @@ export function TextRecordingScreen() {
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Foca o textarea ao entrar na tela pra que o teclado suba imediatamente
+  // Foca antes do paint pra tentar herdar o gesto da navegação anterior
+  // (tap no botão da Home), o que ajuda em alguns navegadores móveis a
+  // abrir o teclado direto. iOS Safari ainda bloqueia em alguns casos.
+  useLayoutEffect(() => {
+    textareaRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  // Backup: tenta de novo logo após o paint
   useEffect(() => {
-    const id = setTimeout(() => textareaRef.current?.focus(), 50);
+    const id = setTimeout(() => {
+      if (document.activeElement !== textareaRef.current) {
+        textareaRef.current?.focus({ preventScroll: true });
+      }
+    }, 100);
     return () => clearTimeout(id);
   }, []);
 
