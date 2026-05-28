@@ -298,6 +298,17 @@ export function RecordingScreen() {
     setTimeout(() => start({ fresh: true }), 100);
   }
 
+  function continueRecording() {
+    // Volta a gravar mantendo o texto editado como base
+    const base = editedText.trim();
+    accumulatedRef.current = base;
+    interimRef.current = '';
+    setFinalText(base);
+    setInterimText('');
+    setError(null);
+    start({ fresh: false });
+  }
+
   function changeRecLang(lang: string) {
     if (lang === recLang) {
       setLangPickerOpen(false);
@@ -791,8 +802,8 @@ export function RecordingScreen() {
 
           <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
             <button
-              onClick={discard}
-              aria-label={t('recording.discard')}
+              onClick={reRecord}
+              aria-label={t('recording.rerecord')}
               style={{
                 width: '56px',
                 height: '56px',
@@ -810,7 +821,8 @@ export function RecordingScreen() {
               <Trash2 size={20} strokeWidth={2.2} />
             </button>
             <button
-              onClick={reRecord}
+              onClick={continueRecording}
+              disabled={!editedText.trim()}
               style={{
                 flex: 1,
                 height: '56px',
@@ -823,12 +835,14 @@ export function RecordingScreen() {
                 gap: '8px',
                 fontSize: '15px',
                 fontWeight: 600,
-                border: `1.5px solid var(--cam-border)`,
-                cursor: 'pointer',
+                border: `1.5px solid var(--cam-color-brand)`,
+                cursor: editedText.trim() ? 'pointer' : 'not-allowed',
+                opacity: editedText.trim() ? 1 : 0.5,
+                fontFamily: 'inherit',
               }}
             >
-              <RotateCcw size={18} strokeWidth={2.5} />
-              {t('recording.rerecord')}
+              <Mic size={18} strokeWidth={2.5} />
+              {t('recording.continueRecording')}
             </button>
             <button
               onClick={save}

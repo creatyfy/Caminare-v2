@@ -155,6 +155,7 @@ export const ptBR = {
     save: 'Salvar',
     discard: 'Descartar',
     rerecord: 'Gravar de novo',
+    continueRecording: 'Continuar gravando',
     reviewSubtitle: 'Revise sua gravação. Você pode salvar, gravar de novo ou descartar.',
     saving: 'Salvando o registro...',
     limitNote: 'Máximo 2 minutos por gravação.',
