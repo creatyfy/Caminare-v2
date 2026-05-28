@@ -171,7 +171,7 @@ export const ptBR = {
   emotionValidation: {
     title: 'Validação',
     subtitle: 'Valide as emoções e pensamentos que identificamos.',
-    subtitleManual: 'Adicione as emoções que sentiu nesse registro.',
+    subtitleManual: 'Valide as emoções e pensamentos que identificamos.',
     emotionsHeader: 'Emoções identificadas',
     addEmotion: 'Adicionar emoção',
     newEmotionPlaceholder: 'Digite uma emoção...',
@@ -182,11 +182,11 @@ export const ptBR = {
   },
   beliefValidation: {
     title: 'Crenças Identificadas',
-    subtitle: 'Valide as crenças limitantes encontradas',
-    subtitleManual: 'Adicione crenças limitantes que você percebeu nesse momento',
+    subtitle: 'Valide possíveis crenças que podem estar por trás da reação emocional deste evento',
+    subtitleManual: 'Valide possíveis crenças que podem estar por trás da reação emocional deste evento',
     adjust: 'Ajustar',
     discard: 'Descartar',
-    hint: 'Crenças limitantes são pensamentos que podem estar afetando sua autoestima e bem-estar',
+    hint: 'Quando imagens e crenças atuam inconscientemente, desarmonias podem surgir e padrões negativos se repetir.',
     finish: 'Finalizar Registro',
     addBelief: 'Adicionar crença',
     newBeliefPlaceholder: 'Ex: Não sou bom o suficiente...',
