@@ -171,7 +171,7 @@ export const en = {
   emotionValidation: {
     title: 'Validation',
     subtitle: 'Validate the emotions and thoughts we identified.',
-    subtitleManual: 'Add the emotions you felt in this entry.',
+    subtitleManual: 'Validate the emotions and thoughts we identified.',
     emotionsHeader: 'Identified emotions',
     addEmotion: 'Add emotion',
     newEmotionPlaceholder: 'Type an emotion...',
@@ -182,11 +182,11 @@ export const en = {
   },
   beliefValidation: {
     title: 'Identified Beliefs',
-    subtitle: 'Validate the limiting beliefs found',
-    subtitleManual: 'Add limiting beliefs you noticed in this moment',
+    subtitle: 'Validate possible beliefs that may be behind the emotional reaction to this event',
+    subtitleManual: 'Validate possible beliefs that may be behind the emotional reaction to this event',
     adjust: 'Adjust',
     discard: 'Discard',
-    hint: 'Limiting beliefs are thoughts that may be affecting your self-esteem and well-being',
+    hint: 'When images and beliefs operate unconsciously, disharmonies can arise and negative patterns can repeat.',
     finish: 'Finish Entry',
     addBelief: 'Add belief',
     newBeliefPlaceholder: 'e.g. I am not good enough...',
