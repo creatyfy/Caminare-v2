@@ -1,5 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { Mic, ArrowLeft, Square, Trash2, RotateCcw, Loader2, Edit3, AlertCircle, Check } from 'lucide-react';
+import {
+  Mic,
+  ArrowLeft,
+  Square,
+  Trash2,
+  RotateCcw,
+  Loader2,
+  Edit3,
+  AlertCircle,
+  Check,
+  Pause,
+  Play,
+  Globe,
+  X,
+} from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,39 +51,58 @@ type SpeechRecognitionEventLike = {
 
 type SpeechRecognitionErrorEventLike = { error: string };
 
-type RecState = 'idle' | 'recording' | 'review' | 'saving';
-type RecLang = 'pt-BR' | 'en-US';
+type RecState = 'idle' | 'recording' | 'paused' | 'review' | 'saving';
 const MAX_SECONDS = 120;
 const LANG_STORAGE_KEY = 'caminare_rec_lang';
 
-function getInitialRecLang(appLang: string): RecLang {
+interface RecLanguage {
+  code: string;
+  name: string;
+  flag: string;
+}
+
+// Lista de idiomas para o seletor (cobre os mais comuns no Web Speech API)
+const LANGUAGES: RecLanguage[] = [
+  { code: 'pt-BR', name: 'Português (Brasil)', flag: '🇧🇷' },
+  { code: 'pt-PT', name: 'Português (Portugal)', flag: '🇵🇹' },
+  { code: 'en-US', name: 'English (US)', flag: '🇺🇸' },
+  { code: 'en-GB', name: 'English (UK)', flag: '🇬🇧' },
+  { code: 'es-ES', name: 'Español (España)', flag: '🇪🇸' },
+  { code: 'es-MX', name: 'Español (México)', flag: '🇲🇽' },
+  { code: 'fr-FR', name: 'Français', flag: '🇫🇷' },
+  { code: 'de-DE', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it-IT', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'nl-NL', name: 'Nederlands', flag: '🇳🇱' },
+  { code: 'ja-JP', name: '日本語', flag: '🇯🇵' },
+  { code: 'ko-KR', name: '한국어', flag: '🇰🇷' },
+  { code: 'zh-CN', name: '中文 (简体)', flag: '🇨🇳' },
+  { code: 'zh-TW', name: '中文 (繁體)', flag: '🇹🇼' },
+  { code: 'ru-RU', name: 'Русский', flag: '🇷🇺' },
+  { code: 'ar-SA', name: 'العربية', flag: '🇸🇦' },
+];
+
+function getInitialRecLang(appLang: string): string {
   if (typeof window !== 'undefined') {
+    // 1) Última escolha do usuário
     try {
       const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved === 'pt-BR' || saved === 'en-US') return saved;
+      if (saved && LANGUAGES.some((l) => l.code === saved)) return saved;
     } catch {
       // ignore
     }
+    // 2) Idioma do navegador / sistema operacional
+    const browserLang = navigator.language;
+    if (LANGUAGES.some((l) => l.code === browserLang)) return browserLang;
+    const primary = browserLang.split('-')[0];
+    const found = LANGUAGES.find((l) => l.code.startsWith(primary + '-'));
+    if (found) return found.code;
   }
+  // 3) Idioma do app
   return appLang.startsWith('en') ? 'en-US' : 'pt-BR';
 }
 
-function langChipStyle(active: boolean): React.CSSProperties {
-  return {
-    padding: '10px 16px',
-    borderRadius: '9999px',
-    border: active ? 'none' : `1.5px solid var(--cam-border)`,
-    backgroundColor: active ? 'var(--cam-color-brand)' : 'var(--cam-bg-card)',
-    color: active ? '#FFFFFF' : 'var(--cam-text-primary)',
-    fontSize: '13px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontFamily: 'inherit',
-    boxShadow: active ? 'var(--cam-shadow-brand)' : 'none',
-  };
+function getLangByCode(code: string): RecLanguage {
+  return LANGUAGES.find((l) => l.code === code) ?? LANGUAGES[0];
 }
 
 export function RecordingScreen() {
@@ -80,27 +113,38 @@ export function RecordingScreen() {
   const [state, setState] = useState<RecState>('idle');
   const [finalText, setFinalText] = useState('');
   const [interimText, setInterimText] = useState('');
+  const [editedText, setEditedText] = useState(''); // texto editável na revisão
   const [error, setError] = useState<string | null>(null);
   const [seconds, setSeconds] = useState(0);
-  const [recLang, setRecLang] = useState<RecLang>(() => getInitialRecLang(i18n.language));
-
-  function changeRecLang(lang: RecLang) {
-    setRecLang(lang);
-    try {
-      window.localStorage.setItem(LANG_STORAGE_KEY, lang);
-    } catch {
-      // ignore
-    }
-  }
+  const [recLang, setRecLang] = useState<string>(() =>
+    getInitialRecLang(i18n.language)
+  );
+  const [langPickerOpen, setLangPickerOpen] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const accumulatedRef = useRef<string>('');
   const interimRef = useRef<string>('');
+  const hasAttemptedStartRef = useRef(false);
+  const recLangRef = useRef(recLang);
+
+  useEffect(() => {
+    recLangRef.current = recLang;
+  }, [recLang]);
 
   const isSupported =
     typeof window !== 'undefined' &&
     !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+  // Auto-iniciar gravação ao entrar na tela (sem tela intermediária)
+  useEffect(() => {
+    if (!isSupported) return;
+    if (hasAttemptedStartRef.current) return;
+    hasAttemptedStartRef.current = true;
+    const id = setTimeout(() => start({ fresh: true }), 80);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => cleanupRefs();
@@ -121,41 +165,46 @@ export function RecordingScreen() {
     }
   }
 
-  function start() {
-    if (state === 'recording') return;
+  function start(opts: { fresh: boolean } = { fresh: true }) {
     setError(null);
-    setFinalText('');
-    setInterimText('');
-    setSeconds(0);
-    accumulatedRef.current = '';
-    interimRef.current = '';
+
+    if (opts.fresh) {
+      accumulatedRef.current = '';
+      interimRef.current = '';
+      setFinalText('');
+      setInterimText('');
+      setEditedText('');
+      setSeconds(0);
+    }
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       setError(t('recording.notSupported'));
+      setState('idle');
       return;
     }
+
+    // Snapshot do que já tínhamos antes desta sessão (pra modo "resume")
+    const beforeText = accumulatedRef.current;
 
     const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = recLang;
+    recognition.lang = recLangRef.current;
 
     recognition.onresult = (event) => {
-      // Reconstrói o texto completo a partir do estado atual de TODOS os
-      // resultados, em vez de anexar. Evita duplicação quando o engine
-      // emite o mesmo final mais de uma vez (acontece no Safari iOS).
       let interim = '';
-      let final = '';
+      let newFinal = '';
       for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          final += result[0].transcript;
+          newFinal += result[0].transcript;
         } else {
           interim += result[0].transcript;
         }
       }
-      accumulatedRef.current = final.trim();
+      const sep = beforeText && newFinal ? ' ' : '';
+      accumulatedRef.current = (beforeText + sep + newFinal).trim();
       setFinalText(accumulatedRef.current);
       interimRef.current = interim.trim();
       setInterimText(interim.trim());
@@ -165,10 +214,15 @@ export function RecordingScreen() {
       // eslint-disable-next-line no-console
       console.error('SpeechRecognition error:', event.error);
       if (event.error === 'aborted' || event.error === 'no-speech') return;
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+      if (
+        event.error === 'not-allowed' ||
+        event.error === 'service-not-allowed'
+      ) {
         setError(t('recording.errorPermission'));
       } else if (event.error === 'network') {
         setError(t('recording.errorNetwork'));
+      } else if (event.error === 'language-not-supported') {
+        setError(t('recording.errorLangUnsupported'));
       } else {
         setError(t('recording.errorGeneric'));
       }
@@ -177,8 +231,7 @@ export function RecordingScreen() {
     };
 
     recognition.onend = () => {
-      // Browser pode encerrar sozinho; nesse caso, mantém o que foi capturado
-      // e deixa o usuário decidir o que fazer.
+      // Browser pode encerrar sozinho; o usuário decide retomar ou parar.
     };
 
     try {
@@ -190,7 +243,6 @@ export function RecordingScreen() {
         setSeconds((prev) => {
           const next = prev + 1;
           if (next >= MAX_SECONDS) {
-            // Auto-stop quando bater 2 min
             setTimeout(() => stop(), 0);
             return MAX_SECONDS;
           }
@@ -201,7 +253,17 @@ export function RecordingScreen() {
       // eslint-disable-next-line no-console
       console.error(e);
       setError(t('recording.errorGeneric'));
+      setState('idle');
     }
+  }
+
+  function pauseRecording() {
+    cleanupRefs();
+    setState('paused');
+  }
+
+  function resumeRecording() {
+    start({ fresh: false });
   }
 
   function stop() {
@@ -212,6 +274,7 @@ export function RecordingScreen() {
       interimRef.current = '';
       setFinalText(captured);
       setInterimText('');
+      setEditedText(captured);
       setState('review');
     } else {
       setError(t('recording.errorEmpty'));
@@ -224,14 +287,42 @@ export function RecordingScreen() {
     interimRef.current = '';
     setFinalText('');
     setInterimText('');
+    setEditedText('');
     setSeconds(0);
     setError(null);
     setState('idle');
   }
 
+  function reRecord() {
+    discard();
+    setTimeout(() => start({ fresh: true }), 100);
+  }
+
+  function changeRecLang(lang: string) {
+    if (lang === recLang) {
+      setLangPickerOpen(false);
+      return;
+    }
+    setRecLang(lang);
+    recLangRef.current = lang;
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+      // ignore
+    }
+    setLangPickerOpen(false);
+
+    // Se está gravando, reinicia o reconhecimento com o novo idioma
+    // mantendo o que já foi capturado
+    if (state === 'recording') {
+      cleanupRefs();
+      setTimeout(() => start({ fresh: false }), 100);
+    }
+  }
+
   async function save() {
     if (!user) return;
-    const text = finalText.trim();
+    const text = editedText.trim();
     if (!text) return;
     setState('saving');
     setError(null);
@@ -259,6 +350,7 @@ export function RecordingScreen() {
 
   const remaining = MAX_SECONDS - seconds;
   const isWarn = remaining <= 20;
+  const currentLang = getLangByCode(recLang);
 
   return (
     <div
@@ -369,7 +461,7 @@ export function RecordingScreen() {
         </div>
       )}
 
-      {/* Idle */}
+      {/* Idle (fallback de erro / permissão negada) */}
       {isSupported && state === 'idle' && (
         <div
           style={{
@@ -379,12 +471,12 @@ export function RecordingScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '24px',
-            gap: '20px',
+            gap: '18px',
             textAlign: 'center',
           }}
         >
           <button
-            onClick={start}
+            onClick={() => start({ fresh: true })}
             aria-label={t('recording.startPrompt')}
             style={{
               width: '140px',
@@ -397,79 +489,27 @@ export function RecordingScreen() {
               justifyContent: 'center',
               cursor: 'pointer',
               boxShadow: 'var(--cam-shadow-brand)',
-              transition: 'transform 0.15s ease',
             }}
-            onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
-            onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
             <Mic size={56} color="#FFFFFF" strokeWidth={2} />
           </button>
           <p
             style={{
-              fontSize: '16px',
+              fontSize: '15px',
               color: 'var(--cam-text-primary)',
               fontWeight: 500,
-              margin: '8px 0 0 0',
-              maxWidth: 280,
+              margin: '4px 0 0 0',
+              maxWidth: 320,
               lineHeight: 1.5,
             }}
           >
-            {t('recording.startPrompt')}
+            {error ?? t('recording.startPrompt')}
           </p>
-
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-            <button
-              type="button"
-              onClick={() => changeRecLang('pt-BR')}
-              aria-pressed={recLang === 'pt-BR'}
-              style={langChipStyle(recLang === 'pt-BR')}
-            >
-              🇧🇷 Português
-            </button>
-            <button
-              type="button"
-              onClick={() => changeRecLang('en-US')}
-              aria-pressed={recLang === 'en-US'}
-              style={langChipStyle(recLang === 'en-US')}
-            >
-              🇺🇸 English
-            </button>
-          </div>
-
-          <p
-            style={{
-              fontSize: '13px',
-              color: 'var(--cam-text-secondary)',
-              margin: 0,
-            }}
-          >
-            {t('recording.limitNote')}
-          </p>
-
-          {error && (
-            <div
-              role="alert"
-              style={{
-                backgroundColor: 'var(--cam-bg-error-soft)',
-                color: 'var(--cam-text-error)',
-                borderRadius: '12px',
-                padding: '10px 14px',
-                fontSize: '13px',
-                fontWeight: 500,
-                marginTop: '8px',
-                maxWidth: 320,
-                textAlign: 'left',
-              }}
-            >
-              {error}
-            </div>
-          )}
         </div>
       )}
 
-      {/* Recording */}
-      {isSupported && state === 'recording' && (
+      {/* Recording / Paused */}
+      {isSupported && (state === 'recording' || state === 'paused') && (
         <div
           style={{
             flex: 1,
@@ -479,54 +519,78 @@ export function RecordingScreen() {
             minHeight: 0,
           }}
         >
-          {/* Recording indicator + timer */}
+          {/* Indicador + idioma + timer */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '14px 18px',
+              padding: '12px 14px',
               backgroundColor: 'var(--cam-bg-card)',
               borderRadius: '16px',
               boxShadow: 'var(--cam-shadow-card)',
               marginBottom: '14px',
               flexShrink: 0,
+              gap: '10px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                minWidth: 0,
+              }}
+            >
               <span
-                className="animate-pulse"
+                className={state === 'recording' ? 'animate-pulse' : ''}
                 style={{
                   width: '10px',
                   height: '10px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--cam-color-error)',
+                  backgroundColor:
+                    state === 'recording'
+                      ? 'var(--cam-color-error)'
+                      : 'var(--cam-text-secondary)',
                   display: 'inline-block',
+                  flexShrink: 0,
                 }}
               />
               <span
                 style={{
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: 600,
                   color: 'var(--cam-text-primary)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {t('recording.recording')}
+                {state === 'recording'
+                  ? t('recording.recording')
+                  : t('recording.paused')}
               </span>
-              <span
+              <button
+                type="button"
+                onClick={() => setLangPickerOpen(true)}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '3px 8px 3px 6px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'var(--cam-bg-tint)',
+                  border: 'none',
+                  cursor: 'pointer',
                   fontSize: '11px',
                   fontWeight: 700,
-                  color: 'var(--cam-text-secondary)',
-                  backgroundColor: 'var(--cam-bg-muted)',
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
+                  color: 'var(--cam-text-brand)',
+                  fontFamily: 'inherit',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                 }}
               >
-                {recLang === 'pt-BR' ? 'PT' : 'EN'}
-              </span>
+                <span style={{ fontSize: '13px' }}>{currentLang.flag}</span>
+                {recLang.toUpperCase()}
+              </button>
             </div>
             <span
               style={{
@@ -534,13 +598,14 @@ export function RecordingScreen() {
                 fontWeight: 700,
                 color: isWarn ? 'var(--cam-text-error)' : 'var(--cam-text-secondary)',
                 fontVariantNumeric: 'tabular-nums',
+                flexShrink: 0,
               }}
             >
               {formatTime(seconds)} / {formatTime(MAX_SECONDS)}
             </span>
           </div>
 
-          {/* Transcript area */}
+          {/* Transcript */}
           <div
             style={{
               flex: 1,
@@ -592,34 +657,77 @@ export function RecordingScreen() {
             )}
           </div>
 
-          {/* Stop button */}
-          <button
-            onClick={stop}
-            style={{
-              width: '100%',
-              height: '56px',
-              backgroundColor: 'var(--cam-color-error)',
-              color: '#FFFFFF',
-              borderRadius: '9999px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              fontSize: '16px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: 'var(--cam-shadow-error)',
-              flexShrink: 0,
-            }}
-          >
-            <Square size={18} strokeWidth={2.5} fill="#FFFFFF" />
-            {t('recording.stop')}
-          </button>
+          {/* Botões: Pause/Resume + Stop */}
+          <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+            {state === 'recording' ? (
+              <button
+                onClick={pauseRecording}
+                aria-label={t('recording.pause')}
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--cam-bg-card)',
+                  color: 'var(--cam-text-primary)',
+                  border: `1.5px solid var(--cam-border)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                <Pause size={20} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <button
+                onClick={resumeRecording}
+                aria-label={t('recording.resume')}
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--cam-color-brand)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  boxShadow: 'var(--cam-shadow-brand)',
+                }}
+              >
+                <Play size={20} strokeWidth={2.5} fill="#FFFFFF" />
+              </button>
+            )}
+            <button
+              onClick={stop}
+              style={{
+                flex: 1,
+                height: '56px',
+                backgroundColor: 'var(--cam-color-error)',
+                color: '#FFFFFF',
+                borderRadius: '9999px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                fontSize: '16px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: 'var(--cam-shadow-error)',
+              }}
+            >
+              <Square size={18} strokeWidth={2.5} fill="#FFFFFF" />
+              {t('recording.stop')}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Review */}
+      {/* Review com textarea editável */}
       {isSupported && state === 'review' && (
         <div
           style={{
@@ -641,31 +749,28 @@ export function RecordingScreen() {
             {t('recording.reviewSubtitle')}
           </p>
 
-          <div
+          <textarea
+            value={editedText}
+            onChange={(e) => setEditedText(e.target.value)}
             style={{
               flex: 1,
+              width: '100%',
               backgroundColor: 'var(--cam-bg-card)',
               border: `1px solid var(--cam-border-subtle)`,
               borderRadius: '20px',
               padding: '20px',
-              overflowY: 'auto',
+              fontSize: '17px',
+              color: 'var(--cam-text-primary)',
+              lineHeight: 1.6,
+              resize: 'none',
+              outline: 'none',
               boxShadow: 'var(--cam-shadow-card)',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
               marginBottom: '16px',
               minHeight: 0,
             }}
-          >
-            <p
-              style={{
-                fontSize: '17px',
-                color: 'var(--cam-text-primary)',
-                lineHeight: 1.6,
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {finalText}
-            </p>
-          </div>
+          />
 
           {error && (
             <div
@@ -705,10 +810,7 @@ export function RecordingScreen() {
               <Trash2 size={20} strokeWidth={2.2} />
             </button>
             <button
-              onClick={() => {
-                discard();
-                setTimeout(start, 60);
-              }}
+              onClick={reRecord}
               style={{
                 flex: 1,
                 height: '56px',
@@ -730,6 +832,7 @@ export function RecordingScreen() {
             </button>
             <button
               onClick={save}
+              disabled={!editedText.trim()}
               style={{
                 flex: 1,
                 height: '56px',
@@ -743,8 +846,9 @@ export function RecordingScreen() {
                 fontSize: '15px',
                 fontWeight: 600,
                 border: 'none',
-                cursor: 'pointer',
+                cursor: editedText.trim() ? 'pointer' : 'not-allowed',
                 boxShadow: 'var(--cam-shadow-accent)',
+                opacity: editedText.trim() ? 1 : 0.5,
               }}
             >
               <Check size={18} strokeWidth={2.5} />
@@ -784,6 +888,127 @@ export function RecordingScreen() {
           >
             {t('recording.saving')}
           </p>
+        </div>
+      )}
+
+      {/* Language picker overlay */}
+      {langPickerOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLangPickerOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'var(--cam-bg-overlay)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--cam-bg-card)',
+              borderTopLeftRadius: '24px',
+              borderTopRightRadius: '24px',
+              width: '100%',
+              maxWidth: 480,
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderBottom: `1px solid var(--cam-border-subtle)`,
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Globe size={18} color="var(--cam-text-brand)" />
+                <h3
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: 'var(--cam-text-primary)',
+                    margin: 0,
+                  }}
+                >
+                  {t('recording.langPickerTitle')}
+                </h3>
+              </div>
+              <button
+                onClick={() => setLangPickerOpen(false)}
+                aria-label="Fechar"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  color: 'var(--cam-text-secondary)',
+                  display: 'flex',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div
+              style={{
+                overflowY: 'auto',
+                padding: '8px 0',
+                flex: 1,
+              }}
+            >
+              {LANGUAGES.map((lang) => {
+                const active = lang.code === recLang;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => changeRecLang(lang.code)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                      width: '100%',
+                      padding: '12px 20px',
+                      background: active ? 'var(--cam-bg-tint)' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      textAlign: 'left',
+                      color: 'var(--cam-text-primary)',
+                    }}
+                  >
+                    <span style={{ fontSize: '22px' }}>{lang.flag}</span>
+                    <span style={{ flex: 1, fontSize: '15px', fontWeight: 500 }}>
+                      {lang.name}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: 'var(--cam-text-secondary)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.4px',
+                      }}
+                    >
+                      {lang.code}
+                    </span>
+                    {active && (
+                      <Check size={16} color="var(--cam-color-brand)" strokeWidth={2.5} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>

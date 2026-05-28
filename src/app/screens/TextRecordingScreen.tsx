@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,13 @@ export function TextRecordingScreen() {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Foca o textarea ao entrar na tela pra que o teclado suba imediatamente
+  useEffect(() => {
+    const id = setTimeout(() => textareaRef.current?.focus(), 50);
+    return () => clearTimeout(id);
+  }, []);
 
   async function handleSubmit() {
     if (!text.trim() || submitting || !user) return;
@@ -84,6 +91,8 @@ export function TextRecordingScreen() {
         }}
       >
         <textarea
+          ref={textareaRef}
+          autoFocus
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
           placeholder={t('textRecording.placeholder')}
