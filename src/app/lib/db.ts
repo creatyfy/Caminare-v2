@@ -403,6 +403,8 @@ export interface BeliefFull {
   occurrence_count: number;
 }
 
+// Crenças pendentes de validação. Mostra APENAS validation = 'pending' — crenças
+// já confirmadas/descartadas/ajustadas de registros anteriores não reaparecem.
 export async function getUserBeliefs(userId: string): Promise<BeliefFull[]> {
   try {
     const { data, error } = await supabase
@@ -410,7 +412,7 @@ export async function getUserBeliefs(userId: string): Promise<BeliefFull[]> {
       .select('id, content, content_original, validation, occurrence_count')
       .eq('user_id', userId)
       .is('deleted_at', null)
-      .neq('validation', 'rejected')
+      .eq('validation', 'pending')
       .order('occurrence_count', { ascending: false });
     if (error) {
       console.error('[db.getUserBeliefs]', error);

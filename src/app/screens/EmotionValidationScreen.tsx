@@ -39,6 +39,8 @@ export function EmotionValidationScreen() {
     setLoading(true);
     setAnalyzeError(null);
 
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
     (async () => {
       // Se o registro ainda não foi analisado pela IA, chama /api/process-entry.
       const status = await getEntryProcessingStatus(user.id, entryId);
@@ -46,7 +48,18 @@ export function EmotionValidationScreen() {
       if (status !== 'done') {
         setAnalyzing(true);
         try {
-          await processEntry(entryId, i18n.language);
+          const res = await processEntry(entryId, i18n.language);
+          // Se a análise já foi disparada na gravação (background), o endpoint
+          // responde 'processing' — aguardamos a conclusão via polling do status
+          // em vez de reprocessar (evita emoções duplicadas).
+          if (active && res.status === 'processing') {
+            for (let i = 0; i < 30 && active; i++) {
+              await sleep(2000);
+              if (!active) return;
+              const s = await getEntryProcessingStatus(user.id, entryId);
+              if (s === 'done' || s === 'error') break;
+            }
+          }
         } catch (err) {
           console.error('[EmotionValidation] process-entry falhou:', err);
           if (active) setAnalyzeError(t('emotionValidation.analyzeError'));
@@ -203,7 +216,7 @@ export function EmotionValidationScreen() {
               }}
             >
               <Loader2 size={20} className="animate-spin" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }} />
-              {analyzing ? t('emotionValidation.analyzing') : t('common.loading')}
+              {analyzing ? <AnalyzingMessages /> : t('common.loading')}
             </div>
           )}
 
@@ -479,3 +492,45 @@ const backButtonStyle: React.CSSProperties = {
   padding: 0,
   cursor: 'pointer',
 };
+
+// Mensagens rotativas exibidas durante a análise da IA, trocando a cada 3s com
+// transição suave de fade. Tom acolhedor do Caminare.
+function AnalyzingMessages() {
+  const { t } = useTranslation();
+  const raw = t('emotionValidation.analyzingSteps', { returnObjects: true });
+  const steps = Array.isArray(raw)
+    ? (raw as string[])
+    : [t('emotionValidation.analyzing')];
+  const [idx, setIdx] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (steps.length <= 1) return;
+    let fadeTimeout: ReturnType<typeof setTimeout>;
+    const interval = setInterval(() => {
+      setVisible(false);
+      fadeTimeout = setTimeout(() => {
+        setIdx((i) => (i + 1) % steps.length);
+        setVisible(true);
+      }, 400);
+    }, 3000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(fadeTimeout);
+    };
+  }, [steps.length]);
+
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.4s ease',
+        color: 'var(--cam-text-secondary)',
+      }}
+    >
+      {steps[idx]}
+    </span>
+  );
+}

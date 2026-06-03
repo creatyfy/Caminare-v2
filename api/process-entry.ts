@@ -121,8 +121,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const transcricao = (body.transcricao ?? entry.raw_text ?? '').trim();
   if (!transcricao) return sendError(res, 400, 'Registro sem texto para analisar.');
 
-  // Marca como "processing" para sinalizar a UI e evitar corrida.
-  await db.from('entries').update({ processing_status: 'processing' }).eq('id', entryId);
+  // Claim atômico: só processa quem conseguir mudar pending/error → processing.
+  // Evita processamento duplicado quando a gravação dispara /api/process-entry em
+  // background E a tela de validação também o chama (corrida). O update condicional
+  // é atômico no Postgres: apenas uma requisição "ganha"; as demais recebem 202.
+  const { data: claimed, error: claimErr } = await db
+    .from('entries')
+    .update({ processing_status: 'processing' })
+    .eq('id', entryId)
+    .in('processing_status', ['pending', 'error'])
+    .select('id');
+  if (claimErr) {
+    console.error('[process-entry] erro ao reivindicar processamento:', claimErr);
+    return sendError(res, 500, 'Não foi possível iniciar a análise.');
+  }
+  if (!claimed || claimed.length === 0) {
+    // Outra requisição já está processando este registro — o cliente deve
+    // aguardar (poll do status) em vez de reprocessar.
+    return sendJson(res, 202, { status: 'processing' });
+  }
 
   try {
     // 3) Monta histórico resumido (contexto) a partir dos últimos registros.
