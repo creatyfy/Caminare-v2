@@ -342,6 +342,31 @@ export async function setEmotionValidation(
   }
 }
 
+// Status de processamento de IA do registro (usado para decidir se chamamos
+// /api/process-entry ou se a análise já foi feita).
+export async function getEntryProcessingStatus(
+  userId: string,
+  entryId: string
+): Promise<'pending' | 'processing' | 'done' | 'error' | null> {
+  try {
+    const { data, error } = await supabase
+      .from('entries')
+      .select('processing_status')
+      .eq('user_id', userId)
+      .eq('id', entryId)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (error) {
+      console.error('[db.getEntryProcessingStatus]', error);
+      return null;
+    }
+    return (data?.processing_status as 'pending' | 'processing' | 'done' | 'error') ?? null;
+  } catch (err) {
+    console.error('[db.getEntryProcessingStatus]', err);
+    return null;
+  }
+}
+
 export async function getEntryThoughts(
   userId: string,
   entryId: string

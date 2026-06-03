@@ -184,6 +184,9 @@ export const en = {
     emptyEmotions: 'No emotions yet. Add one below.',
     thoughtsHeader: 'Identified thoughts',
     continue: 'Continue',
+    analyzing: 'Analyzing your entry...',
+    analyzingBeliefs: 'Analyzing your beliefs...',
+    analyzeError: 'We could not analyze your entry right now. You can still add emotions manually below.',
     missingEntry: 'Entry not found. Go back and try again.',
   },
   beliefValidation: {
@@ -197,6 +200,7 @@ export const en = {
     addBelief: 'Add belief',
     newBeliefPlaceholder: 'e.g. I am not good enough...',
     empty: 'No beliefs recorded yet. Add one below.',
+    analyzingPatterns: 'Analyzing patterns...',
   },
   newPattern: {
     title: 'New Pattern Identified',
