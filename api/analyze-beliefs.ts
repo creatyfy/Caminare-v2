@@ -90,7 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const ai = await runStructured<AiResult>(
+    const { data: ai } = await runStructured<AiResult>(
       SYSTEM_ANALYZE_BELIEFS,
       buildAnalyzeBeliefsUser({
         transcricao,
