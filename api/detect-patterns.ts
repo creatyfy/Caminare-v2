@@ -130,7 +130,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const crencasMapeadas = (bels ?? []).map((b) => b.content).filter(Boolean);
 
   try {
-    const ai = await runStructured<AiResult>(
+    const { data: ai } = await runStructured<AiResult>(
       SYSTEM_DETECT_PATTERNS,
       buildDetectPatternsUser({
         idioma: body.idioma ?? 'pt-BR',

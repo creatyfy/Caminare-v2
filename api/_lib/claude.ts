@@ -18,8 +18,15 @@ function client(): Anthropic {
   return _client;
 }
 
+export interface StructuredResult<T> {
+  /** JSON já parseado da resposta. */
+  data: T;
+  /** Resposta bruta da API Anthropic (para auditoria/log). */
+  raw: Anthropic.Message;
+}
+
 /**
- * Executa uma chamada ao Claude e devolve o JSON parseado da resposta.
+ * Executa uma chamada ao Claude e devolve o JSON parseado + a resposta bruta.
  *
  * @param systemPrompt Bloco SISTEMA fixo — recebe cache_control: ephemeral
  *                     (prompt caching), pois é longo e imutável entre chamadas.
@@ -30,7 +37,7 @@ export async function runStructured<T>(
   systemPrompt: string,
   userContent: string,
   maxTokens: number
-): Promise<T> {
+): Promise<StructuredResult<T>> {
   const doCall = () =>
     client().messages.create({
       model: CLAUDE_MODEL,
@@ -62,7 +69,7 @@ export async function runStructured<T>(
     .join('')
     .trim();
 
-  return extractJson<T>(text);
+  return { data: extractJson<T>(text), raw };
 }
 
 /**
