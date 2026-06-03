@@ -12,9 +12,9 @@ import {
   serviceClient,
   sendJson,
   sendError,
-} from './_lib/runtime';
-import { runStructured } from './_lib/claude';
-import { SYSTEM_ANALYZE_BELIEFS, buildAnalyzeBeliefsUser } from './_lib/prompts';
+} from './_lib/runtime.js';
+import { runStructured } from './_lib/claude.js';
+import { SYSTEM_ANALYZE_BELIEFS, buildAnalyzeBeliefsUser } from './_lib/prompts.js';
 
 export const config = { maxDuration: 30 };
 

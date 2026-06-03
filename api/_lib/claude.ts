@@ -6,7 +6,7 @@
 // =============================================================================
 
 import Anthropic from '@anthropic-ai/sdk';
-import { ANTHROPIC_API_KEY } from './runtime';
+import { ANTHROPIC_API_KEY } from './runtime.js';
 
 export const CLAUDE_MODEL = 'claude-sonnet-4-5';
 
