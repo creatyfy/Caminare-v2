@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createTextEntry } from '../lib/db';
+import { processEntry } from '../lib/ai';
 
 declare global {
   interface Window {
@@ -344,6 +345,11 @@ export function RecordingScreen() {
         setState('review');
         return;
       }
+      // Dispara a análise em background (sem await) para já começar enquanto o
+      // usuário navega. A tela de validação aguarda a conclusão via polling.
+      void processEntry(entryId, i18n.language).catch((err) =>
+        console.error('[Recording] process-entry (background) falhou:', err)
+      );
       navigate(`/validacao-emocoes?entryId=${entryId}`);
     } catch (e) {
       // eslint-disable-next-line no-console

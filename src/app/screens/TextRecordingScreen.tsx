@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createTextEntry } from '../lib/db';
+import { processEntry } from '../lib/ai';
 
 // Equivalente a aproximadamente 2 min de fala (150 wpm × ~5 chars por palavra)
 const MAX_CHARS = 1500;
 
 export function TextRecordingScreen() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,6 +45,11 @@ export function TextRecordingScreen() {
         setError(t('textRecording.errorSave'));
         return;
       }
+      // Dispara a análise em background (sem await) para já começar enquanto o
+      // usuário navega. A tela de validação aguarda a conclusão via polling.
+      void processEntry(entryId, i18n.language).catch((err) =>
+        console.error('[TextRecording] process-entry (background) falhou:', err)
+      );
       navigate(`/validacao-emocoes?entryId=${entryId}`);
     } catch (err) {
       console.error('Erro ao salvar registro:', err);

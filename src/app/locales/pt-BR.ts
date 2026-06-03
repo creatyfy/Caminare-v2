@@ -185,6 +185,12 @@ export const ptBR = {
     thoughtsHeader: 'Pensamentos identificados',
     continue: 'Continuar',
     analyzing: 'Analisando seu relato...',
+    analyzingSteps: [
+      'Lendo seu relato com atenção...',
+      'Identificando o que você sentiu...',
+      'Organizando os insights...',
+      'Quase pronto...',
+    ],
     analyzingBeliefs: 'Analisando suas crenças...',
     analyzeError: 'Não conseguimos analisar seu relato agora. Você ainda pode adicionar emoções manualmente abaixo.',
     missingEntry: 'Registro não encontrado. Volte e tente de novo.',

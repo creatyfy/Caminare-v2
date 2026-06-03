@@ -40,9 +40,10 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
 // ─── process-entry ───────────────────────────────────────────────────────────
 
 export interface ProcessEntryResult {
-  status: 'ok' | 'already_processed' | string;
-  emocoes: { nome: string; intensidade?: string; confianca?: number }[];
-  pensamentos: string[];
+  // 'ok' | 'already_processed' | 'processing' (202, outra requisição está processando)
+  status: 'ok' | 'already_processed' | 'processing' | string;
+  emocoes?: { nome: string; intensidade?: string; confianca?: number }[];
+  pensamentos?: string[];
 }
 
 export function processEntry(entryId: string, idioma: string): Promise<ProcessEntryResult> {

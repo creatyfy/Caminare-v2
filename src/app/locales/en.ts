@@ -185,6 +185,12 @@ export const en = {
     thoughtsHeader: 'Identified thoughts',
     continue: 'Continue',
     analyzing: 'Analyzing your entry...',
+    analyzingSteps: [
+      'Reading your entry carefully...',
+      'Identifying what you felt...',
+      'Organizing the insights...',
+      'Almost there...',
+    ],
     analyzingBeliefs: 'Analyzing your beliefs...',
     analyzeError: 'We could not analyze your entry right now. You can still add emotions manually below.',
     missingEntry: 'Entry not found. Go back and try again.',
