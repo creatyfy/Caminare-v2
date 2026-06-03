@@ -40,20 +40,22 @@ interface AiResult {
   pensamentos?: string[];
 }
 
-// "sutil/moderada/alta" (saída da IA) → "low/medium/high" (coluna emotions.intensity)
-function mapIntensity(v?: string): 'low' | 'medium' | 'high' | null {
+// Normaliza a intensidade para os valores do enum `emotion_intensity` do banco:
+// 'sutil' | 'moderada' | 'alta' (mesmo vocabulário que o Prompt 1 produz).
+// Também aceita equivalentes em inglês caso a IA fuja do formato pedido.
+function mapIntensity(v?: string): 'sutil' | 'moderada' | 'alta' | null {
   switch ((v ?? '').toLowerCase().trim()) {
     case 'sutil':
     case 'subtle':
     case 'low':
-      return 'low';
+      return 'sutil';
     case 'moderada':
     case 'moderate':
     case 'medium':
-      return 'medium';
+      return 'moderada';
     case 'alta':
     case 'high':
-      return 'high';
+      return 'alta';
     default:
       return null;
   }
