@@ -15,10 +15,13 @@ import {
   sendJson,
   sendError,
 } from './_lib/runtime.js';
-import { runStructured } from './_lib/claude.js';
+import { runStructured, CLAUDE_MODEL } from './_lib/claude.js';
 import { SYSTEM_PROCESS_ENTRY, buildProcessEntryUser } from './_lib/prompts.js';
 
 export const config = { maxDuration: 30 };
+
+// Versão atual dos prompts (coluna NOT NULL em entry_analysis_logs).
+const PROMPT_VERSION = '1.3.1';
 
 interface Body {
   entry_id?: string;
@@ -158,11 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (insErr) console.error('[process-entry] erro ao inserir emoções:', insErr);
     }
 
-    const { error: logErr } = await db.from('entry_analysis_logs').insert({
-      user_id: user.id,
-      entry_id: entryId,
-      parsed_thoughts: pensamentos,
-    });
+    const logErr = await insertAnalysisLog(db, user.id, entryId, pensamentos);
     if (logErr) console.error('[process-entry] erro ao inserir log de análise:', logErr);
 
     await db.from('entries').update({ processing_status: 'done' }).eq('id', entryId);
@@ -207,4 +206,37 @@ async function buildHistorico(
       return `  • [${date}] ${snippet}${emo ? ` (emoções: ${emo})` : ''}`;
     })
     .join('\n');
+}
+
+// Insere o log de análise. Sempre envia prompt_version (coluna NOT NULL).
+// Tenta incluir model_used; se a coluna não existir no schema, refaz sem ela
+// (assim funciona independente de o banco ter ou não essa coluna).
+async function insertAnalysisLog(
+  db: ReturnType<typeof serviceClient>,
+  userId: string,
+  entryId: string,
+  thoughts: string[]
+): Promise<unknown> {
+  const base = {
+    user_id: userId,
+    entry_id: entryId,
+    parsed_thoughts: thoughts,
+    prompt_version: PROMPT_VERSION,
+  };
+
+  const { error } = await db.from('entry_analysis_logs').insert({ ...base, model_used: CLAUDE_MODEL });
+  if (error && isUnknownColumnError(error)) {
+    const { error: retryErr } = await db.from('entry_analysis_logs').insert(base);
+    return retryErr;
+  }
+  return error;
+}
+
+// Detecta "coluna inexistente" do PostgREST (PGRST204) ou da própria mensagem,
+// para sabermos quando refazer o insert sem o campo opcional.
+function isUnknownColumnError(error: unknown): boolean {
+  const e = error as { code?: string; message?: string };
+  const code = e?.code ?? '';
+  const msg = (e?.message ?? '').toLowerCase();
+  return code === 'PGRST204' || msg.includes('model_used') || (msg.includes('column') && msg.includes('schema cache'));
 }
