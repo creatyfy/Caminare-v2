@@ -25,7 +25,7 @@ export interface EntryWithEmotions {
   processed_text: string | null;
   created_at: string;
   input_type: 'text' | 'audio';
-  processing_status: 'pending' | 'processing' | 'done' | 'error';
+  processing_status: 'pending' | 'processing' | 'done' | 'failed';
   emotions: EmotionRow[];
 }
 
@@ -152,7 +152,7 @@ type EntryRow = {
   processed_text: string | null;
   created_at: string;
   input_type: 'text' | 'audio';
-  processing_status: 'pending' | 'processing' | 'done' | 'error';
+  processing_status: 'pending' | 'processing' | 'done' | 'failed';
   emotions: EmotionRow[] | null;
 };
 
@@ -348,7 +348,7 @@ export async function setEmotionValidation(
 export async function getEntryProcessingStatus(
   userId: string,
   entryId: string
-): Promise<'pending' | 'processing' | 'done' | 'error' | null> {
+): Promise<'pending' | 'processing' | 'done' | 'failed' | null> {
   try {
     const { data, error } = await supabase
       .from('entries')
@@ -361,7 +361,7 @@ export async function getEntryProcessingStatus(
       console.error('[db.getEntryProcessingStatus]', error);
       return null;
     }
-    return (data?.processing_status as 'pending' | 'processing' | 'done' | 'error') ?? null;
+    return (data?.processing_status as 'pending' | 'processing' | 'done' | 'failed') ?? null;
   } catch (err) {
     console.error('[db.getEntryProcessingStatus]', err);
     return null;

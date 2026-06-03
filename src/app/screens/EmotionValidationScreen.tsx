@@ -57,7 +57,7 @@ export function EmotionValidationScreen() {
               await sleep(2000);
               if (!active) return;
               const s = await getEntryProcessingStatus(user.id, entryId);
-              if (s === 'done' || s === 'error') break;
+              if (s === 'done' || s === 'failed') break;
             }
           }
         } catch (err) {

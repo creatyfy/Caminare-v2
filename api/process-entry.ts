@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const transcricao = (body.transcricao ?? entry.raw_text ?? '').trim();
   if (!transcricao) return sendError(res, 400, 'Registro sem texto para analisar.');
 
-  // Claim atômico: só processa quem conseguir mudar pending/error → processing.
+  // Claim atômico: só processa quem conseguir mudar pending/failed → processing.
   // Evita processamento duplicado quando a gravação dispara /api/process-entry em
   // background E a tela de validação também o chama (corrida). O update condicional
   // é atômico no Postgres: apenas uma requisição "ganha"; as demais recebem 202.
@@ -129,7 +129,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .from('entries')
     .update({ processing_status: 'processing' })
     .eq('id', entryId)
-    .in('processing_status', ['pending', 'error'])
+    .in('processing_status', ['pending', 'failed'])
     .select('id');
   if (claimErr) {
     console.error('[process-entry] erro ao reivindicar processamento:', claimErr);
@@ -190,7 +190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err) {
     console.error('[process-entry] falha na análise:', err);
-    await db.from('entries').update({ processing_status: 'error' }).eq('id', entryId);
+    await db.from('entries').update({ processing_status: 'failed' }).eq('id', entryId);
     return sendError(res, 502, 'Não foi possível analisar o relato agora. Tente novamente.');
   }
 }
