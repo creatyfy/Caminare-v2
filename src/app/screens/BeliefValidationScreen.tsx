@@ -9,10 +9,11 @@ import {
   setBeliefValidation,
   type BeliefFull,
 } from '../lib/db';
+import { detectPatterns } from '../lib/ai';
 
 export function BeliefValidationScreen() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
   const [beliefs, setBeliefs] = useState<BeliefFull[]>([]);
@@ -20,6 +21,22 @@ export function BeliefValidationScreen() {
   const [isAdding, setIsAdding] = useState(false);
   const [newBelief, setNewBelief] = useState('');
   const [adding, setAdding] = useState(false);
+  const [continuing, setContinuing] = useState(false);
+
+  async function handleContinue() {
+    if (!user || continuing) return;
+    setContinuing(true);
+    // Dispara a detecção de padrões (só processa com histórico suficiente;
+    // caso contrário o endpoint responde 'insuficiente' e a próxima tela
+    // mostra o estado "nenhum padrão novo").
+    try {
+      await detectPatterns(user.id, i18n.language);
+    } catch (err) {
+      console.error('[BeliefValidation] detect-patterns falhou:', err);
+    }
+    setContinuing(false);
+    navigate('/novo-padrao');
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -366,7 +383,8 @@ export function BeliefValidationScreen() {
         </div>
 
         <button
-          onClick={() => navigate('/novo-padrao')}
+          onClick={handleContinue}
+          disabled={continuing || loading}
           style={{
             width: '100%',
             height: '56px',
@@ -376,14 +394,17 @@ export function BeliefValidationScreen() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            gap: '8px',
             fontSize: '16px',
             fontWeight: 600,
             border: 'none',
             boxShadow: 'var(--cam-shadow-brand)',
-            cursor: 'pointer',
+            cursor: continuing || loading ? 'not-allowed' : 'pointer',
+            opacity: continuing || loading ? 0.7 : 1,
           }}
         >
-          {t('common.continue')}
+          {continuing && <Loader2 size={18} className="animate-spin" />}
+          {continuing ? t('beliefValidation.analyzingPatterns') : t('common.continue')}
         </button>
       </div>
     </div>

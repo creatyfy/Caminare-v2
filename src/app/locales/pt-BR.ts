@@ -184,6 +184,9 @@ export const ptBR = {
     emptyEmotions: 'Nenhuma emoção registrada ainda. Adicione abaixo.',
     thoughtsHeader: 'Pensamentos identificados',
     continue: 'Continuar',
+    analyzing: 'Analisando seu relato...',
+    analyzingBeliefs: 'Analisando suas crenças...',
+    analyzeError: 'Não conseguimos analisar seu relato agora. Você ainda pode adicionar emoções manualmente abaixo.',
     missingEntry: 'Registro não encontrado. Volte e tente de novo.',
   },
   beliefValidation: {
@@ -197,6 +200,7 @@ export const ptBR = {
     addBelief: 'Adicionar crença',
     newBeliefPlaceholder: 'Ex: Não sou bom o suficiente...',
     empty: 'Nenhuma crença registrada ainda. Adicione abaixo.',
+    analyzingPatterns: 'Analisando padrões...',
   },
   newPattern: {
     title: 'Novo Padrão Identificado',

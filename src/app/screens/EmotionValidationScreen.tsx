@@ -8,12 +8,14 @@ import {
   addEntryEmotion,
   setEmotionValidation,
   getEntryThoughts,
+  getEntryProcessingStatus,
   type EmotionFull,
 } from '../lib/db';
+import { processEntry, analyzeBeliefs } from '../lib/ai';
 
 export function EmotionValidationScreen() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const entryId = searchParams.get('entryId');
@@ -21,6 +23,9 @@ export function EmotionValidationScreen() {
   const [emotions, setEmotions] = useState<EmotionFull[]>([]);
   const [thoughts, setThoughts] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [continuing, setContinuing] = useState(false);
   const [isAddingEmotion, setIsAddingEmotion] = useState(false);
   const [newEmotion, setNewEmotion] = useState('');
   const [adding, setAdding] = useState(false);
@@ -32,19 +37,65 @@ export function EmotionValidationScreen() {
     }
     let active = true;
     setLoading(true);
-    Promise.all([
-      getEntryEmotions(user.id, entryId),
-      getEntryThoughts(user.id, entryId),
-    ]).then(([es, ts]) => {
+    setAnalyzeError(null);
+
+    (async () => {
+      // Se o registro ainda não foi analisado pela IA, chama /api/process-entry.
+      const status = await getEntryProcessingStatus(user.id, entryId);
+      if (!active) return;
+      if (status !== 'done') {
+        setAnalyzing(true);
+        try {
+          await processEntry(entryId, i18n.language);
+        } catch (err) {
+          console.error('[EmotionValidation] process-entry falhou:', err);
+          if (active) setAnalyzeError(t('emotionValidation.analyzeError'));
+        }
+        if (!active) return;
+        setAnalyzing(false);
+      }
+
+      const [es, ts] = await Promise.all([
+        getEntryEmotions(user.id, entryId),
+        getEntryThoughts(user.id, entryId),
+      ]);
       if (!active) return;
       setEmotions(es);
       setThoughts(ts);
       setLoading(false);
-    });
+    })();
+
     return () => {
       active = false;
     };
-  }, [user, entryId]);
+  }, [user, entryId, i18n.language, t]);
+
+  async function handleContinue() {
+    if (!user || !entryId || continuing) return;
+    setContinuing(true);
+    // Itens validados = não rejeitados; rejeitados = marcados como 'rejected'.
+    const emocoesValidadas = emotions
+      .filter((e) => e.validation !== 'rejected')
+      .map((e) => e.name);
+    const emocoesRejeitadas = emotions
+      .filter((e) => e.validation === 'rejected')
+      .map((e) => e.name);
+    try {
+      await analyzeBeliefs({
+        entryId,
+        idioma: i18n.language,
+        emocoesValidadas,
+        emocoesRejeitadas,
+        pensamentosValidados: thoughts ?? [],
+        pensamentosRejeitados: [],
+      });
+    } catch (err) {
+      // Não bloqueia o fluxo: a tela de crenças mostra o que já existir.
+      console.error('[EmotionValidation] analyze-beliefs falhou:', err);
+    }
+    setContinuing(false);
+    navigate('/validacao-crencas');
+  }
 
   async function handleEmotionValidation(
     id: string,
@@ -152,7 +203,25 @@ export function EmotionValidationScreen() {
               }}
             >
               <Loader2 size={20} className="animate-spin" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }} />
-              {t('common.loading')}
+              {analyzing ? t('emotionValidation.analyzing') : t('common.loading')}
+            </div>
+          )}
+
+          {!loading && analyzeError && (
+            <div
+              role="alert"
+              style={{
+                backgroundColor: 'var(--cam-bg-error-soft)',
+                color: 'var(--cam-text-error)',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                fontSize: '13px',
+                fontWeight: 500,
+                marginBottom: '16px',
+                lineHeight: 1.4,
+              }}
+            >
+              {analyzeError}
             </div>
           )}
 
@@ -369,7 +438,8 @@ export function EmotionValidationScreen() {
         )}
 
         <button
-          onClick={() => navigate('/validacao-crencas')}
+          onClick={handleContinue}
+          disabled={continuing || loading}
           style={{
             width: '100%',
             height: '56px',
@@ -379,15 +449,18 @@ export function EmotionValidationScreen() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            gap: '8px',
             fontSize: '16px',
             fontWeight: 600,
             border: 'none',
             boxShadow: 'var(--cam-shadow-brand)',
-            cursor: 'pointer',
+            cursor: continuing || loading ? 'not-allowed' : 'pointer',
+            opacity: continuing || loading ? 0.7 : 1,
             marginTop: '16px',
           }}
         >
-          {t('emotionValidation.continue')}
+          {continuing && <Loader2 size={18} className="animate-spin" />}
+          {continuing ? t('emotionValidation.analyzingBeliefs') : t('emotionValidation.continue')}
         </button>
       </div>
     </div>
