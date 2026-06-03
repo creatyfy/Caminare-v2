@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Heart, Search, ChevronDown } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Calendar, Heart, Search, ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { getEntries, type EntryWithEmotions } from '../lib/db';
@@ -8,14 +7,17 @@ import { formatDate } from '../lib/format';
 
 type FilterValue = '7days' | '15days' | '30days' | 'all';
 
+// Tamanho do preview do relato no card (truncado com reticências).
+const PREVIEW_CHARS = 120;
+
 export function HistoryScreen() {
-  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [entries, setEntries] = useState<EntryWithEmotions[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterValue>('all');
+  const [selectedEntry, setSelectedEntry] = useState<EntryWithEmotions | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -36,6 +38,20 @@ export function HistoryScreen() {
     if (!term) return entries;
     return entries.filter((e) => e.raw_text.toLowerCase().includes(term));
   }, [entries, search]);
+
+  // Fecha o modal com a tecla Escape.
+  useEffect(() => {
+    if (!selectedEntry) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedEntry(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedEntry]);
+
+  const selectedDateTime = selectedEntry
+    ? formatDate(selectedEntry.created_at, i18n.language)
+    : null;
 
   return (
     <div
@@ -156,19 +172,19 @@ export function HistoryScreen() {
           filteredEntries.map((entry) => {
             const { date, time } = formatDate(entry.created_at, i18n.language);
             const summary =
-              entry.raw_text.length > 100
-                ? entry.raw_text.slice(0, 100).trimEnd() + '…'
+              entry.raw_text.length > PREVIEW_CHARS
+                ? entry.raw_text.slice(0, PREVIEW_CHARS).trimEnd() + '…'
                 : entry.raw_text;
             return (
               <div
                 key={entry.id}
-                onClick={() => navigate(`/registro/${entry.id}`)}
+                onClick={() => setSelectedEntry(entry)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    navigate(`/registro/${entry.id}`);
+                    setSelectedEntry(entry);
                   }
                 }}
                 style={{
@@ -221,8 +237,13 @@ export function HistoryScreen() {
                     style={{
                       color: 'var(--cam-text-primary)',
                       fontSize: '15px',
+                      fontWeight: 400,
                       lineHeight: 1.5,
                       margin: '0 0 12px 0',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
                     }}
                   >
                     {summary}
@@ -250,6 +271,131 @@ export function HistoryScreen() {
             );
           })}
       </div>
+
+      {/* Modal expansivo do registro */}
+      {selectedEntry && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setSelectedEntry(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'var(--cam-bg-overlay)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--cam-bg-card)',
+              borderRadius: '24px',
+              width: '100%',
+              maxWidth: 440,
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: 'var(--cam-shadow-card)',
+            }}
+          >
+            {/* Header: data/hora + fechar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '20px 20px 16px 20px',
+                borderBottom: `1px solid var(--cam-border-subtle)`,
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: 'var(--cam-text-secondary)',
+                  fontSize: '13px',
+                }}
+              >
+                <Calendar size={14} />
+                <span>{selectedDateTime?.date}</span>
+                <span>•</span>
+                <span>{selectedDateTime?.time}</span>
+              </div>
+              <button
+                onClick={() => setSelectedEntry(null)}
+                aria-label={t('common.back')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  color: 'var(--cam-text-secondary)',
+                  display: 'flex',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Corpo: relato completo + emoções */}
+            <div style={{ overflowY: 'auto', padding: '20px', flex: 1 }}>
+              <p
+                style={{
+                  color: 'var(--cam-text-primary)',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  margin: '0 0 24px 0',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {selectedEntry.raw_text}
+              </p>
+
+              <h3
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--cam-text-secondary)',
+                  margin: '0 0 12px 0',
+                }}
+              >
+                {t('entryDetail.emotionsTitle')}
+              </h3>
+              {selectedEntry.emotions.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {selectedEntry.emotions.map((emotion) => (
+                    <span
+                      key={emotion.id}
+                      style={{
+                        backgroundColor: 'var(--cam-bg-muted)',
+                        color: 'var(--cam-text-brand)',
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {emotion.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0 }}>
+                  {t('entryDetail.emotionsEmpty')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
