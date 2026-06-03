@@ -40,24 +40,32 @@ interface AiResult {
   pensamentos?: string[];
 }
 
-// Normaliza a intensidade para os valores do enum `emotion_intensity` do banco:
-// 'sutil' | 'moderada' | 'alta' (mesmo vocabulário que o Prompt 1 produz).
-// Também aceita equivalentes em inglês caso a IA fuja do formato pedido.
-function mapIntensity(v?: string): 'sutil' | 'moderada' | 'alta' | null {
+// Normaliza a intensidade para o enum `emotion_intensity` do banco:
+// 'subtle' | 'moderate' | 'strong' | 'very_strong'. Aceita o vocabulário PT que
+// o Prompt 1 produz (sutil/moderada/alta) e equivalentes em inglês. Fallback
+// seguro = 'moderate' (a coluna não aceita valor fora do enum).
+function mapIntensity(v?: string): 'subtle' | 'moderate' | 'strong' | 'very_strong' {
   switch ((v ?? '').toLowerCase().trim()) {
     case 'sutil':
     case 'subtle':
     case 'low':
-      return 'sutil';
+      return 'subtle';
     case 'moderada':
     case 'moderate':
     case 'medium':
-      return 'moderada';
+      return 'moderate';
     case 'alta':
     case 'high':
-      return 'alta';
+    case 'strong':
+      return 'strong';
+    case 'muito alta':
+    case 'muito forte':
+    case 'very_strong':
+    case 'very strong':
+    case 'very high':
+      return 'very_strong';
     default:
-      return null;
+      return 'moderate';
   }
 }
 
