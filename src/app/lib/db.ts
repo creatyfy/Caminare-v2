@@ -16,7 +16,7 @@ export interface HomeStats {
 export interface EmotionRow {
   id: string;
   name: string;
-  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
 }
 
 export interface EntryWithEmotions {
@@ -265,7 +265,7 @@ export interface EmotionFull {
   id: string;
   name: string;
   name_original: string;
-  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
   // enum emotion_intensity no banco: 'subtle' | 'moderate' | 'strong' | 'very_strong'
   intensity: 'subtle' | 'moderate' | 'strong' | 'very_strong' | null;
 }
@@ -325,7 +325,7 @@ export async function addEntryEmotion(
 
 export async function setEmotionValidation(
   emotionId: string,
-  validation: 'confirmed' | 'rejected' | 'adjusted'
+  validation: 'confirmed' | 'edited' | 'rejected'
 ): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -399,7 +399,7 @@ export interface BeliefFull {
   id: string;
   content: string;
   content_original: string;
-  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
   occurrence_count: number;
 }
 
@@ -460,7 +460,7 @@ export async function addBelief(
 
 export async function setBeliefValidation(
   beliefId: string,
-  validation: 'confirmed' | 'rejected' | 'adjusted'
+  validation: 'confirmed' | 'edited' | 'rejected'
 ): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -485,7 +485,7 @@ export interface PatternFull {
   description: string;
   triggers: string[] | null;
   emotions_involved: string[] | null;
-  validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
   occurrence_count: number;
 }
 
@@ -515,7 +515,7 @@ export async function getPendingPattern(
 
 export async function setPatternValidation(
   patternId: string,
-  validation: 'confirmed' | 'rejected' | 'adjusted'
+  validation: 'confirmed' | 'edited' | 'rejected'
 ): Promise<boolean> {
   try {
     const { error } = await supabase
