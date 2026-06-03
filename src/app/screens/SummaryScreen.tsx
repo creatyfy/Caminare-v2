@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FileText, Download, Share2, Calendar, ChevronDown, Loader2 } from 'lucide-react';
+import { FileText, Download, Share2, Calendar, ChevronDown, Loader2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { getEntriesForSummary, getProfile, type EntryDetail, type Profile } from '../lib/db';
@@ -8,6 +8,9 @@ import type { TherapyReportData } from '../lib/pdf/TherapyReportPDF';
 
 type SummaryPeriod = '7days' | '15days' | '30days';
 type PdfBusy = 'idle' | 'downloading' | 'sharing';
+
+// Tamanho do preview do relato no card (truncado com reticências).
+const PREVIEW_CHARS = 120;
 
 export function SummaryScreen() {
   const { t, i18n } = useTranslation();
@@ -18,6 +21,7 @@ export function SummaryScreen() {
   const [period, setPeriod] = useState<SummaryPeriod>('30days');
   const [pdfBusy, setPdfBusy] = useState<PdfBusy>('idle');
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<EntryDetail | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +64,20 @@ export function SummaryScreen() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   }, [entries]);
+
+  // Fecha o modal com a tecla Escape.
+  useEffect(() => {
+    if (!selectedEntry) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedEntry(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedEntry]);
+
+  const selectedDateTime = selectedEntry
+    ? formatDate(selectedEntry.created_at, i18n.language)
+    : null;
 
   function buildReportData(): TherapyReportData {
     const userName =
@@ -359,35 +377,46 @@ export function SummaryScreen() {
                 entries.map((entry) => {
                   const { date, time } = formatDate(entry.created_at, i18n.language);
                   const summary =
-                    entry.raw_text.length > 120
-                      ? entry.raw_text.slice(0, 120).trimEnd() + '…'
+                    entry.raw_text.length > PREVIEW_CHARS
+                      ? entry.raw_text.slice(0, PREVIEW_CHARS).trimEnd() + '…'
                       : entry.raw_text;
                   return (
                     <div
                       key={entry.id}
+                      onClick={() => setSelectedEntry(entry)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedEntry(entry);
+                        }
+                      }}
                       style={{
                         padding: '16px',
                         backgroundColor: 'var(--cam-bg-tint)',
                         borderRadius: '16px',
                         border: `1px solid var(--cam-border-subtle)`,
+                        cursor: 'pointer',
                       }}
                     >
                       <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', marginBottom: '6px' }}>
                         {date} • {time}
                       </div>
-                      <h5 style={{ fontSize: '15px', color: 'var(--cam-text-primary)', margin: '0 0 10px 0', fontWeight: 600 }}>
-                        {summary}
-                      </h5>
                       <p
                         style={{
                           fontSize: '14px',
+                          fontWeight: 400,
                           color: 'var(--cam-text-primary)',
-                          lineHeight: 1.6,
+                          lineHeight: 1.5,
                           margin: '0 0 12px 0',
-                          whiteSpace: 'pre-wrap',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
                         }}
                       >
-                        {entry.raw_text}
+                        {summary}
                       </p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                         {entry.emotions.map((emotion) => (
@@ -491,6 +520,131 @@ export function SummaryScreen() {
           </div>
         </div>
       </div>
+
+      {/* Modal expansivo do registro */}
+      {selectedEntry && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setSelectedEntry(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'var(--cam-bg-overlay)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--cam-bg-card)',
+              borderRadius: '24px',
+              width: '100%',
+              maxWidth: 440,
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              boxShadow: 'var(--cam-shadow-card)',
+            }}
+          >
+            {/* Header: data/hora + fechar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '20px 20px 16px 20px',
+                borderBottom: `1px solid var(--cam-border-subtle)`,
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: 'var(--cam-text-secondary)',
+                  fontSize: '13px',
+                }}
+              >
+                <Calendar size={14} />
+                <span>{selectedDateTime?.date}</span>
+                <span>•</span>
+                <span>{selectedDateTime?.time}</span>
+              </div>
+              <button
+                onClick={() => setSelectedEntry(null)}
+                aria-label={t('common.back')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px',
+                  cursor: 'pointer',
+                  color: 'var(--cam-text-secondary)',
+                  display: 'flex',
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Corpo: relato completo + emoções */}
+            <div style={{ overflowY: 'auto', padding: '20px', flex: 1 }}>
+              <p
+                style={{
+                  color: 'var(--cam-text-primary)',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  margin: '0 0 24px 0',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {selectedEntry.raw_text}
+              </p>
+
+              <h3
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--cam-text-secondary)',
+                  margin: '0 0 12px 0',
+                }}
+              >
+                {t('entryDetail.emotionsTitle')}
+              </h3>
+              {selectedEntry.emotions.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {selectedEntry.emotions.map((emotion) => (
+                    <span
+                      key={emotion.id}
+                      style={{
+                        backgroundColor: 'var(--cam-bg-muted)',
+                        color: 'var(--cam-text-brand)',
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                      }}
+                    >
+                      {emotion.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0 }}>
+                  {t('entryDetail.emotionsEmpty')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
