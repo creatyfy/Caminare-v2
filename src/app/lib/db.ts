@@ -266,8 +266,8 @@ export interface EmotionFull {
   name: string;
   name_original: string;
   validation: 'pending' | 'confirmed' | 'rejected' | 'adjusted';
-  // enum emotion_intensity no banco: 'sutil' | 'moderada' | 'alta'
-  intensity: 'sutil' | 'moderada' | 'alta' | null;
+  // enum emotion_intensity no banco: 'subtle' | 'moderate' | 'strong' | 'very_strong'
+  intensity: 'subtle' | 'moderate' | 'strong' | 'very_strong' | null;
 }
 
 export async function getEntryEmotions(
