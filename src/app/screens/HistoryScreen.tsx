@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Heart, Search, ChevronDown, X } from 'lucide-react';
+import { Calendar, Heart, Search, ChevronDown, X, Pencil, Trash2, Plus, Check, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { getEntries, type EntryWithEmotions } from '../lib/db';
+import {
+  getEntries,
+  deleteEntry,
+  updateEntry,
+  updateEntryEmotion,
+  addEntryEmotion,
+  setEmotionValidation,
+  type EntryWithEmotions,
+  type EmotionRow,
+} from '../lib/db';
 import { formatDate } from '../lib/format';
 
 type FilterValue = '7days' | '15days' | '30days' | 'all';
@@ -19,6 +28,16 @@ export function HistoryScreen() {
   const [filter, setFilter] = useState<FilterValue>('all');
   const [selectedEntry, setSelectedEntry] = useState<EntryWithEmotions | null>(null);
 
+  // Edição do registro no modal (texto + emoções). Nenhuma ação chama /api/*.
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [savingEntry, setSavingEntry] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [editingEmotionId, setEditingEmotionId] = useState<string | null>(null);
+  const [emotionDraft, setEmotionDraft] = useState('');
+  const [isAddingEmotion, setIsAddingEmotion] = useState(false);
+  const [newEmotion, setNewEmotion] = useState('');
+
   useEffect(() => {
     if (!user) return;
     let active = true;
@@ -33,6 +52,98 @@ export function HistoryScreen() {
     };
   }, [user, filter]);
 
+  function openEntry(entry: EntryWithEmotions) {
+    setSelectedEntry(entry);
+    setEditing(false);
+    setEditText(entry.raw_text);
+    setEditingEmotionId(null);
+    setIsAddingEmotion(false);
+    setNewEmotion('');
+  }
+
+  function closeModal() {
+    setSelectedEntry(null);
+    setEditing(false);
+    setEditingEmotionId(null);
+    setIsAddingEmotion(false);
+    setNewEmotion('');
+  }
+
+  // Atualiza um registro tanto no modal quanto na lista (mantém a UI coerente).
+  function patchSelected(patch: Partial<EntryWithEmotions>) {
+    setSelectedEntry((prev) => (prev ? { ...prev, ...patch } : prev));
+    setEntries((prev) =>
+      prev.map((e) => (selectedEntry && e.id === selectedEntry.id ? { ...e, ...patch } : e))
+    );
+  }
+
+  async function handleSaveText() {
+    if (!selectedEntry || savingEntry) return;
+    const trimmed = editText.trim();
+    if (!trimmed) return;
+    setSavingEntry(true);
+    const ok = await updateEntry(selectedEntry.id, trimmed);
+    setSavingEntry(false);
+    if (ok) {
+      patchSelected({ raw_text: trimmed });
+      setEditing(false);
+    }
+  }
+
+  async function handleDeleteEntry() {
+    if (!selectedEntry || deleting) return;
+    if (!window.confirm(t('history.deleteConfirm'))) return;
+    setDeleting(true);
+    const ok = await deleteEntry(selectedEntry.id);
+    setDeleting(false);
+    if (ok) {
+      const id = selectedEntry.id;
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+      closeModal();
+    }
+  }
+
+  async function handleRenameEmotion(emotionId: string) {
+    if (!selectedEntry) return;
+    const trimmed = emotionDraft.trim();
+    if (!trimmed) return;
+    const ok = await updateEntryEmotion(emotionId, trimmed);
+    if (ok) {
+      const next = selectedEntry.emotions.map((e) =>
+        e.id === emotionId ? { ...e, name: trimmed, validation: 'edited' as const } : e
+      );
+      patchSelected({ emotions: next });
+    }
+    setEditingEmotionId(null);
+    setEmotionDraft('');
+  }
+
+  async function handleRemoveEmotion(emotionId: string) {
+    if (!selectedEntry) return;
+    const ok = await setEmotionValidation(emotionId, 'rejected');
+    if (ok) {
+      const next = selectedEntry.emotions.filter((e) => e.id !== emotionId);
+      patchSelected({ emotions: next });
+    }
+  }
+
+  async function handleAddEmotion() {
+    if (!user || !selectedEntry) return;
+    const trimmed = newEmotion.trim();
+    if (!trimmed) return;
+    const created = await addEntryEmotion(user.id, selectedEntry.id, trimmed);
+    if (created) {
+      const row: EmotionRow = {
+        id: created.id,
+        name: created.name,
+        validation: created.validation,
+      };
+      patchSelected({ emotions: [...selectedEntry.emotions, row] });
+      setNewEmotion('');
+      setIsAddingEmotion(false);
+    }
+  }
+
   const filteredEntries = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return entries;
@@ -43,7 +154,7 @@ export function HistoryScreen() {
   useEffect(() => {
     if (!selectedEntry) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelectedEntry(null);
+      if (e.key === 'Escape') closeModal();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -178,13 +289,13 @@ export function HistoryScreen() {
             return (
               <div
                 key={entry.id}
-                onClick={() => setSelectedEntry(entry)}
+                onClick={() => openEntry(entry)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setSelectedEntry(entry);
+                    openEntry(entry);
                   }
                 }}
                 style={{
@@ -277,7 +388,7 @@ export function HistoryScreen() {
         <div
           role="dialog"
           aria-modal="true"
-          onClick={() => setSelectedEntry(null)}
+          onClick={closeModal}
           style={{
             position: 'fixed',
             inset: 0,
@@ -303,7 +414,7 @@ export function HistoryScreen() {
               boxShadow: 'var(--cam-shadow-card)',
             }}
           >
-            {/* Header: data/hora + fechar */}
+            {/* Header: data/hora + ações (editar / excluir / fechar) */}
             <div
               style={{
                 display: 'flex',
@@ -328,36 +439,80 @@ export function HistoryScreen() {
                 <span>•</span>
                 <span>{selectedDateTime?.time}</span>
               </div>
-              <button
-                onClick={() => setSelectedEntry(null)}
-                aria-label={t('common.back')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '4px',
-                  cursor: 'pointer',
-                  color: 'var(--cam-text-secondary)',
-                  display: 'flex',
-                }}
-              >
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {!editing && (
+                  <>
+                    <button
+                      onClick={() => setEditing(true)}
+                      aria-label={t('history.edit')}
+                      title={t('history.edit')}
+                      style={modalIconButtonStyle}
+                    >
+                      <Pencil size={18} color="var(--cam-text-brand)" strokeWidth={2.5} />
+                    </button>
+                    <button
+                      onClick={handleDeleteEntry}
+                      disabled={deleting}
+                      aria-label={t('history.delete')}
+                      title={t('history.delete')}
+                      style={modalIconButtonStyle}
+                    >
+                      {deleting ? (
+                        <Loader2 size={18} className="animate-spin" color="var(--cam-text-error)" />
+                      ) : (
+                        <Trash2 size={18} color="var(--cam-text-error)" strokeWidth={2.5} />
+                      )}
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={closeModal}
+                  aria-label={t('common.back')}
+                  style={modalIconButtonStyle}
+                >
+                  <X size={20} color="var(--cam-text-secondary)" />
+                </button>
+              </div>
             </div>
 
-            {/* Corpo: relato completo + emoções */}
+            {/* Corpo: relato completo + emoções (modo leitura ou edição) */}
             <div style={{ overflowY: 'auto', padding: '20px', flex: 1 }}>
-              <p
-                style={{
-                  color: 'var(--cam-text-primary)',
-                  fontSize: '16px',
-                  fontWeight: 400,
-                  lineHeight: 1.6,
-                  margin: '0 0 24px 0',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {selectedEntry.raw_text}
-              </p>
+              {editing ? (
+                <textarea
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  rows={6}
+                  disabled={savingEntry}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '14px',
+                    border: `1px solid var(--cam-border)`,
+                    outline: 'none',
+                    fontSize: '16px',
+                    color: 'var(--cam-text-primary)',
+                    backgroundColor: 'var(--cam-bg-input)',
+                    lineHeight: 1.6,
+                    resize: 'vertical',
+                    fontFamily: 'inherit',
+                    boxSizing: 'border-box',
+                    margin: '0 0 24px 0',
+                  }}
+                />
+              ) : (
+                <p
+                  style={{
+                    color: 'var(--cam-text-primary)',
+                    fontSize: '16px',
+                    fontWeight: 400,
+                    lineHeight: 1.6,
+                    margin: '0 0 24px 0',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {selectedEntry.raw_text}
+                </p>
+              )}
 
               <h3
                 style={{
@@ -369,9 +524,41 @@ export function HistoryScreen() {
               >
                 {t('entryDetail.emotionsTitle')}
               </h3>
-              {selectedEntry.emotions.length > 0 ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {selectedEntry.emotions.map((emotion) => (
+
+              {selectedEntry.emotions.length === 0 && !editing && (
+                <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0 }}>
+                  {t('entryDetail.emotionsEmpty')}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                {selectedEntry.emotions.map((emotion) =>
+                  editing && editingEmotionId === emotion.id ? (
+                    <input
+                      key={emotion.id}
+                      value={emotionDraft}
+                      onChange={(e) => setEmotionDraft(e.target.value)}
+                      autoFocus
+                      onBlur={() => handleRenameEmotion(emotion.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRenameEmotion(emotion.id);
+                        if (e.key === 'Escape') {
+                          setEditingEmotionId(null);
+                          setEmotionDraft('');
+                        }
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        border: `1px solid var(--cam-border)`,
+                        outline: 'none',
+                        fontSize: '12px',
+                        color: 'var(--cam-text-primary)',
+                        backgroundColor: 'var(--cam-bg-input)',
+                        maxWidth: '160px',
+                      }}
+                    />
+                  ) : (
                     <span
                       key={emotion.id}
                       style={{
@@ -381,16 +568,140 @@ export function HistoryScreen() {
                         borderRadius: '9999px',
                         fontSize: '12px',
                         fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
                       }}
                     >
-                      {emotion.name}
+                      {editing ? (
+                        <button
+                          onClick={() => {
+                            setEditingEmotionId(emotion.id);
+                            setEmotionDraft(emotion.name);
+                          }}
+                          style={chipTextButtonStyle}
+                        >
+                          {emotion.name}
+                        </button>
+                      ) : (
+                        emotion.name
+                      )}
+                      {editing && (
+                        <button
+                          onClick={() => handleRemoveEmotion(emotion.id)}
+                          aria-label={t('history.removeEmotion')}
+                          style={chipRemoveButtonStyle}
+                        >
+                          <X size={13} strokeWidth={2.5} />
+                        </button>
+                      )}
                     </span>
+                  )
+                )}
+
+                {editing &&
+                  (isAddingEmotion ? (
+                    <input
+                      value={newEmotion}
+                      onChange={(e) => setNewEmotion(e.target.value)}
+                      placeholder={t('history.emotionPlaceholder')}
+                      autoFocus
+                      onBlur={() => {
+                        if (newEmotion.trim()) handleAddEmotion();
+                        else setIsAddingEmotion(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddEmotion();
+                        if (e.key === 'Escape') {
+                          setIsAddingEmotion(false);
+                          setNewEmotion('');
+                        }
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        border: `1px solid var(--cam-border)`,
+                        outline: 'none',
+                        fontSize: '12px',
+                        color: 'var(--cam-text-primary)',
+                        backgroundColor: 'var(--cam-bg-input)',
+                        maxWidth: '160px',
+                      }}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setIsAddingEmotion(true)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '6px 12px',
+                        borderRadius: '9999px',
+                        border: `1px dashed var(--cam-border)`,
+                        background: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--cam-text-brand)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <Plus size={14} strokeWidth={2.5} />
+                      {t('history.addEmotion')}
+                    </button>
                   ))}
+              </div>
+
+              {editing && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
+                  <button
+                    onClick={() => {
+                      setEditing(false);
+                      setEditText(selectedEntry.raw_text);
+                      setEditingEmotionId(null);
+                      setIsAddingEmotion(false);
+                      setNewEmotion('');
+                    }}
+                    disabled={savingEntry}
+                    style={{
+                      flex: 1,
+                      height: '44px',
+                      borderRadius: '9999px',
+                      backgroundColor: 'transparent',
+                      color: 'var(--cam-text-secondary)',
+                      border: `1.5px solid var(--cam-border)`,
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: savingEntry ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    onClick={handleSaveText}
+                    disabled={savingEntry || !editText.trim()}
+                    style={{
+                      flex: 1,
+                      height: '44px',
+                      borderRadius: '9999px',
+                      backgroundColor: 'var(--cam-color-brand)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: savingEntry || !editText.trim() ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      opacity: savingEntry || !editText.trim() ? 0.6 : 1,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {savingEntry ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} strokeWidth={2.5} />}
+                    {t('common.save')}
+                  </button>
                 </div>
-              ) : (
-                <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0 }}>
-                  {t('entryDetail.emotionsEmpty')}
-                </p>
               )}
             </div>
           </div>
@@ -399,3 +710,34 @@ export function HistoryScreen() {
     </div>
   );
 }
+
+const modalIconButtonStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: '6px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const chipTextButtonStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  color: 'var(--cam-text-brand)',
+  fontSize: '12px',
+  fontWeight: 500,
+  fontFamily: 'inherit',
+};
+
+const chipRemoveButtonStyle: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  color: 'var(--cam-text-error)',
+  display: 'flex',
+  alignItems: 'center',
+};

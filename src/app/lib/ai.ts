@@ -43,7 +43,6 @@ export interface ProcessEntryResult {
   // 'ok' | 'already_processed' | 'processing' (202, outra requisição está processando)
   status: 'ok' | 'already_processed' | 'processing' | string;
   emocoes?: { nome: string; intensidade?: string; confianca?: number }[];
-  pensamentos?: string[];
 }
 
 export function processEntry(entryId: string, idioma: string): Promise<ProcessEntryResult> {
@@ -60,8 +59,6 @@ export interface AnalyzeBeliefsInput {
   idioma: string;
   emocoesValidadas: string[];
   emocoesRejeitadas: string[];
-  pensamentosValidados: string[];
-  pensamentosRejeitados: string[];
 }
 
 export interface AnalyzeBeliefsResult {
@@ -75,8 +72,6 @@ export function analyzeBeliefs(input: AnalyzeBeliefsInput): Promise<AnalyzeBelie
     idioma: input.idioma,
     emocoes_validadas: input.emocoesValidadas,
     emocoes_rejeitadas: input.emocoesRejeitadas,
-    pensamentos_validados: input.pensamentosValidados,
-    pensamentos_rejeitados: input.pensamentosRejeitados,
   });
 }
 

@@ -343,6 +343,81 @@ export async function setEmotionValidation(
   }
 }
 
+// Exclusão de registro = soft delete (deleted_at). Não chama /api/*.
+export async function deleteEntry(entryId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('entries')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', entryId);
+    if (error) {
+      console.error('[db.deleteEntry]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.deleteEntry]', err);
+    return false;
+  }
+}
+
+// Edita o texto do registro (raw_text). Edição direta no banco, sem IA.
+export async function updateEntry(
+  entryId: string,
+  rawText: string
+): Promise<boolean> {
+  try {
+    const trimmed = rawText.trim();
+    if (!trimmed) return false;
+    const { error } = await supabase
+      .from('entries')
+      .update({ raw_text: trimmed })
+      .eq('id', entryId);
+    if (error) {
+      console.error('[db.updateEntry]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.updateEntry]', err);
+    return false;
+  }
+}
+
+// Renomeia uma emoção do registro sem chamar IA: incrementa version, mantém
+// name_original e marca validation = 'edited'.
+export async function updateEntryEmotion(
+  emotionId: string,
+  name: string
+): Promise<boolean> {
+  try {
+    const trimmed = name.trim();
+    if (!trimmed) return false;
+    const { data: current, error: readErr } = await supabase
+      .from('emotions')
+      .select('version')
+      .eq('id', emotionId)
+      .maybeSingle();
+    if (readErr) {
+      console.error('[db.updateEntryEmotion read]', readErr);
+      return false;
+    }
+    const nextVersion = ((current?.version as number) ?? 1) + 1;
+    const { error } = await supabase
+      .from('emotions')
+      .update({ name: trimmed, validation: 'edited', version: nextVersion })
+      .eq('id', emotionId);
+    if (error) {
+      console.error('[db.updateEntryEmotion]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.updateEntryEmotion]', err);
+    return false;
+  }
+}
+
 // Status de processamento de IA do registro (usado para decidir se chamamos
 // /api/process-entry ou se a análise já foi feita).
 export async function getEntryProcessingStatus(
@@ -474,6 +549,58 @@ export async function setBeliefValidation(
     return true;
   } catch (err) {
     console.error('[db.setBeliefValidation]', err);
+    return false;
+  }
+}
+
+// Edita o texto de uma crença sem chamar IA: incrementa version, mantém
+// content_original e marca validation = 'edited'.
+export async function updateBelief(
+  beliefId: string,
+  content: string
+): Promise<boolean> {
+  try {
+    const trimmed = content.trim();
+    if (!trimmed) return false;
+    const { data: current, error: readErr } = await supabase
+      .from('beliefs')
+      .select('version')
+      .eq('id', beliefId)
+      .maybeSingle();
+    if (readErr) {
+      console.error('[db.updateBelief read]', readErr);
+      return false;
+    }
+    const nextVersion = ((current?.version as number) ?? 1) + 1;
+    const { error } = await supabase
+      .from('beliefs')
+      .update({ content: trimmed, validation: 'edited', version: nextVersion })
+      .eq('id', beliefId);
+    if (error) {
+      console.error('[db.updateBelief]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.updateBelief]', err);
+    return false;
+  }
+}
+
+// Exclusão de crença = soft delete (deleted_at). Nunca DELETE físico.
+export async function deleteBeliefById(beliefId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('beliefs')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', beliefId);
+    if (error) {
+      console.error('[db.deleteBeliefById]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.deleteBeliefById]', err);
     return false;
   }
 }

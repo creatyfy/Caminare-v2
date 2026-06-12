@@ -24,8 +24,6 @@ interface Body {
   idioma?: string;
   emocoes_validadas?: string[];
   emocoes_rejeitadas?: string[];
-  pensamentos_validados?: string[];
-  pensamentos_rejeitados?: string[];
   crencas_existentes?: string[];
   data_hora?: string;
 }
@@ -89,6 +87,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     crencasExistentes = (existing ?? []).map((b) => b.content).filter(Boolean);
   }
 
+  // Crenças já rejeitadas pelo usuário: o prompt nunca deve sugeri-las de novo e
+  // filtramos qualquer formulação que bata com elas antes de inserir.
+  const { data: rejected } = await db
+    .from('beliefs')
+    .select('content')
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .eq('validation', 'rejected');
+  const crencasRejeitadas = (rejected ?? []).map((b) => b.content).filter(Boolean);
+
   try {
     const { data: ai } = await runStructured<AiResult>(
       SYSTEM_ANALYZE_BELIEFS,
@@ -97,22 +105,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         idioma: body.idioma ?? 'pt-BR',
         emocoesValidadas: asStrArray(body.emocoes_validadas),
         emocoesRejeitadas: asStrArray(body.emocoes_rejeitadas),
-        pensamentosValidados: asStrArray(body.pensamentos_validados),
-        pensamentosRejeitados: asStrArray(body.pensamentos_rejeitados),
         crencasExistentes,
+        crencasRejeitadas,
         dataHora: body.data_hora ?? new Date().toISOString(),
       }),
       1500
     );
 
-    const crencas = (ai.crencas ?? []).filter((c) => c?.formulacao?.trim()).slice(0, 4);
+    const crencas = (ai.crencas ?? []).filter((c) => c?.formulacao?.trim()).slice(0, 5);
 
     if (crencas.length) {
       const nowIso = body.data_hora ?? new Date().toISOString();
-      // Não recria crença pending com formulação idêntica a uma já existente.
+      // Não recria crença pending com formulação idêntica a uma já existente
+      // nem reintroduz uma crença que o usuário já rejeitou.
       const existingSet = new Set(crencasExistentes.map((c) => c.toLowerCase()));
+      const rejectedSet = new Set(crencasRejeitadas.map((c) => c.toLowerCase()));
       const rows = crencas
-        .filter((c) => !existingSet.has(c.formulacao.trim().toLowerCase()))
+        .filter((c) => {
+          const key = c.formulacao.trim().toLowerCase();
+          return !existingSet.has(key) && !rejectedSet.has(key);
+        })
         .map((c) => ({
           user_id: user.id,
           content: c.formulacao.trim(),
