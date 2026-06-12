@@ -374,12 +374,17 @@ export async function updateEntry(
   try {
     const trimmed = rawText.trim();
     if (!trimmed) return false;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('entries')
       .update({ raw_text: trimmed })
-      .eq('id', entryId);
+      .eq('id', entryId)
+      .select('id');
     if (error) {
       console.error('[db.updateEntry]', error);
+      return false;
+    }
+    if ((data?.length ?? 0) === 0) {
+      console.error('[db.updateEntry] UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em entries).');
       return false;
     }
     return true;
@@ -408,12 +413,17 @@ export async function updateEntryEmotion(
       return false;
     }
     const nextVersion = ((current?.version as number) ?? 1) + 1;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('emotions')
       .update({ name: trimmed, validation: 'edited', version: nextVersion })
-      .eq('id', emotionId);
+      .eq('id', emotionId)
+      .select('id');
     if (error) {
       console.error('[db.updateEntryEmotion]', error);
+      return false;
+    }
+    if ((data?.length ?? 0) === 0) {
+      console.error('[db.updateEntryEmotion] UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em emotions).');
       return false;
     }
     return true;
@@ -605,12 +615,19 @@ export async function updateBelief(
       return false;
     }
     const nextVersion = ((current?.version as number) ?? 1) + 1;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('beliefs')
       .update({ content: trimmed, validation: 'edited', version: nextVersion })
-      .eq('id', beliefId);
+      .eq('id', beliefId)
+      .select('id');
     if (error) {
+      // 42501 = permission denied (grant de coluna); RLS bloqueado costuma vir
+      // como sucesso com 0 linhas (tratado abaixo). Logamos para diagnóstico.
       console.error('[db.updateBelief]', error);
+      return false;
+    }
+    if ((data?.length ?? 0) === 0) {
+      console.error('[db.updateBelief] UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em beliefs).');
       return false;
     }
     return true;
@@ -708,12 +725,17 @@ export async function updatePattern(
   try {
     const trimmed = description.trim();
     if (!trimmed) return false;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('patterns')
       .update({ description: trimmed, validation: 'edited' })
-      .eq('id', patternId);
+      .eq('id', patternId)
+      .select('id');
     if (error) {
       console.error('[db.updatePattern]', error);
+      return false;
+    }
+    if ((data?.length ?? 0) === 0) {
+      console.error('[db.updatePattern] UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em patterns).');
       return false;
     }
     return true;
