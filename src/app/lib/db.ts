@@ -394,43 +394,13 @@ export async function updateEntry(
   }
 }
 
-// Renomeia uma emoção do registro sem chamar IA: incrementa version, mantém
-// name_original e marca validation = 'edited'.
+// Renomeia uma emoção do registro sem chamar IA (mesma resiliência de schema do
+// updateBelief: garante o name salvo mesmo sem version/enum 'edited').
 export async function updateEntryEmotion(
   emotionId: string,
   name: string
 ): Promise<boolean> {
-  try {
-    const trimmed = name.trim();
-    if (!trimmed) return false;
-    const { data: current, error: readErr } = await supabase
-      .from('emotions')
-      .select('version')
-      .eq('id', emotionId)
-      .maybeSingle();
-    if (readErr) {
-      console.error('[db.updateEntryEmotion read]', readErr);
-      return false;
-    }
-    const nextVersion = ((current?.version as number) ?? 1) + 1;
-    const { data, error } = await supabase
-      .from('emotions')
-      .update({ name: trimmed, validation: 'edited', version: nextVersion })
-      .eq('id', emotionId)
-      .select('id');
-    if (error) {
-      console.error('[db.updateEntryEmotion]', error);
-      return false;
-    }
-    if ((data?.length ?? 0) === 0) {
-      console.error('[db.updateEntryEmotion] UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em emotions).');
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error('[db.updateEntryEmotion]', err);
-    return false;
-  }
+  return updateRowResilient('emotions', emotionId, name, 'name', '[db.updateEntryEmotion]');
 }
 
 // Status de processamento de IA do registro (usado para decidir se chamamos
@@ -596,43 +566,67 @@ export async function setBeliefValidation(
   }
 }
 
-// Edita o texto de uma crença sem chamar IA: incrementa version, mantém
-// content_original e marca validation = 'edited'.
+// Edita o texto de uma crença sem chamar IA. Resiliente a schema mínimo: tenta
+// gravar content + validation('edited') + version e, se alguma coluna não
+// existir (42703) ou o enum não aceitar 'edited' (22P02/22023/23514), cai para
+// payloads mais simples — o mínimo (só content) sempre persiste o texto editado.
 export async function updateBelief(
   beliefId: string,
   content: string
 ): Promise<boolean> {
+  return updateRowResilient('beliefs', beliefId, content, 'content', '[db.updateBelief]');
+}
+
+// Códigos Postgres que indicam "coluna/enum incompatível" — dá pra tentar um
+// payload mais simples. Outros erros (ex.: 42501 permission) não adiantam.
+const SCHEMA_MISMATCH_CODES = new Set(['42703', '22P02', '22023', '23514']);
+
+// UPDATE resiliente usado por edições "sem IA" (crença/emoção). Persiste sempre
+// o campo principal (`field`), tentando também validation='edited' e version
+// quando o schema suporta. Confere linhas afetadas (RLS → 0 linhas → false).
+async function updateRowResilient(
+  table: 'beliefs' | 'emotions',
+  rowId: string,
+  value: string,
+  field: 'content' | 'name',
+  logTag: string
+): Promise<boolean> {
   try {
-    const trimmed = content.trim();
+    const trimmed = value.trim();
     if (!trimmed) return false;
-    const { data: current, error: readErr } = await supabase
-      .from('beliefs')
+
+    let version: number | undefined;
+    const { data: current } = await supabase
+      .from(table)
       .select('version')
-      .eq('id', beliefId)
+      .eq('id', rowId)
       .maybeSingle();
-    if (readErr) {
-      console.error('[db.updateBelief read]', readErr);
+    if (current && typeof current.version === 'number') version = current.version + 1;
+
+    // Do mais completo ao mínimo. O último (só o campo) garante o texto salvo.
+    const attempts: Record<string, unknown>[] = [
+      { [field]: trimmed, validation: 'edited', ...(version !== undefined ? { version } : {}) },
+      { [field]: trimmed, validation: 'edited' },
+      { [field]: trimmed },
+    ];
+
+    for (const payload of attempts) {
+      const res = await supabase.from(table).update(payload).eq('id', rowId).select('id');
+      if (!res.error) {
+        if ((res.data?.length ?? 0) === 0) {
+          console.error(`${logTag} UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em ${table}).`);
+          return false;
+        }
+        return true;
+      }
+      if (SCHEMA_MISMATCH_CODES.has(res.error.code)) continue; // tenta payload mais simples
+      console.error(logTag, res.error); // ex.: 42501 permission — não dá pra contornar
       return false;
     }
-    const nextVersion = ((current?.version as number) ?? 1) + 1;
-    const { data, error } = await supabase
-      .from('beliefs')
-      .update({ content: trimmed, validation: 'edited', version: nextVersion })
-      .eq('id', beliefId)
-      .select('id');
-    if (error) {
-      // 42501 = permission denied (grant de coluna); RLS bloqueado costuma vir
-      // como sucesso com 0 linhas (tratado abaixo). Logamos para diagnóstico.
-      console.error('[db.updateBelief]', error);
-      return false;
-    }
-    if ((data?.length ?? 0) === 0) {
-      console.error('[db.updateBelief] UPDATE afetou 0 linhas (provável RLS sem policy de UPDATE em beliefs).');
-      return false;
-    }
-    return true;
+    console.error(`${logTag} todas as tentativas falharam (coluna/enum incompatível).`);
+    return false;
   } catch (err) {
-    console.error('[db.updateBelief]', err);
+    console.error(logTag, err);
     return false;
   }
 }
