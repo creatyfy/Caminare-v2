@@ -1,10 +1,13 @@
 import { Home, History, Brain, FileText, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { usePendingPattern } from '../contexts/PendingPatternContext';
 
 export function BottomNav() {
   const location = useLocation();
   const { t } = useTranslation();
+  const { pattern } = usePendingPattern();
+  const hasPendingPattern = !!pattern;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -43,6 +46,8 @@ export function BottomNav() {
       >
         {navItems.map((item) => {
           const active = isActive(item.path);
+          // Pulso roxo no Insights enquanto houver padrão pendente de validação.
+          const pulsing = item.path === '/padroes' && hasPendingPattern;
           return (
             <Link
               key={item.path}
@@ -59,7 +64,19 @@ export function BottomNav() {
                 color: active ? 'var(--cam-text-brand)' : 'var(--cam-text-secondary)',
               }}
             >
-              <item.icon size={24} strokeWidth={active ? 2.5 : 2} />
+              <span
+                className={pulsing ? 'cam-pattern-pulse' : undefined}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  color: pulsing ? 'var(--cam-text-brand)' : 'inherit',
+                }}
+              >
+                <item.icon size={24} strokeWidth={active || pulsing ? 2.5 : 2} />
+              </span>
               <span style={{ fontSize: '10px', fontWeight: 500, lineHeight: 1 }}>{item.label}</span>
             </Link>
           );

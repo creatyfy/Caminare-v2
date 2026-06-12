@@ -116,6 +116,10 @@ export const en = {
     },
     voiceButton: 'New Voice Entry',
     textButton: 'New Text Entry',
+    patternModalTitle: '{{name}}, a possible new pattern has been recognized.',
+    patternModalMessage: 'Want to analyze it now?',
+    patternModalAnalyze: 'Analyze',
+    patternModalLater: 'Later',
   },
   history: {
     title: 'History',
@@ -134,6 +138,11 @@ export const en = {
     addEmotion: 'Add emotion',
     emotionPlaceholder: 'Type an emotion...',
     removeEmotion: 'Remove emotion',
+  },
+  entryDone: {
+    title: 'Entry complete!',
+    message: 'Your emotions and beliefs have been saved.',
+    backHome: 'Back to home',
   },
   entryDetail: {
     title: 'Full entry',
@@ -228,6 +237,7 @@ export const en = {
     descriptionLabel: 'Pattern description:',
     triggersLabel: 'Common triggers:',
     confirmPattern: 'Confirm Pattern',
+    edit: 'Edit',
     notApplies: "Doesn't Apply",
     noneTitle: 'No new patterns',
     noneMessage: 'Keep recording your emotions and beliefs. When a recurring pattern emerges, you will see it here.',

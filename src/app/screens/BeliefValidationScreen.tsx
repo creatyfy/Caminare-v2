@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { usePendingPattern } from '../contexts/PendingPatternContext';
 import {
   getUserBeliefs,
   getEntryBeliefs,
@@ -21,6 +22,7 @@ export function BeliefValidationScreen() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { refresh: refreshPendingPattern } = usePendingPattern();
   const [searchParams] = useSearchParams();
   const entryId = searchParams.get('entryId');
 
@@ -38,24 +40,22 @@ export function BeliefValidationScreen() {
     if (!user || continuing) return;
     setContinuing(true);
     // Padrões só rodam a cada PATTERN_EVERY registros (não a cada registro).
-    // Só abrimos a tela de padrão quando a IA retorna um padrão novo; caso
-    // contrário voltamos direto para a home.
+    // Novo fluxo: o padrão NÃO abre tela aqui — ele surge como modal na home e o
+    // ícone de Insights pulsa. Aqui só revalidamos o estado compartilhado.
     try {
       const stats = await getHomeStats(user.id);
       const total = stats?.totalEntries ?? 0;
       if (total > 0 && total % PATTERN_EVERY === 0) {
         const res = await detectPatterns(user.id, i18n.language);
         if (res.padroes && res.padroes.length > 0) {
-          setContinuing(false);
-          navigate('/novo-padrao');
-          return;
+          await refreshPendingPattern();
         }
       }
     } catch (err) {
       console.error('[BeliefValidation] detect-patterns falhou:', err);
     }
     setContinuing(false);
-    navigate('/home');
+    navigate('/registro-concluido');
   }
 
   function startEdit(belief: BeliefFull) {

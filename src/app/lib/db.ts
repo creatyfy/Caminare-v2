@@ -700,6 +700,29 @@ export async function setPatternValidation(
   }
 }
 
+// Edita a descrição de um padrão sem chamar IA: marca validation = 'edited'.
+export async function updatePattern(
+  patternId: string,
+  description: string
+): Promise<boolean> {
+  try {
+    const trimmed = description.trim();
+    if (!trimmed) return false;
+    const { error } = await supabase
+      .from('patterns')
+      .update({ description: trimmed, validation: 'edited' })
+      .eq('id', patternId);
+    if (error) {
+      console.error('[db.updatePattern]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.updatePattern]', err);
+    return false;
+  }
+}
+
 export async function createTextEntry(
   userId: string,
   rawText: string

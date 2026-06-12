@@ -3,6 +3,7 @@ import { useEffect, useState, lazy, Suspense, type ReactNode } from 'react';
 import './lib/i18n';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { PendingPatternProvider } from './contexts/PendingPatternContext';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -14,6 +15,7 @@ import { RecordingScreen } from './screens/RecordingScreen';
 import { TextRecordingScreen } from './screens/TextRecordingScreen';
 import { EmotionValidationScreen } from './screens/EmotionValidationScreen';
 import { BeliefValidationScreen } from './screens/BeliefValidationScreen';
+import { EntryDoneScreen } from './screens/EntryDoneScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { EntryDetailScreen } from './screens/EntryDetailScreen';
 import { PatternsScreen } from './screens/PatternsScreen';
@@ -100,6 +102,7 @@ function AppRoutes() {
         <Route path="/registro-texto" element={<RequireAuth><TextRecordingScreen /></RequireAuth>} />
         <Route path="/validacao-emocoes" element={<RequireAuth><EmotionValidationScreen /></RequireAuth>} />
         <Route path="/validacao-crencas" element={<RequireAuth><BeliefValidationScreen /></RequireAuth>} />
+        <Route path="/registro-concluido" element={<RequireAuth><EntryDoneScreen /></RequireAuth>} />
         <Route path="/historico" element={<RequireAuth><HistoryScreen /></RequireAuth>} />
         <Route path="/registro/:id" element={<RequireAuth><EntryDetailScreen /></RequireAuth>} />
         <Route path="/padroes" element={<RequireAuth><PatternsScreen /></RequireAuth>} />
@@ -134,12 +137,14 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <div
-            className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
-            style={{ backgroundColor: 'var(--cam-bg-page)' }}
-          >
-            <AppRoutes />
-          </div>
+          <PendingPatternProvider>
+            <div
+              className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
+              style={{ backgroundColor: 'var(--cam-bg-page)' }}
+            >
+              <AppRoutes />
+            </div>
+          </PendingPatternProvider>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

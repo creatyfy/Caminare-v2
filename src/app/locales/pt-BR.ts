@@ -116,6 +116,10 @@ export const ptBR = {
     },
     voiceButton: 'Novo Registro por Voz',
     textButton: 'Novo Registro por Texto',
+    patternModalTitle: '{{name}}, você tem um possível novo padrão reconhecido.',
+    patternModalMessage: 'Quer analisar agora?',
+    patternModalAnalyze: 'Analisar',
+    patternModalLater: 'Deixar pra depois',
   },
   history: {
     title: 'Histórico',
@@ -134,6 +138,11 @@ export const ptBR = {
     addEmotion: 'Adicionar emoção',
     emotionPlaceholder: 'Digite uma emoção...',
     removeEmotion: 'Remover emoção',
+  },
+  entryDone: {
+    title: 'Registro concluído!',
+    message: 'Suas emoções e crenças foram registradas.',
+    backHome: 'Voltar para a tela inicial',
   },
   entryDetail: {
     title: 'Registro completo',
@@ -228,6 +237,7 @@ export const ptBR = {
     descriptionLabel: 'Descrição do padrão:',
     triggersLabel: 'Gatilhos comuns:',
     confirmPattern: 'Confirmar Padrão',
+    edit: 'Editar',
     notApplies: 'Não se Aplica',
     noneTitle: 'Nenhum padrão novo',
     noneMessage: 'Continue registrando suas emoções e crenças. Quando um padrão recorrente aparecer, você verá aqui.',

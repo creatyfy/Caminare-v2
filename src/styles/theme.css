@@ -217,3 +217,15 @@ html.dark,
     opacity: 0.7;
   }
 }
+
+/* Pulso (sombra roxa) atrás de um ícone — usado no item Insights da BottomNav
+   enquanto houver um padrão pendente de validação. */
+@keyframes camPatternPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 239, 0); }
+  50%      { box-shadow: 0 0 0 8px rgba(124, 92, 239, 0.35); }
+}
+
+.cam-pattern-pulse {
+  border-radius: 50%;
+  animation: camPatternPulse 1.6s ease-in-out infinite;
+}
