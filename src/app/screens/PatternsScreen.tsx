@@ -53,9 +53,9 @@ export function PatternsScreen() {
   }
 
   async function confirmRemoveBelief() {
-    if (!pendingDeleteBeliefId) return;
+    if (!user || !pendingDeleteBeliefId) return;
     const id = pendingDeleteBeliefId;
-    const ok = await deleteBeliefById(id);
+    const ok = await deleteBeliefById(user.id, id);
     if (ok) setBeliefs((prev) => prev.filter((b) => b.id !== id));
     setPendingDeleteBeliefId(null);
   }
