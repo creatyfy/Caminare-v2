@@ -1,10 +1,11 @@
 import { Check, X, ArrowLeft, Plus, Loader2, Pencil } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import {
   getUserBeliefs,
+  getEntryBeliefs,
   addBelief,
   setBeliefValidation,
   updateBelief,
@@ -20,6 +21,8 @@ export function BeliefValidationScreen() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const entryId = searchParams.get('entryId');
 
   const [beliefs, setBeliefs] = useState<BeliefFull[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +88,12 @@ export function BeliefValidationScreen() {
     if (!user) return;
     let active = true;
     setLoading(true);
-    getUserBeliefs(user.id).then((bs) => {
+    // Com entryId: só as crenças daquele registro (máx. 5). Sem entryId
+    // (acesso avulso): mantém o comportamento antigo de todas as pendentes.
+    const load = entryId
+      ? getEntryBeliefs(user.id, entryId)
+      : getUserBeliefs(user.id);
+    load.then((bs) => {
       if (!active) return;
       setBeliefs(bs);
       setLoading(false);
@@ -93,7 +101,7 @@ export function BeliefValidationScreen() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, entryId]);
 
   async function handleValidation(
     id: string,

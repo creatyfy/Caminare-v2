@@ -93,9 +93,9 @@ export function HistoryScreen() {
   }
 
   async function confirmDeleteEntry() {
-    if (!pendingDeleteId || deleting) return;
+    if (!user || !pendingDeleteId || deleting) return;
     setDeleting(true);
-    const ok = await deleteEntry(pendingDeleteId);
+    const ok = await deleteEntry(user.id, pendingDeleteId);
     setDeleting(false);
     if (ok) {
       const id = pendingDeleteId;

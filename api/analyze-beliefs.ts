@@ -127,6 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
         .map((c) => ({
           user_id: user.id,
+          source_entry_id: entryId,
           content: c.formulacao.trim(),
           content_original: c.formulacao.trim(),
           validation: 'pending' as const,
@@ -137,7 +138,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }));
       if (rows.length) {
         const { error: insErr } = await db.from('beliefs').insert(rows);
-        if (insErr) console.error('[analyze-beliefs] erro ao inserir crenças:', insErr);
+        // Resiliência ao deploy: se a coluna source_entry_id ainda não existir
+        // no banco (migration não aplicada), reinsere sem ela para não quebrar a
+        // geração de crenças. Postgres: 42703 = undefined_column.
+        if (insErr?.code === '42703') {
+          const fallback = rows.map(({ source_entry_id, ...rest }) => rest);
+          const { error: fbErr } = await db.from('beliefs').insert(fallback);
+          if (fbErr) console.error('[analyze-beliefs] erro ao inserir crenças (fallback):', fbErr);
+        } else if (insErr) {
+          console.error('[analyze-beliefs] erro ao inserir crenças:', insErr);
+        }
       }
     }
 

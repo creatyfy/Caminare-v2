@@ -80,23 +80,11 @@ export function EmotionValidationScreen() {
   async function handleContinue() {
     if (!user || !entryId || continuing) return;
     setContinuing(true);
-    // Ignorar = confirmar: emoções que ficaram 'pending' (não rejeitadas e não
-    // tocadas) são persistidas como 'confirmed' para baterem com os Insights.
-    // O X continua marcando 'rejected'.
-    const pendentes = emotions.filter((e) => e.validation === 'pending');
-    if (pendentes.length) {
-      await Promise.all(
-        pendentes.map((e) => setEmotionValidation(e.id, 'confirmed'))
-      );
-      setEmotions((prev) =>
-        prev.map((e) =>
-          e.validation === 'pending' ? { ...e, validation: 'confirmed' } : e
-        )
-      );
-    }
-    // Itens validados = não rejeitados; rejeitados = marcados como 'rejected'.
+    // Não tocar = IGNORAR: emoções 'pending' não viram nada (não entram nos
+    // Insights, que já filtram validation='confirmed'). Só contam as que o
+    // usuário confirmou explicitamente (✓); o X marca 'rejected'.
     const emocoesValidadas = emotions
-      .filter((e) => e.validation !== 'rejected')
+      .filter((e) => e.validation === 'confirmed')
       .map((e) => e.name);
     const emocoesRejeitadas = emotions
       .filter((e) => e.validation === 'rejected')
@@ -113,7 +101,7 @@ export function EmotionValidationScreen() {
       console.error('[EmotionValidation] analyze-beliefs falhou:', err);
     }
     setContinuing(false);
-    navigate('/validacao-crencas');
+    navigate('/validacao-crencas?entryId=' + entryId);
   }
 
   async function handleEmotionValidation(

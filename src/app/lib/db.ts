@@ -344,17 +344,22 @@ export async function setEmotionValidation(
 }
 
 // Exclusão de registro = soft delete (deleted_at). Não chama /api/*.
-export async function deleteEntry(entryId: string): Promise<boolean> {
+// Filtra por dono e confere as linhas afetadas: se o RLS bloquear o UPDATE,
+// o Supabase retorna sucesso com 0 linhas — então retornamos false para a UI
+// não remover algo que não foi gravado ("falso sucesso").
+export async function deleteEntry(userId: string, entryId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('entries')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', entryId);
+      .eq('id', entryId)
+      .eq('user_id', userId)
+      .select('id');
     if (error) {
       console.error('[db.deleteEntry]', error);
       return false;
     }
-    return true;
+    return (data?.length ?? 0) > 0;
   } catch (err) {
     console.error('[db.deleteEntry]', err);
     return false;
@@ -500,6 +505,34 @@ export async function getUserBeliefs(userId: string): Promise<BeliefFull[]> {
   }
 }
 
+// Crenças pendentes GERADAS por um registro específico (source_entry_id). Usada
+// na tela de validação logo após o registro: mostra só as crenças daquele
+// registro, no máximo 5. Crenças avulsas (source_entry_id null) não entram.
+export async function getEntryBeliefs(
+  userId: string,
+  entryId: string
+): Promise<BeliefFull[]> {
+  try {
+    const { data, error } = await supabase
+      .from('beliefs')
+      .select('id, content, content_original, validation, occurrence_count')
+      .eq('user_id', userId)
+      .eq('source_entry_id', entryId)
+      .is('deleted_at', null)
+      .eq('validation', 'pending')
+      .order('occurrence_count', { ascending: false })
+      .limit(5);
+    if (error) {
+      console.error('[db.getEntryBeliefs]', error);
+      return [];
+    }
+    return (data ?? []) as BeliefFull[];
+  } catch (err) {
+    console.error('[db.getEntryBeliefs]', err);
+    return [];
+  }
+}
+
 export async function addBelief(
   userId: string,
   content: string
@@ -588,17 +621,24 @@ export async function updateBelief(
 }
 
 // Exclusão de crença = soft delete (deleted_at). Nunca DELETE físico.
-export async function deleteBeliefById(beliefId: string): Promise<boolean> {
+// Filtra por dono e confere linhas afetadas (mesmo motivo do deleteEntry):
+// evita "falso sucesso" quando o RLS bloqueia o UPDATE.
+export async function deleteBeliefById(
+  userId: string,
+  beliefId: string
+): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('beliefs')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', beliefId);
+      .eq('id', beliefId)
+      .eq('user_id', userId)
+      .select('id');
     if (error) {
       console.error('[db.deleteBeliefById]', error);
       return false;
     }
-    return true;
+    return (data?.length ?? 0) > 0;
   } catch (err) {
     console.error('[db.deleteBeliefById]', err);
     return false;
