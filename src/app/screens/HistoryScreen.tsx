@@ -13,6 +13,7 @@ import {
   type EmotionRow,
 } from '../lib/db';
 import { formatDate } from '../lib/format';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 type FilterValue = '7days' | '15days' | '30days' | 'all';
 
@@ -33,6 +34,7 @@ export function HistoryScreen() {
   const [editText, setEditText] = useState('');
   const [savingEntry, setSavingEntry] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [editingEmotionId, setEditingEmotionId] = useState<string | null>(null);
   const [emotionDraft, setEmotionDraft] = useState('');
   const [isAddingEmotion, setIsAddingEmotion] = useState(false);
@@ -90,15 +92,15 @@ export function HistoryScreen() {
     }
   }
 
-  async function handleDeleteEntry() {
-    if (!selectedEntry || deleting) return;
-    if (!window.confirm(t('history.deleteConfirm'))) return;
+  async function confirmDeleteEntry() {
+    if (!pendingDeleteId || deleting) return;
     setDeleting(true);
-    const ok = await deleteEntry(selectedEntry.id);
+    const ok = await deleteEntry(pendingDeleteId);
     setDeleting(false);
     if (ok) {
-      const id = selectedEntry.id;
+      const id = pendingDeleteId;
       setEntries((prev) => prev.filter((e) => e.id !== id));
+      setPendingDeleteId(null);
       closeModal();
     }
   }
@@ -451,7 +453,7 @@ export function HistoryScreen() {
                       <Pencil size={18} color="var(--cam-text-brand)" strokeWidth={2.5} />
                     </button>
                     <button
-                      onClick={handleDeleteEntry}
+                      onClick={() => selectedEntry && setPendingDeleteId(selectedEntry.id)}
                       disabled={deleting}
                       aria-label={t('history.delete')}
                       title={t('history.delete')}
@@ -707,6 +709,16 @@ export function HistoryScreen() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDeleteId}
+        title={t('history.delete')}
+        message={t('history.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        destructive
+        onConfirm={confirmDeleteEntry}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }

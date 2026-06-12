@@ -340,6 +340,28 @@ export function BeliefValidationScreen() {
                       </button>
 
                       <button
+                        onClick={() => startEdit(belief)}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '12px 0',
+                          borderRadius: '16px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor: 'var(--cam-bg-muted)',
+                          color: 'var(--cam-text-brand)',
+                        }}
+                      >
+                        <Pencil size={20} strokeWidth={2.5} />
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                          {t('beliefValidation.adjust')}
+                        </span>
+                      </button>
+
+                      <button
                         onClick={() => handleValidation(belief.id, 'confirmed')}
                         style={{
                           flex: 1,
@@ -367,29 +389,6 @@ export function BeliefValidationScreen() {
                         </span>
                       </button>
                     </div>
-
-                    <button
-                      onClick={() => startEdit(belief)}
-                      style={{
-                        marginTop: '12px',
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        padding: '8px 0',
-                        borderRadius: '12px',
-                        border: 'none',
-                        background: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--cam-text-brand)',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                      }}
-                    >
-                      <Pencil size={15} strokeWidth={2.5} />
-                      {t('beliefValidation.adjust')}
-                    </button>
                   </>
                 )}
               </div>

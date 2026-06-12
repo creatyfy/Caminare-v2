@@ -235,7 +235,7 @@ export const en = {
   },
   patterns: {
     title: 'Insights',
-    subtitle: 'Your emotions, thoughts, beliefs and patterns',
+    subtitle: 'Your emotions, beliefs and patterns',
     loading: 'Loading insights...',
     empty: 'Your insights appear here after you create and validate your first entries.',
     emotionsHeader: 'My top emotions',
