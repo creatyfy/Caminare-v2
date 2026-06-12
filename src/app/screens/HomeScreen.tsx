@@ -3,15 +3,22 @@ import { Mic, Heart, Brain, TrendingUp, BookOpen, Edit3, Shield } from 'lucide-r
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { usePendingPattern } from '../contexts/PendingPatternContext';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { getProfile, getHomeStats, type Profile, type HomeStats } from '../lib/db';
 
 export function HomeScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { pattern, refresh: refreshPendingPattern } = usePendingPattern();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<HomeStats | null>(null);
   const [loading, setLoading] = useState(true);
+  // Modal do padrão: mostra uma vez por abertura da home. "Deixar pra depois"
+  // só dispensa nesta sessão da tela — reabre numa próxima abertura enquanto
+  // houver padrão pendente.
+  const [patternDismissed, setPatternDismissed] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -28,7 +35,14 @@ export function HomeScreen() {
     };
   }, [user]);
 
+  // Revalida o padrão pendente sempre que a home é aberta (pega um padrão
+  // recém-detectado ao concluir um registro).
+  useEffect(() => {
+    void refreshPendingPattern();
+  }, [refreshPendingPattern]);
+
   const firstName = profile?.full_name?.split(' ')[0] ?? t('home.greetingFallback');
+  const showPatternModal = !!pattern && !patternDismissed;
   const statValue = (n: number | undefined) =>
     loading || n === undefined ? '—' : String(n);
 
@@ -249,6 +263,16 @@ export function HomeScreen() {
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showPatternModal}
+        title={t('home.patternModalTitle', { name: firstName })}
+        message={t('home.patternModalMessage')}
+        confirmLabel={t('home.patternModalAnalyze')}
+        cancelLabel={t('home.patternModalLater')}
+        onConfirm={() => navigate('/novo-padrao')}
+        onCancel={() => setPatternDismissed(true)}
+      />
     </div>
   );
 }

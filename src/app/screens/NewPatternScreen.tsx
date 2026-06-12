@@ -1,17 +1,26 @@
-import { Sparkles, Check, X, ArrowLeft, Loader2 } from 'lucide-react';
+import { Sparkles, Check, X, ArrowLeft, Loader2, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { getPendingPattern, setPatternValidation, type PatternFull } from '../lib/db';
+import { usePendingPattern } from '../contexts/PendingPatternContext';
+import {
+  getPendingPattern,
+  setPatternValidation,
+  updatePattern,
+  type PatternFull,
+} from '../lib/db';
 
 export function NewPatternScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { refresh: refreshPendingPattern } = usePendingPattern();
   const [pattern, setPattern] = useState<PatternFull | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -32,7 +41,29 @@ export function NewPatternScreen() {
     setSubmitting(true);
     const ok = await setPatternValidation(pattern.id, validation);
     setSubmitting(false);
-    if (ok) navigate('/home');
+    if (ok) {
+      await refreshPendingPattern();
+      navigate('/home');
+    }
+  }
+
+  function startEdit() {
+    if (!pattern) return;
+    setEditText(pattern.description);
+    setEditing(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!pattern || submitting) return;
+    const trimmed = editText.trim();
+    if (!trimmed) return;
+    setSubmitting(true);
+    const ok = await updatePattern(pattern.id, trimmed);
+    setSubmitting(false);
+    if (ok) {
+      await refreshPendingPattern();
+      navigate('/home');
+    }
   }
 
   if (loading) {
@@ -257,9 +288,33 @@ export function NewPatternScreen() {
             >
               {t('newPattern.descriptionLabel')}
             </h4>
-            <p style={{ fontSize: '15px', color: 'var(--cam-text-secondary)', lineHeight: 1.5, margin: 0 }}>
-              {pattern.description}
-            </p>
+            {editing ? (
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                autoFocus
+                disabled={submitting}
+                rows={4}
+                style={{
+                  width: '100%',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: `1px solid var(--cam-border)`,
+                  outline: 'none',
+                  fontSize: '15px',
+                  color: 'var(--cam-text-primary)',
+                  backgroundColor: 'var(--cam-bg-input)',
+                  resize: 'none',
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
+              />
+            ) : (
+              <p style={{ fontSize: '15px', color: 'var(--cam-text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                {pattern.description}
+              </p>
+            )}
           </div>
 
           {pattern.triggers && pattern.triggers.length > 0 && (
@@ -306,54 +361,131 @@ export function NewPatternScreen() {
             boxSizing: 'border-box',
           }}
         >
-          <button
-            onClick={() => handleValidation('confirmed')}
-            disabled={submitting}
-            style={{
-              width: '100%',
-              height: '56px',
-              backgroundColor: 'var(--cam-color-accent)',
-              color: '#FFFFFF',
-              borderRadius: '9999px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              fontSize: '16px',
-              fontWeight: 600,
-              border: 'none',
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              boxShadow: 'var(--cam-shadow-accent)',
-              opacity: submitting ? 0.7 : 1,
-            }}
-          >
-            {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={2.5} />}
-            {t('newPattern.confirmPattern')}
-          </button>
+          {editing ? (
+            <>
+              <button
+                onClick={handleSaveEdit}
+                disabled={submitting || !editText.trim()}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  backgroundColor: 'var(--cam-color-brand)',
+                  color: '#FFFFFF',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: submitting || !editText.trim() ? 'not-allowed' : 'pointer',
+                  boxShadow: 'var(--cam-shadow-brand)',
+                  opacity: submitting || !editText.trim() ? 0.7 : 1,
+                }}
+              >
+                {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={2.5} />}
+                {t('common.save')}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                disabled={submitting}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--cam-text-secondary)',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  border: `1.5px solid var(--cam-border)`,
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                {t('common.cancel')}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleValidation('confirmed')}
+                disabled={submitting}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  backgroundColor: 'var(--cam-color-accent)',
+                  color: '#FFFFFF',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  boxShadow: 'var(--cam-shadow-accent)',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                {submitting ? <Loader2 size={18} className="animate-spin" /> : <Check size={20} strokeWidth={2.5} />}
+                {t('newPattern.confirmPattern')}
+              </button>
 
-          <button
-            onClick={() => handleValidation('rejected')}
-            disabled={submitting}
-            style={{
-              width: '100%',
-              height: '56px',
-              backgroundColor: 'transparent',
-              color: 'var(--cam-text-error)',
-              borderRadius: '9999px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              fontSize: '16px',
-              fontWeight: 600,
-              border: `1px solid var(--cam-text-error)`,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              opacity: submitting ? 0.7 : 1,
-            }}
-          >
-            <X size={20} strokeWidth={2.5} />
-            {t('newPattern.notApplies')}
-          </button>
+              <button
+                onClick={startEdit}
+                disabled={submitting}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  backgroundColor: 'var(--cam-bg-muted)',
+                  color: 'var(--cam-text-brand)',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                <Pencil size={20} strokeWidth={2.5} />
+                {t('newPattern.edit')}
+              </button>
+
+              <button
+                onClick={() => handleValidation('rejected')}
+                disabled={submitting}
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--cam-text-error)',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  border: `1px solid var(--cam-text-error)`,
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  opacity: submitting ? 0.7 : 1,
+                }}
+              >
+                <X size={20} strokeWidth={2.5} />
+                {t('newPattern.notApplies')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

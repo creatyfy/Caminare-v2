@@ -6,6 +6,7 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   destructive?: boolean;
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
   destructive = false,
@@ -104,7 +106,7 @@ export function ConfirmDialog({
               fontFamily: 'inherit',
             }}
           >
-            {t('common.cancel')}
+            {cancelLabel ?? t('common.cancel')}
           </button>
           <button
             onClick={onConfirm}
