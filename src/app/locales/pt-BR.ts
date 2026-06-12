@@ -235,7 +235,7 @@ export const ptBR = {
   },
   patterns: {
     title: 'Insights',
-    subtitle: 'Suas emoções, pensamentos, crenças e padrões',
+    subtitle: 'Suas emoções, crenças e padrões',
     loading: 'Carregando insights...',
     empty: 'Seus insights aparecem aqui após você criar e validar seus primeiros registros.',
     emotionsHeader: 'Minhas principais emoções',

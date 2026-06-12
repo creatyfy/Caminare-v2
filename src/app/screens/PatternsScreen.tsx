@@ -13,6 +13,7 @@ import {
   type PatternInsight,
   type InsightsFilter,
 } from '../lib/db';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export function PatternsScreen() {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ export function PatternsScreen() {
   const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
   const [editBeliefText, setEditBeliefText] = useState('');
   const [savingBelief, setSavingBelief] = useState(false);
+  const [pendingDeleteBeliefId, setPendingDeleteBeliefId] = useState<string | null>(null);
 
   function startEditBelief(belief: BeliefInsight) {
     setEditingBeliefId(belief.id);
@@ -50,10 +52,12 @@ export function PatternsScreen() {
     }
   }
 
-  async function removeBelief(id: string) {
-    if (!window.confirm(t('patterns.deleteBeliefConfirm'))) return;
+  async function confirmRemoveBelief() {
+    if (!pendingDeleteBeliefId) return;
+    const id = pendingDeleteBeliefId;
     const ok = await deleteBeliefById(id);
     if (ok) setBeliefs((prev) => prev.filter((b) => b.id !== id));
+    setPendingDeleteBeliefId(null);
   }
 
   useEffect(() => {
@@ -346,7 +350,7 @@ export function PatternsScreen() {
                           <Pencil size={16} color="var(--cam-text-brand)" strokeWidth={2.5} />
                         </button>
                         <button
-                          onClick={() => removeBelief(belief.id)}
+                          onClick={() => setPendingDeleteBeliefId(belief.id)}
                           aria-label={t('patterns.deleteBelief')}
                           title={t('patterns.deleteBelief')}
                           style={iconButtonStyle}
@@ -426,6 +430,16 @@ export function PatternsScreen() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDeleteBeliefId}
+        title={t('patterns.deleteBelief')}
+        message={t('patterns.deleteBeliefConfirm')}
+        confirmLabel={t('common.delete')}
+        destructive
+        onConfirm={confirmRemoveBelief}
+        onCancel={() => setPendingDeleteBeliefId(null)}
+      />
     </div>
   );
 }
