@@ -49,7 +49,6 @@ interface HistEntry {
   raw_text: string | null;
   created_at: string;
   emotions: { name: string; validation: string }[] | null;
-  entry_analysis_logs: { parsed_thoughts: unknown; created_at: string }[] | null;
 }
 
 const asStrArray = (v: unknown): string[] =>
@@ -69,11 +68,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const db = serviceClient();
 
-  // 1) Carrega histórico completo (registros + emoções confirmadas + pensamentos).
+  // 1) Carrega histórico completo (registros + emoções confirmadas).
   const { data, error } = await db
     .from('entries')
     .select(
-      'id, raw_text, created_at, emotions(name, validation), entry_analysis_logs(parsed_thoughts, created_at)'
+      'id, raw_text, created_at, emotions(name, validation)'
     )
     .eq('user_id', user.id)
     .is('deleted_at', null)
@@ -108,10 +107,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .filter((x) => x.validation === 'confirmed')
         .map((x) => x.name)
         .join(', ');
-      const thoughts = collectThoughts(e.entry_analysis_logs);
       const parts = [`[${date}] ${(e.raw_text ?? '').slice(0, 400)}`];
       if (emo) parts.push(`    emoções: ${emo}`);
-      if (thoughts.length) parts.push(`    pensamentos: ${thoughts.join(' | ')}`);
       return parts.join('\n');
     })
     .join('\n\n');
@@ -176,11 +173,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[detect-patterns] falha na análise:', err);
     return sendError(res, 502, 'Não foi possível detectar padrões agora. Tente novamente.');
   }
-}
-
-function collectThoughts(logs: HistEntry['entry_analysis_logs']): string[] {
-  if (!logs?.length) return [];
-  const latest = [...logs].sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
-  const raw = latest?.parsed_thoughts;
-  return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string' && !!x.trim()) : [];
 }

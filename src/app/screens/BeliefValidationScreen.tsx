@@ -1,4 +1,4 @@
-import { Check, X, ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { Check, X, ArrowLeft, Plus, Loader2, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,9 +7,14 @@ import {
   getUserBeliefs,
   addBelief,
   setBeliefValidation,
+  updateBelief,
+  getHomeStats,
   type BeliefFull,
 } from '../lib/db';
 import { detectPatterns } from '../lib/ai';
+
+// Padrões só são detectados a cada N registros do usuário (não a cada registro).
+const PATTERN_EVERY = 30;
 
 export function BeliefValidationScreen() {
   const navigate = useNavigate();
@@ -22,20 +27,58 @@ export function BeliefValidationScreen() {
   const [newBelief, setNewBelief] = useState('');
   const [adding, setAdding] = useState(false);
   const [continuing, setContinuing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function handleContinue() {
     if (!user || continuing) return;
     setContinuing(true);
-    // Dispara a detecção de padrões (só processa com histórico suficiente;
-    // caso contrário o endpoint responde 'insuficiente' e a próxima tela
-    // mostra o estado "nenhum padrão novo").
+    // Padrões só rodam a cada PATTERN_EVERY registros (não a cada registro).
+    // Só abrimos a tela de padrão quando a IA retorna um padrão novo; caso
+    // contrário voltamos direto para a home.
     try {
-      await detectPatterns(user.id, i18n.language);
+      const stats = await getHomeStats(user.id);
+      const total = stats?.totalEntries ?? 0;
+      if (total > 0 && total % PATTERN_EVERY === 0) {
+        const res = await detectPatterns(user.id, i18n.language);
+        if (res.padroes && res.padroes.length > 0) {
+          setContinuing(false);
+          navigate('/novo-padrao');
+          return;
+        }
+      }
     } catch (err) {
       console.error('[BeliefValidation] detect-patterns falhou:', err);
     }
     setContinuing(false);
-    navigate('/novo-padrao');
+    navigate('/home');
+  }
+
+  function startEdit(belief: BeliefFull) {
+    setEditingId(belief.id);
+    setEditText(belief.content);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditText('');
+  }
+
+  async function saveEdit(id: string) {
+    const trimmed = editText.trim();
+    if (!trimmed || savingEdit) return;
+    setSavingEdit(true);
+    const ok = await updateBelief(id, trimmed);
+    setSavingEdit(false);
+    if (ok) {
+      setBeliefs((prev) =>
+        prev.map((b) =>
+          b.id === id ? { ...b, content: trimmed, validation: 'edited' } : b
+        )
+      );
+      cancelEdit();
+    }
   }
 
   useEffect(() => {
@@ -170,91 +213,185 @@ export function BeliefValidationScreen() {
                   transition: 'opacity 0.3s ease',
                 }}
               >
-                <div style={{ marginBottom: '20px' }}>
-                  <p
-                    style={{
-                      color: 'var(--cam-text-primary)',
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      lineHeight: 1.5,
-                      margin: '0 0 12px 0',
-                    }}
-                  >
-                    {belief.content}
-                  </p>
-                  {belief.occurrence_count > 1 && (
-                    <p
+                {editingId === belief.id ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      autoFocus
+                      disabled={savingEdit}
+                      rows={3}
                       style={{
-                        fontSize: '12px',
-                        color: 'var(--cam-text-secondary)',
-                        margin: 0,
+                        width: '100%',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        border: `1px solid var(--cam-border)`,
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: 'var(--cam-text-primary)',
+                        backgroundColor: 'var(--cam-bg-input)',
+                        resize: 'none',
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={cancelEdit}
+                        disabled={savingEdit}
+                        style={{
+                          flex: 1,
+                          height: '44px',
+                          borderRadius: '9999px',
+                          backgroundColor: 'transparent',
+                          color: 'var(--cam-text-secondary)',
+                          border: `1.5px solid var(--cam-border)`,
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: savingEdit ? 'not-allowed' : 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        {t('common.cancel')}
+                      </button>
+                      <button
+                        onClick={() => saveEdit(belief.id)}
+                        disabled={savingEdit || !editText.trim()}
+                        style={{
+                          flex: 1,
+                          height: '44px',
+                          borderRadius: '9999px',
+                          backgroundColor: 'var(--cam-color-brand)',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: savingEdit || !editText.trim() ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          opacity: savingEdit || !editText.trim() ? 0.6 : 1,
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        {savingEdit && <Loader2 size={14} className="animate-spin" />}
+                        {t('common.save')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ marginBottom: '20px' }}>
+                      <p
+                        style={{
+                          color: 'var(--cam-text-primary)',
+                          fontSize: '16px',
+                          fontWeight: 600,
+                          lineHeight: 1.5,
+                          margin: '0 0 12px 0',
+                        }}
+                      >
+                        {belief.content}
+                      </p>
+                      {belief.occurrence_count > 1 && (
+                        <p
+                          style={{
+                            fontSize: '12px',
+                            color: 'var(--cam-text-secondary)',
+                            margin: 0,
+                          }}
+                        >
+                          {belief.occurrence_count}{' '}
+                          {belief.occurrence_count === 1
+                            ? t('common.occurrence')
+                            : t('common.occurrences')}
+                        </p>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button
+                        onClick={() => handleValidation(belief.id, 'rejected')}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '12px 0',
+                          borderRadius: '16px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor:
+                            belief.validation === 'rejected'
+                              ? 'var(--cam-color-error)'
+                              : 'var(--cam-bg-error-soft)',
+                          color:
+                            belief.validation === 'rejected'
+                              ? '#FFFFFF'
+                              : 'var(--cam-text-error)',
+                        }}
+                      >
+                        <X size={20} strokeWidth={2.5} />
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                          {t('beliefValidation.discard')}
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => handleValidation(belief.id, 'confirmed')}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '12px 0',
+                          borderRadius: '16px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          backgroundColor:
+                            belief.validation === 'confirmed'
+                              ? 'var(--cam-color-accent)'
+                              : 'var(--cam-bg-accent-soft)',
+                          color:
+                            belief.validation === 'confirmed'
+                              ? '#FFFFFF'
+                              : 'var(--cam-text-accent)',
+                        }}
+                      >
+                        <Check size={20} strokeWidth={2.5} />
+                        <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                          {t('common.confirm')}
+                        </span>
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => startEdit(belief)}
+                      style={{
+                        marginTop: '12px',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        padding: '8px 0',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--cam-text-brand)',
+                        fontSize: '13px',
+                        fontWeight: 600,
                       }}
                     >
-                      {belief.occurrence_count}{' '}
-                      {belief.occurrence_count === 1
-                        ? t('common.occurrence')
-                        : t('common.occurrences')}
-                    </p>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    onClick={() => handleValidation(belief.id, 'confirmed')}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '12px 0',
-                      borderRadius: '16px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      backgroundColor:
-                        belief.validation === 'confirmed'
-                          ? 'var(--cam-color-accent)'
-                          : 'var(--cam-bg-accent-soft)',
-                      color:
-                        belief.validation === 'confirmed'
-                          ? '#FFFFFF'
-                          : 'var(--cam-text-accent)',
-                    }}
-                  >
-                    <Check size={20} strokeWidth={2.5} />
-                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
-                      {t('common.confirm')}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => handleValidation(belief.id, 'rejected')}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '12px 0',
-                      borderRadius: '16px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      backgroundColor:
-                        belief.validation === 'rejected'
-                          ? 'var(--cam-color-error)'
-                          : 'var(--cam-bg-error-soft)',
-                      color:
-                        belief.validation === 'rejected'
-                          ? '#FFFFFF'
-                          : 'var(--cam-text-error)',
-                    }}
-                  >
-                    <X size={20} strokeWidth={2.5} />
-                    <span style={{ fontSize: '13px', fontWeight: 600 }}>
-                      {t('beliefValidation.discard')}
-                    </span>
-                  </button>
-                </div>
+                      <Pencil size={15} strokeWidth={2.5} />
+                      {t('beliefValidation.adjust')}
+                    </button>
+                  </>
+                )}
               </div>
             ))}
 

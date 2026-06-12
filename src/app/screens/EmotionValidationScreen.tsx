@@ -7,7 +7,6 @@ import {
   getEntryEmotions,
   addEntryEmotion,
   setEmotionValidation,
-  getEntryThoughts,
   getEntryProcessingStatus,
   type EmotionFull,
 } from '../lib/db';
@@ -21,7 +20,6 @@ export function EmotionValidationScreen() {
   const entryId = searchParams.get('entryId');
 
   const [emotions, setEmotions] = useState<EmotionFull[]>([]);
-  const [thoughts, setThoughts] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
@@ -68,13 +66,9 @@ export function EmotionValidationScreen() {
         setAnalyzing(false);
       }
 
-      const [es, ts] = await Promise.all([
-        getEntryEmotions(user.id, entryId),
-        getEntryThoughts(user.id, entryId),
-      ]);
+      const es = await getEntryEmotions(user.id, entryId);
       if (!active) return;
       setEmotions(es);
-      setThoughts(ts);
       setLoading(false);
     })();
 
@@ -86,6 +80,20 @@ export function EmotionValidationScreen() {
   async function handleContinue() {
     if (!user || !entryId || continuing) return;
     setContinuing(true);
+    // Ignorar = confirmar: emoções que ficaram 'pending' (não rejeitadas e não
+    // tocadas) são persistidas como 'confirmed' para baterem com os Insights.
+    // O X continua marcando 'rejected'.
+    const pendentes = emotions.filter((e) => e.validation === 'pending');
+    if (pendentes.length) {
+      await Promise.all(
+        pendentes.map((e) => setEmotionValidation(e.id, 'confirmed'))
+      );
+      setEmotions((prev) =>
+        prev.map((e) =>
+          e.validation === 'pending' ? { ...e, validation: 'confirmed' } : e
+        )
+      );
+    }
     // Itens validados = não rejeitados; rejeitados = marcados como 'rejected'.
     const emocoesValidadas = emotions
       .filter((e) => e.validation !== 'rejected')
@@ -99,8 +107,6 @@ export function EmotionValidationScreen() {
         idioma: i18n.language,
         emocoesValidadas,
         emocoesRejeitadas,
-        pensamentosValidados: thoughts ?? [],
-        pensamentosRejeitados: [],
       });
     } catch (err) {
       // Não bloqueia o fluxo: a tela de crenças mostra o que já existir.
@@ -408,48 +414,6 @@ export function EmotionValidationScreen() {
           )}
         </div>
 
-        {/* Thoughts section: only shown if there's an analysis log */}
-        {!loading && thoughts && thoughts.length > 0 && (
-          <div style={{ marginBottom: '32px' }}>
-            <h3
-              style={{
-                fontSize: '14px',
-                fontWeight: 600,
-                color: 'var(--cam-text-secondary)',
-                marginBottom: '16px',
-                marginLeft: '4px',
-              }}
-            >
-              {t('emotionValidation.thoughtsHeader')}
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {thoughts.map((thought, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    backgroundColor: 'var(--cam-bg-card)',
-                    borderRadius: '20px',
-                    padding: '20px',
-                    boxShadow: 'var(--cam-shadow-card)',
-                  }}
-                >
-                  <p
-                    style={{
-                      color: 'var(--cam-text-primary)',
-                      fontSize: '15px',
-                      lineHeight: 1.5,
-                      margin: 0,
-                    }}
-                  >
-                    "{thought}"
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         <button
           onClick={handleContinue}
           disabled={continuing || loading}
@@ -473,7 +437,15 @@ export function EmotionValidationScreen() {
           }}
         >
           {continuing && <Loader2 size={18} className="animate-spin" />}
-          {continuing ? t('emotionValidation.analyzingBeliefs') : t('emotionValidation.continue')}
+          {continuing ? (
+            <AnalyzingMessages
+              stepsKey="emotionValidation.analyzingBeliefsSteps"
+              fallbackKey="emotionValidation.analyzingBeliefs"
+              color="var(--cam-text-on-brand)"
+            />
+          ) : (
+            t('emotionValidation.continue')
+          )}
         </button>
       </div>
     </div>
@@ -494,13 +466,22 @@ const backButtonStyle: React.CSSProperties = {
 };
 
 // Mensagens rotativas exibidas durante a análise da IA, trocando a cada 3s com
-// transição suave de fade. Tom acolhedor do Caminare.
-function AnalyzingMessages() {
+// transição suave de fade. Tom acolhedor do Caminare. Reaproveitada tanto na
+// análise de emoções quanto na de crenças (basta trocar `stepsKey`).
+function AnalyzingMessages({
+  stepsKey = 'emotionValidation.analyzingSteps',
+  fallbackKey = 'emotionValidation.analyzing',
+  color = 'var(--cam-text-secondary)',
+}: {
+  stepsKey?: string;
+  fallbackKey?: string;
+  color?: string;
+}) {
   const { t } = useTranslation();
-  const raw = t('emotionValidation.analyzingSteps', { returnObjects: true });
+  const raw = t(stepsKey, { returnObjects: true });
   const steps = Array.isArray(raw)
     ? (raw as string[])
-    : [t('emotionValidation.analyzing')];
+    : [t(fallbackKey)];
   const [idx, setIdx] = useState(0);
   const [visible, setVisible] = useState(true);
 
@@ -527,7 +508,7 @@ function AnalyzingMessages() {
         verticalAlign: 'middle',
         opacity: visible ? 1 : 0,
         transition: 'opacity 0.4s ease',
-        color: 'var(--cam-text-secondary)',
+        color,
       }}
     >
       {steps[idx]}

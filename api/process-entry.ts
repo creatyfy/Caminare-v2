@@ -40,7 +40,6 @@ interface AiEmotion {
 interface AiResult {
   status?: string;
   emocoes?: AiEmotion[];
-  pensamentos?: string[];
 }
 
 // Normaliza a intensidade para o enum `emotion_intensity` do banco:
@@ -101,20 +100,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // 2) Idempotência: se já foi processado, devolve o que existe sem reprocessar.
   if (entry.processing_status === 'done') {
-    const [{ data: emo }, { data: log }] = await Promise.all([
-      db.from('emotions').select('name, intensity').eq('entry_id', entryId).neq('validation', 'rejected'),
-      db
-        .from('entry_analysis_logs')
-        .select('parsed_thoughts')
-        .eq('entry_id', entryId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const { data: emo } = await db
+      .from('emotions')
+      .select('name, intensity')
+      .eq('entry_id', entryId)
+      .neq('validation', 'rejected');
     return sendJson(res, 200, {
       status: 'already_processed',
       emocoes: (emo ?? []).map((e) => ({ nome: e.name, intensidade: e.intensity })),
-      pensamentos: Array.isArray(log?.parsed_thoughts) ? log?.parsed_thoughts : [],
     });
   }
 
@@ -159,10 +152,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
 
     const emocoes = (ai.emocoes ?? []).slice(0, 6).filter((e) => e?.nome?.trim());
-    const pensamentos = (ai.pensamentos ?? [])
-      .filter((p) => typeof p === 'string' && p.trim())
-      .slice(0, 3)
-      .map((p) => p.trim());
 
     // 5) Persiste emoções (validation 'pending') e o log de análise.
     if (emocoes.length) {
@@ -178,7 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (insErr) console.error('[process-entry] erro ao inserir emoções:', insErr);
     }
 
-    const logErr = await insertAnalysisLog(db, user.id, entryId, pensamentos, raw);
+    const logErr = await insertAnalysisLog(db, user.id, entryId, raw);
     if (logErr) console.error('[process-entry] erro ao inserir log de análise:', logErr);
 
     await db.from('entries').update({ processing_status: 'done' }).eq('id', entryId);
@@ -186,7 +175,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendJson(res, 200, {
       status: 'ok',
       emocoes,
-      pensamentos,
     });
   } catch (err) {
     console.error('[process-entry] falha na análise:', err);
@@ -227,17 +215,17 @@ async function buildHistorico(
 
 // Insere o log de análise preenchendo as colunas NOT NULL:
 // prompt_version, ai_model e raw_response (resposta bruta da API em JSON string).
+// Pensamentos não são mais extraídos: parsed_thoughts grava sempre lista vazia.
 async function insertAnalysisLog(
   db: ReturnType<typeof serviceClient>,
   userId: string,
   entryId: string,
-  thoughts: string[],
   rawResponse: unknown
 ): Promise<unknown> {
   const { error } = await db.from('entry_analysis_logs').insert({
     user_id: userId,
     entry_id: entryId,
-    parsed_thoughts: thoughts,
+    parsed_thoughts: [],
     prompt_version: PROMPT_VERSION,
     ai_model: CLAUDE_MODEL,
     raw_response: JSON.stringify(rawResponse),

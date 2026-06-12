@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Brain, ChevronDown } from 'lucide-react';
+import { Brain, ChevronDown, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import {
   getEmotionCounts,
   getBeliefs,
   getPatterns,
+  updateBelief,
+  deleteBeliefById,
   type EmotionCount,
   type BeliefInsight,
   type PatternInsight,
@@ -20,6 +22,39 @@ export function PatternsScreen() {
   const [patterns, setPatterns] = useState<PatternInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<InsightsFilter>('all');
+  const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
+  const [editBeliefText, setEditBeliefText] = useState('');
+  const [savingBelief, setSavingBelief] = useState(false);
+
+  function startEditBelief(belief: BeliefInsight) {
+    setEditingBeliefId(belief.id);
+    setEditBeliefText(belief.content);
+  }
+
+  function cancelEditBelief() {
+    setEditingBeliefId(null);
+    setEditBeliefText('');
+  }
+
+  async function saveBelief(id: string) {
+    const trimmed = editBeliefText.trim();
+    if (!trimmed || savingBelief) return;
+    setSavingBelief(true);
+    const ok = await updateBelief(id, trimmed);
+    setSavingBelief(false);
+    if (ok) {
+      setBeliefs((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, content: trimmed } : b))
+      );
+      cancelEditBelief();
+    }
+  }
+
+  async function removeBelief(id: string) {
+    if (!window.confirm(t('patterns.deleteBeliefConfirm'))) return;
+    const ok = await deleteBeliefById(id);
+    if (ok) setBeliefs((prev) => prev.filter((b) => b.id !== id));
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -214,23 +249,113 @@ export function PatternsScreen() {
                   >
                     <Brain size={24} color="var(--cam-text-brand)" strokeWidth={2} />
                   </div>
-                  <div>
-                    <h4
-                      style={{
-                        color: 'var(--cam-text-primary)',
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        lineHeight: 1.4,
-                        margin: '0 0 6px 0',
-                      }}
-                    >
-                      {belief.content}
-                    </h4>
-                    <p style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', margin: 0 }}>
-                      {belief.occurrence_count}{' '}
-                      {belief.occurrence_count === 1 ? t('common.occurrence') : t('common.occurrences')}
-                    </p>
-                  </div>
+
+                  {editingBeliefId === belief.id ? (
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <textarea
+                        value={editBeliefText}
+                        onChange={(e) => setEditBeliefText(e.target.value)}
+                        autoFocus
+                        disabled={savingBelief}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          border: `1px solid var(--cam-border)`,
+                          outline: 'none',
+                          fontSize: '15px',
+                          color: 'var(--cam-text-primary)',
+                          backgroundColor: 'var(--cam-bg-input)',
+                          resize: 'none',
+                          fontFamily: 'inherit',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={cancelEditBelief}
+                          disabled={savingBelief}
+                          style={{
+                            flex: 1,
+                            height: '40px',
+                            borderRadius: '9999px',
+                            backgroundColor: 'transparent',
+                            color: 'var(--cam-text-secondary)',
+                            border: `1.5px solid var(--cam-border)`,
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: savingBelief ? 'not-allowed' : 'pointer',
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          {t('common.cancel')}
+                        </button>
+                        <button
+                          onClick={() => saveBelief(belief.id)}
+                          disabled={savingBelief || !editBeliefText.trim()}
+                          style={{
+                            flex: 1,
+                            height: '40px',
+                            borderRadius: '9999px',
+                            backgroundColor: 'var(--cam-color-brand)',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: savingBelief || !editBeliefText.trim() ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            opacity: savingBelief || !editBeliefText.trim() ? 0.6 : 1,
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          {savingBelief && <Loader2 size={14} className="animate-spin" />}
+                          {t('common.save')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ flex: 1 }}>
+                        <h4
+                          style={{
+                            color: 'var(--cam-text-primary)',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            lineHeight: 1.4,
+                            margin: '0 0 6px 0',
+                          }}
+                        >
+                          {belief.content}
+                        </h4>
+                        <p style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', margin: 0 }}>
+                          {belief.occurrence_count}{' '}
+                          {belief.occurrence_count === 1 ? t('common.occurrence') : t('common.occurrences')}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                        <button
+                          onClick={() => startEditBelief(belief)}
+                          aria-label={t('patterns.editBelief')}
+                          title={t('patterns.editBelief')}
+                          style={iconButtonStyle}
+                        >
+                          <Pencil size={16} color="var(--cam-text-brand)" strokeWidth={2.5} />
+                        </button>
+                        <button
+                          onClick={() => removeBelief(belief.id)}
+                          aria-label={t('patterns.deleteBelief')}
+                          title={t('patterns.deleteBelief')}
+                          style={iconButtonStyle}
+                        >
+                          <Trash2 size={16} color="var(--cam-text-error)" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -304,3 +429,15 @@ export function PatternsScreen() {
     </div>
   );
 }
+
+const iconButtonStyle: React.CSSProperties = {
+  width: '36px',
+  height: '36px',
+  borderRadius: '50%',
+  backgroundColor: 'var(--cam-bg-muted)',
+  border: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+};

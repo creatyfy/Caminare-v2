@@ -675,7 +675,7 @@ export function RecordingScreen() {
           </div>
 
           {/* Botões: Pause/Resume + Stop */}
-          <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '10px', flexShrink: 0, justifyContent: 'center' }}>
             {state === 'recording' ? (
               <button
                 onClick={pauseRecording}
@@ -720,25 +720,23 @@ export function RecordingScreen() {
             )}
             <button
               onClick={stop}
+              aria-label={t('recording.stop')}
               style={{
-                flex: 1,
+                width: '56px',
                 height: '56px',
+                borderRadius: '50%',
                 backgroundColor: 'var(--cam-color-error)',
                 color: '#FFFFFF',
-                borderRadius: '9999px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '10px',
-                fontSize: '16px',
-                fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
+                flexShrink: 0,
                 boxShadow: 'var(--cam-shadow-error)',
               }}
             >
-              <Square size={18} strokeWidth={2.5} fill="#FFFFFF" />
-              {t('recording.stop')}
+              <Square size={20} strokeWidth={2.5} fill="#FFFFFF" />
             </button>
           </div>
         </div>

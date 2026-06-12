@@ -16,20 +16,18 @@
 
 // ─── PROMPT 1 — process-entry ────────────────────────────────────────────────
 
-export const SYSTEM_PROCESS_ENTRY = `Você é um analisador emocional especializado em identificar, com alta precisão, o conteúdo emocional e cognitivo presente em relatos livres de usuários do Caminare, um aplicativo de autoconhecimento. Você fará a extração e normalização emocional e racional dos registros dos usuários. Seu papel é processar relatos pessoais e identificar, de forma conservadora e precisa, as emoções e os pensamentos presentes no texto. Você nunca responde diretamente ao usuário. Você apenas processa o relato e retorna dados estruturados para o sistema. Você não faz diagnóstico. Não faz inferências de crenças, esquemas cognitivos, traços de personalidade ou padrões de trauma. Não interpreta o que não está no texto. Seu trabalho é extração e normalização, nada além disso.
+export const SYSTEM_PROCESS_ENTRY = `Você é um analisador emocional especializado em identificar, com alta precisão, o conteúdo emocional presente em relatos livres de usuários do Caminare, um aplicativo de autoconhecimento. Você fará a extração e normalização emocional dos registros dos usuários. Seu papel é processar relatos pessoais e identificar, de forma conservadora e precisa, as emoções presentes no texto. Você nunca responde diretamente ao usuário. Você apenas processa o relato e retorna dados estruturados para o sistema. Você não faz diagnóstico. Não faz inferências de crenças, esquemas cognitivos, traços de personalidade ou padrões de trauma. Não interpreta o que não está no texto. Seu trabalho é extração e normalização, nada além disso.
 
 INSTRUÇÕES:
 - Identifique até 6 emoções presentes no relato. Para cada uma informe: nome (substantivo curto, em minúsculas, no idioma do relato), intensidade ("sutil", "moderada" ou "alta") e confiança (número de 0 a 1).
 - Você pode inferir emoções implícitas quando forem altamente prováveis a partir do texto, mas não crie narrativas complexas nem emoções que não tenham sustentação no relato.
-- Extraia de 1 a 3 pensamentos explícitos ou fortemente implícitos, escritos em primeira pessoa, como o usuário os pensaria ("Eu...").
 - Seja conservador: na dúvida, não invente. Menos itens com alta confiança é melhor que muitos itens duvidosos.
 
 CONTRATO DE SAÍDA:
 Retorne APENAS um objeto JSON válido, sem markdown, sem cercas de código, sem texto antes ou depois, exatamente neste formato:
 {
   "status": "ok",
-  "emocoes": [{ "nome": "string", "intensidade": "sutil|moderada|alta", "confianca": 0.0 }],
-  "pensamentos": ["string"]
+  "emocoes": [{ "nome": "string", "intensidade": "sutil|moderada|alta", "confianca": 0.0 }]
 }`;
 
 export function buildProcessEntryUser(input: {
@@ -59,9 +57,15 @@ export const SYSTEM_ANALYZE_BELIEFS = `Você é um componente de análise de cre
 
 INSTRUÇÕES:
 - Considere o relato e, com peso maior, os itens que o usuário VALIDOU. Itens REJEITADOS pelo usuário não devem sustentar crenças.
-- Proponha de 0 a 4 crenças centrais como hipóteses. Se não houver base suficiente, retorne lista vazia.
-- Para cada crença informe:
-  - "formulacao": frase curta em primeira pessoa, como o usuário a sustentaria ("Eu...", "As pessoas...", "O mundo...").
+- Proponha de 0 a 5 crenças centrais como hipóteses. Se não houver base suficiente, retorne lista vazia.
+- Cada crença ("formulacao") deve ser uma REGRA INTERNA do usuário, não uma conclusão sobre o episódio relatado. Siga rigorosamente:
+  - Curta, absoluta, normativa e identitária — uma regra de vida que a pessoa carrega ("tem que", "preciso", "bom X é assim", "eu sou...").
+  - Linguagem natural e simples, como a pessoa formularia para si mesma.
+  - Capture o CONCEITO SUBJACENTE (a regra que opera por baixo), não a conclusão emocional do momento.
+  - SEM justificativas, explicações, condições ou "se... então". Nada de "porque", "quando", "se eu".
+  - NÃO repita o relato nem descreva o que aconteceu. NÃO é uma constatação concreta sobre o episódio.
+  - Exemplo: em vez de "se eu trabalhar muito e ficar pouco com meu filho, falho como pai" → "Pai bom tem que estar presente."
+- Para cada crença informe também:
   - "tipo": um de "sobre_si" | "sobre_os_outros" | "sobre_o_mundo" | "condicional" | "pseudo_solucao".
   - "categoria": rótulo temático curto (ex.: "merecimento", "pertencimento", "controle", "segurança").
   - "origem_provavel": breve hipótese de onde a crença pode vir (1 frase, linguagem de possibilidade).
@@ -69,6 +73,7 @@ INSTRUÇÕES:
   - "recorrencia": "nova" se parece surgir agora, "recorrente" se ecoa crenças já existentes do usuário.
   - "confianca": número de 0 a 1.
 - Não repita crenças já existentes com formulação idêntica; se reforçar uma existente, marque "recorrencia": "recorrente".
+- NUNCA proponha uma crença que conste na lista de crenças já rejeitadas pelo usuário.
 
 CONTRATO DE SAÍDA:
 Retorne APENAS um objeto JSON válido, sem markdown, sem cercas de código, sem texto antes ou depois, exatamente neste formato:
@@ -90,9 +95,8 @@ export function buildAnalyzeBeliefsUser(input: {
   idioma: string;
   emocoesValidadas: string[];
   emocoesRejeitadas: string[];
-  pensamentosValidados: string[];
-  pensamentosRejeitados: string[];
   crencasExistentes: string[];
+  crencasRejeitadas: string[];
   dataHora: string;
 }): string {
   const list = (arr: string[]) => (arr.length ? arr.map((x) => `  - ${x}`).join('\n') : '  (nenhum)');
@@ -105,12 +109,10 @@ export function buildAnalyzeBeliefsUser(input: {
     list(input.emocoesValidadas),
     `EMOÇÕES REJEITADAS PELO USUÁRIO:`,
     list(input.emocoesRejeitadas),
-    `PENSAMENTOS VALIDADOS PELO USUÁRIO:`,
-    list(input.pensamentosValidados),
-    `PENSAMENTOS REJEITADOS PELO USUÁRIO:`,
-    list(input.pensamentosRejeitados),
     `CRENÇAS JÁ EXISTENTES DO USUÁRIO (para evitar duplicação / marcar recorrência):`,
     list(input.crencasExistentes),
+    `CRENÇAS JÁ REJEITADAS PELO USUÁRIO (NUNCA sugerir novamente):`,
+    list(input.crencasRejeitadas),
     ``,
     `RELATO COMPLETO:`,
     input.transcricao,
