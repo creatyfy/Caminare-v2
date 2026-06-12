@@ -722,21 +722,24 @@ export function RecordingScreen() {
               onClick={stop}
               aria-label={t('recording.stop')}
               style={{
-                width: '56px',
+                flex: 1,
                 height: '56px',
-                borderRadius: '50%',
                 backgroundColor: 'var(--cam-color-error)',
                 color: '#FFFFFF',
+                borderRadius: '9999px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: '10px',
+                fontSize: '16px',
+                fontWeight: 600,
                 border: 'none',
                 cursor: 'pointer',
-                flexShrink: 0,
                 boxShadow: 'var(--cam-shadow-error)',
               }}
             >
-              <Square size={20} strokeWidth={2.5} fill="#FFFFFF" />
+              <Square size={18} strokeWidth={2.5} fill="#FFFFFF" />
+              {t('recording.stop')}
             </button>
           </div>
         </div>
