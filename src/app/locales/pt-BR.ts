@@ -143,6 +143,7 @@ export const ptBR = {
     title: 'Registro concluído!',
     message: 'Suas emoções e crenças foram registradas.',
     backHome: 'Voltar para a tela inicial',
+    backNow: 'Voltar agora',
   },
   entryDetail: {
     title: 'Registro completo',

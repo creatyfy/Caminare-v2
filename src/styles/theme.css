@@ -229,3 +229,20 @@ html.dark,
   border-radius: 50%;
   animation: camPatternPulse 1.6s ease-in-out infinite;
 }
+
+/* Tela de conclusão de registro: entrada (pop do check + mensagem) e saída
+   (fade-out do container) antes de voltar sozinha para a home. */
+@keyframes camPop {
+  0%   { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes camFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes camFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

@@ -143,6 +143,7 @@ export const en = {
     title: 'Entry complete!',
     message: 'Your emotions and beliefs have been saved.',
     backHome: 'Back to home',
+    backNow: 'Back now',
   },
   entryDetail: {
     title: 'Full entry',

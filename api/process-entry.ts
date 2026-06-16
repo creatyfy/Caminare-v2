@@ -160,11 +160,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         entry_id: entryId,
         name: e.nome.trim(),
         name_original: e.nome.trim(),
+        source: 'ai' as const,
         validation: 'pending' as const,
         intensity: mapIntensity(e.intensidade),
       }));
       const { error: insErr } = await db.from('emotions').insert(rows);
-      if (insErr) console.error('[process-entry] erro ao inserir emoções:', insErr);
+      // Resiliência ao deploy: se a coluna `source` ainda não existir (42703),
+      // reinsere sem ela para não perder as emoções.
+      if (insErr?.code === '42703') {
+        const fallback = rows.map(({ source, ...rest }) => rest);
+        const { error: fbErr } = await db.from('emotions').insert(fallback);
+        if (fbErr) console.error('[process-entry] erro ao inserir emoções (fallback):', fbErr);
+      } else if (insErr) {
+        console.error('[process-entry] erro ao inserir emoções:', insErr);
+      }
     }
 
     const logErr = await insertAnalysisLog(db, user.id, entryId, raw);

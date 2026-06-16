@@ -9,6 +9,7 @@ import {
   getEntryBeliefs,
   addBelief,
   setBeliefValidation,
+  ignorePendingBeliefs,
   updateBelief,
   getHomeStats,
   type BeliefFull,
@@ -39,6 +40,12 @@ export function BeliefValidationScreen() {
   async function handleContinue() {
     if (!user || continuing) return;
     setContinuing(true);
+    // Crenças daquele registro que continuaram 'pending' (não tocadas) → 'ignored'
+    // (flag distinta de 'rejected', para treino). Só quando há entryId — no acesso
+    // avulso (sem entryId) não marcamos as pendentes de outros registros.
+    if (entryId) {
+      await ignorePendingBeliefs(user.id, entryId);
+    }
     // Padrões só rodam a cada PATTERN_EVERY registros (não a cada registro).
     // Novo fluxo: o padrão NÃO abre tela aqui — ele surge como modal na home e o
     // ícone de Insights pulsa. Aqui só revalidamos o estado compartilhado.
