@@ -4,6 +4,7 @@ import './lib/i18n';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { PendingPatternProvider } from './contexts/PendingPatternContext';
+import { EntitlementProvider, useEntitlement } from './contexts/EntitlementContext';
 import { BottomNav } from './components/BottomNav';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -22,6 +23,7 @@ import { PatternsScreen } from './screens/PatternsScreen';
 import { NewPatternScreen } from './screens/NewPatternScreen';
 import { SummaryScreen } from './screens/SummaryScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import { PaywallScreen } from './screens/PaywallScreen';
 import { getProfile } from './lib/db';
 
 // Telas pesadas carregadas sob demanda (code splitting):
@@ -39,6 +41,16 @@ function RequireAuth({ children }: { children: ReactNode }) {
   const location = useLocation();
   if (loading) return null;
   if (!session) return <Navigate to="/login" replace state={{ from: location }} />;
+  return <>{children}</>;
+}
+
+// Gating de acesso (Fase 1): usuário restrito (trial expirado por dias/75 ou
+// sem assinatura) é mandado pro paywall. Rotas liberadas mesmo restrito:
+// /historico e /padroes (insights).
+function RequireAccess({ children }: { children: ReactNode }) {
+  const { loading, access } = useEntitlement();
+  if (loading) return null;
+  if (access === 'restricted') return <Navigate to="/assinatura" replace />;
   return <>{children}</>;
 }
 
@@ -98,8 +110,8 @@ function AppRoutes() {
         />
 
         <Route path="/home" element={<RequireAuth><HomeScreen /></RequireAuth>} />
-        <Route path="/gravacao" element={<RequireAuth><RecordingScreen /></RequireAuth>} />
-        <Route path="/registro-texto" element={<RequireAuth><TextRecordingScreen /></RequireAuth>} />
+        <Route path="/gravacao" element={<RequireAuth><RequireAccess><RecordingScreen /></RequireAccess></RequireAuth>} />
+        <Route path="/registro-texto" element={<RequireAuth><RequireAccess><TextRecordingScreen /></RequireAccess></RequireAuth>} />
         <Route path="/validacao-emocoes" element={<RequireAuth><EmotionValidationScreen /></RequireAuth>} />
         <Route path="/validacao-crencas" element={<RequireAuth><BeliefValidationScreen /></RequireAuth>} />
         <Route path="/registro-concluido" element={<RequireAuth><EntryDoneScreen /></RequireAuth>} />
@@ -107,7 +119,8 @@ function AppRoutes() {
         <Route path="/registro/:id" element={<RequireAuth><EntryDetailScreen /></RequireAuth>} />
         <Route path="/padroes" element={<RequireAuth><PatternsScreen /></RequireAuth>} />
         <Route path="/novo-padrao" element={<RequireAuth><NewPatternScreen /></RequireAuth>} />
-        <Route path="/resumo" element={<RequireAuth><SummaryScreen /></RequireAuth>} />
+        <Route path="/resumo" element={<RequireAuth><RequireAccess><SummaryScreen /></RequireAccess></RequireAuth>} />
+        <Route path="/assinatura" element={<RequireAuth><PaywallScreen /></RequireAuth>} />
         <Route path="/perfil" element={<RequireAuth><ProfileScreen /></RequireAuth>} />
         <Route
           path="/admin"
@@ -136,16 +149,18 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <PendingPatternProvider>
-            <div
-              className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
-              style={{ backgroundColor: 'var(--cam-bg-page)' }}
-            >
-              <AppRoutes />
-            </div>
-          </PendingPatternProvider>
-        </BrowserRouter>
+        <EntitlementProvider>
+          <BrowserRouter>
+            <PendingPatternProvider>
+              <div
+                className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
+                style={{ backgroundColor: 'var(--cam-bg-page)' }}
+              >
+                <AppRoutes />
+              </div>
+            </PendingPatternProvider>
+          </BrowserRouter>
+        </EntitlementProvider>
       </AuthProvider>
     </ThemeProvider>
   );
