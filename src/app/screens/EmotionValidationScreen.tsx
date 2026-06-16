@@ -7,6 +7,7 @@ import {
   getEntryEmotions,
   addEntryEmotion,
   setEmotionValidation,
+  ignorePendingEmotions,
   getEntryProcessingStatus,
   type EmotionFull,
 } from '../lib/db';
@@ -80,9 +81,10 @@ export function EmotionValidationScreen() {
   async function handleContinue() {
     if (!user || !entryId || continuing) return;
     setContinuing(true);
-    // Não tocar = IGNORAR: emoções 'pending' não viram nada (não entram nos
-    // Insights, que já filtram validation='confirmed'). Só contam as que o
-    // usuário confirmou explicitamente (✓); o X marca 'rejected'.
+    // Não tocar = IGNORAR: emoções sugeridas que continuam 'pending' são marcadas
+    // 'ignored' no banco (flag distinta de 'rejected', para treino) — não entram
+    // nos Insights (que filtram 'confirmed'). Só contam as confirmadas (✓); o X
+    // marca 'rejected'.
     const emocoesValidadas = emotions
       .filter((e) => e.validation === 'confirmed')
       .map((e) => e.name);
@@ -100,6 +102,8 @@ export function EmotionValidationScreen() {
       // Não bloqueia o fluxo: a tela de crenças mostra o que já existir.
       console.error('[EmotionValidation] analyze-beliefs falhou:', err);
     }
+    // Sugeridas e não tocadas → 'ignored'. Best-effort: não bloqueia a navegação.
+    await ignorePendingEmotions(user.id, entryId);
     setContinuing(false);
     navigate('/validacao-crencas?entryId=' + entryId);
   }

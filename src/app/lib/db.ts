@@ -16,7 +16,7 @@ export interface HomeStats {
 export interface EmotionRow {
   id: string;
   name: string;
-  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected' | 'ignored';
 }
 
 export interface EntryWithEmotions {
@@ -265,7 +265,7 @@ export interface EmotionFull {
   id: string;
   name: string;
   name_original: string;
-  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected' | 'ignored';
   // enum emotion_intensity no banco: 'subtle' | 'moderate' | 'strong' | 'very_strong'
   intensity: 'subtle' | 'moderate' | 'strong' | 'very_strong' | null;
 }
@@ -301,17 +301,25 @@ export async function addEntryEmotion(
   try {
     const trimmed = name.trim();
     if (!trimmed) return null;
-    const { data, error } = await supabase
+    // source='manual': distingue do que a IA sugeriu (treino). Resiliente: se a
+    // coluna `source` ainda não existir (migration não aplicada), reinsere sem
+    // ela (42703 = undefined_column).
+    const base = {
+      user_id: userId,
+      entry_id: entryId,
+      name: trimmed,
+      name_original: trimmed,
+      validation: 'confirmed' as const,
+    };
+    const cols = 'id, name, name_original, validation, intensity';
+    let { data, error } = await supabase
       .from('emotions')
-      .insert({
-        user_id: userId,
-        entry_id: entryId,
-        name: trimmed,
-        name_original: trimmed,
-        validation: 'confirmed',
-      })
-      .select('id, name, name_original, validation, intensity')
+      .insert({ ...base, source: 'manual' })
+      .select(cols)
       .single();
+    if (error?.code === '42703') {
+      ({ data, error } = await supabase.from('emotions').insert(base).select(cols).single());
+    }
     if (error) {
       console.error('[db.addEntryEmotion]', error);
       return null;
@@ -339,6 +347,37 @@ export async function setEmotionValidation(
     return true;
   } catch (err) {
     console.error('[db.setEmotionValidation]', err);
+    return false;
+  }
+}
+
+// Marca como 'ignored' as emoções sugeridas pela IA que continuaram 'pending'
+// ao avançar (não confirmadas nem rejeitadas). Assim todo item termina com um
+// status final (confirmed | edited | rejected | ignored) — nada fica 'pending'
+// nem se perde. Resiliente: se o enum ainda não tiver 'ignored' (migration não
+// aplicada), apenas não persiste (não quebra o fluxo).
+export async function ignorePendingEmotions(
+  userId: string,
+  entryId: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('emotions')
+      .update({ validation: 'ignored' })
+      .eq('user_id', userId)
+      .eq('entry_id', entryId)
+      .eq('validation', 'pending');
+    if (error) {
+      if (SCHEMA_MISMATCH_CODES.has(error.code)) {
+        console.warn('[db.ignorePendingEmotions] enum sem valor "ignored" ainda (migration pendente).');
+        return false;
+      }
+      console.error('[db.ignorePendingEmotions]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.ignorePendingEmotions]', err);
     return false;
   }
 }
@@ -459,7 +498,7 @@ export interface BeliefFull {
   id: string;
   content: string;
   content_original: string;
-  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected' | 'ignored';
   occurrence_count: number;
 }
 
@@ -521,20 +560,27 @@ export async function addBelief(
     const trimmed = content.trim();
     if (!trimmed) return null;
     const now = new Date().toISOString();
-    const { data, error } = await supabase
+    // source='manual': distingue do que a IA sugeriu (treino). Resiliente: se a
+    // coluna `source` ainda não existir (42703), reinsere sem ela.
+    const base = {
+      user_id: userId,
+      content: trimmed,
+      content_original: trimmed,
+      validation: 'confirmed' as const,
+      first_seen_at: now,
+      last_seen_at: now,
+      occurrence_count: 1,
+      version: 1,
+    };
+    const cols = 'id, content, content_original, validation, occurrence_count';
+    let { data, error } = await supabase
       .from('beliefs')
-      .insert({
-        user_id: userId,
-        content: trimmed,
-        content_original: trimmed,
-        validation: 'confirmed',
-        first_seen_at: now,
-        last_seen_at: now,
-        occurrence_count: 1,
-        version: 1,
-      })
-      .select('id, content, content_original, validation, occurrence_count')
+      .insert({ ...base, source: 'manual' })
+      .select(cols)
       .single();
+    if (error?.code === '42703') {
+      ({ data, error } = await supabase.from('beliefs').insert(base).select(cols).single());
+    }
     if (error) {
       console.error('[db.addBelief]', error);
       return null;
@@ -562,6 +608,37 @@ export async function setBeliefValidation(
     return true;
   } catch (err) {
     console.error('[db.setBeliefValidation]', err);
+    return false;
+  }
+}
+
+// Marca como 'ignored' as crenças daquele registro que continuaram 'pending' ao
+// avançar (não confirmadas/editadas/rejeitadas). Mesma ideia do equivalente de
+// emoções: todo item sugerido termina flagrado e não reaparece. Resiliente ao
+// enum ainda não ter 'ignored'.
+export async function ignorePendingBeliefs(
+  userId: string,
+  entryId: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('beliefs')
+      .update({ validation: 'ignored' })
+      .eq('user_id', userId)
+      .eq('source_entry_id', entryId)
+      .is('deleted_at', null)
+      .eq('validation', 'pending');
+    if (error) {
+      if (SCHEMA_MISMATCH_CODES.has(error.code)) {
+        console.warn('[db.ignorePendingBeliefs] enum sem valor "ignored" ainda (migration pendente).');
+        return false;
+      }
+      console.error('[db.ignorePendingBeliefs]', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[db.ignorePendingBeliefs]', err);
     return false;
   }
 }
@@ -663,7 +740,7 @@ export interface PatternFull {
   description: string;
   triggers: string[] | null;
   emotions_involved: string[] | null;
-  validation: 'pending' | 'confirmed' | 'edited' | 'rejected';
+  validation: 'pending' | 'confirmed' | 'edited' | 'rejected' | 'ignored';
   occurrence_count: number;
 }
 
@@ -707,6 +784,55 @@ export async function setPatternValidation(
     return true;
   } catch (err) {
     console.error('[db.setPatternValidation]', err);
+    return false;
+  }
+}
+
+// Quantas vezes o usuário pode adiar ("deixar pra depois") o modal do padrão na
+// home antes de ele ser marcado como 'ignored' (não reaparece e fica flagrado).
+export const PATTERN_DISMISS_LIMIT = 3;
+
+// Registra um adiamento do modal de padrão: incrementa dismiss_count e, ao
+// atingir PATTERN_DISMISS_LIMIT, marca validation='ignored'. Resiliente: se a
+// coluna dismiss_count ou o valor 'ignored' do enum ainda não existirem
+// (migration pendente), apenas não persiste — o modal continua reabrindo como
+// hoje, sem quebrar nada. Retorna true se o padrão passou a 'ignored'.
+export async function dismissPattern(patternId: string): Promise<boolean> {
+  try {
+    const { data: current, error: readErr } = await supabase
+      .from('patterns')
+      .select('dismiss_count')
+      .eq('id', patternId)
+      .maybeSingle();
+    // Sem a coluna ainda: nada a fazer (migration pendente).
+    if (readErr?.code === '42703') return false;
+    if (readErr) {
+      console.error('[db.dismissPattern] read', readErr);
+      return false;
+    }
+
+    const next = (current?.dismiss_count ?? 0) + 1;
+    const reached = next >= PATTERN_DISMISS_LIMIT;
+    const payload: Record<string, unknown> = { dismiss_count: next };
+    if (reached) payload.validation = 'ignored';
+
+    const { error: updErr } = await supabase
+      .from('patterns')
+      .update(payload)
+      .eq('id', patternId);
+    if (updErr) {
+      // Enum sem 'ignored' ainda: ao menos persiste a contagem (sem o status).
+      if (reached && SCHEMA_MISMATCH_CODES.has(updErr.code)) {
+        await supabase.from('patterns').update({ dismiss_count: next }).eq('id', patternId);
+        return false;
+      }
+      if (updErr.code === '42703') return false;
+      console.error('[db.dismissPattern] update', updErr);
+      return false;
+    }
+    return reached;
+  } catch (err) {
+    console.error('[db.dismissPattern]', err);
     return false;
   }
 }

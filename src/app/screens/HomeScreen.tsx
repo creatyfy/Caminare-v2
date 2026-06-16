@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { usePendingPattern } from '../contexts/PendingPatternContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { getProfile, getHomeStats, type Profile, type HomeStats } from '../lib/db';
+import { getProfile, getHomeStats, dismissPattern, type Profile, type HomeStats } from '../lib/db';
 
 export function HomeScreen() {
   const navigate = useNavigate();
@@ -271,7 +271,18 @@ export function HomeScreen() {
         confirmLabel={t('home.patternModalAnalyze')}
         cancelLabel={t('home.patternModalLater')}
         onConfirm={() => navigate('/novo-padrao')}
-        onCancel={() => setPatternDismissed(true)}
+        onCancel={() => {
+          // Esconde nesta sessão e conta o adiamento. Ao atingir o limite, o
+          // padrão vira 'ignored' no banco e deixa de reaparecer/pulsar —
+          // revalidamos o estado compartilhado pra refletir isso.
+          setPatternDismissed(true);
+          const p = pattern;
+          if (p) {
+            void dismissPattern(p.id).then((ignored) => {
+              if (ignored) void refreshPendingPattern();
+            });
+          }
+        }}
       />
     </div>
   );

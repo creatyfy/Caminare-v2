@@ -13,7 +13,7 @@ import {
   sendJson,
   sendError,
 } from './_lib/runtime.js';
-import { runStructured } from './_lib/claude.js';
+import { runStructured, CLAUDE_MODEL } from './_lib/claude.js';
 import { SYSTEM_ANALYZE_BELIEFS, buildAnalyzeBeliefsUser } from './_lib/prompts.js';
 
 export const config = { maxDuration: 30 };
@@ -98,7 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const crencasRejeitadas = (rejected ?? []).map((b) => b.content).filter(Boolean);
 
   try {
-    const { data: ai } = await runStructured<AiResult>(
+    const { data: ai, raw } = await runStructured<AiResult>(
       SYSTEM_ANALYZE_BELIEFS,
       buildAnalyzeBeliefsUser({
         transcricao,
@@ -114,6 +114,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const crencas = (ai.crencas ?? []).filter((c) => c?.formulacao?.trim()).slice(0, 5);
 
+    // Log bruto do conjunto de crenças sugeridas por este relato (fidelidade de
+    // treino): preserva TODAS as sugestões da IA, mesmo as que serão deduplicadas
+    // e não viram card de validação. Best-effort: não bloqueia a geração.
+    await insertBeliefLog(db, user.id, entryId, raw);
+
     if (crencas.length) {
       const nowIso = body.data_hora ?? new Date().toISOString();
       // Não recria crença pending com formulação idêntica a uma já existente
@@ -128,6 +133,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .map((c) => ({
           user_id: user.id,
           source_entry_id: entryId,
+          source: 'ai' as const,
           content: c.formulacao.trim(),
           content_original: c.formulacao.trim(),
           validation: 'pending' as const,
@@ -138,11 +144,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }));
       if (rows.length) {
         const { error: insErr } = await db.from('beliefs').insert(rows);
-        // Resiliência ao deploy: se a coluna source_entry_id ainda não existir
-        // no banco (migration não aplicada), reinsere sem ela para não quebrar a
-        // geração de crenças. Postgres: 42703 = undefined_column.
+        // Resiliência ao deploy: se alguma coluna opcional (source_entry_id ou
+        // source) ainda não existir no banco (migration não aplicada), reinsere
+        // sem elas para não quebrar a geração. Postgres: 42703 = undefined_column.
         if (insErr?.code === '42703') {
-          const fallback = rows.map(({ source_entry_id, ...rest }) => rest);
+          const fallback = rows.map(({ source_entry_id, source, ...rest }) => rest);
           const { error: fbErr } = await db.from('beliefs').insert(fallback);
           if (fbErr) console.error('[analyze-beliefs] erro ao inserir crenças (fallback):', fbErr);
         } else if (insErr) {
@@ -155,5 +161,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err) {
     console.error('[analyze-beliefs] falha na análise:', err);
     return sendError(res, 502, 'Não foi possível analisar as crenças agora. Tente novamente.');
+  }
+}
+
+// Grava o JSON bruto das crenças sugeridas pela IA para este relato em
+// entry_belief_logs (treino). Best-effort: se a tabela ainda não existir
+// (42P01, migration pendente), apenas loga e segue — não quebra o fluxo.
+async function insertBeliefLog(
+  db: ReturnType<typeof serviceClient>,
+  userId: string,
+  entryId: string,
+  rawResponse: unknown
+): Promise<void> {
+  const { error } = await db.from('entry_belief_logs').insert({
+    user_id: userId,
+    entry_id: entryId,
+    ai_model: CLAUDE_MODEL,
+    raw_response: JSON.stringify(rawResponse),
+  });
+  if (error && error.code !== '42P01') {
+    console.error('[analyze-beliefs] erro ao inserir log de crenças:', error);
   }
 }
