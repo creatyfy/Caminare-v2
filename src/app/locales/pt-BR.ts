@@ -352,8 +352,47 @@ export const ptBR = {
     errorLoad: 'Não foi possível carregar os dados do painel.',
     nav: {
       overview: 'Visão geral',
+      emotions: 'Emoções',
+      beliefs: 'Crenças',
+      patterns: 'Padrões',
       feedback: 'Sugestões',
       users: 'Usuários',
+    },
+    period: {
+      d7: '7 dias',
+      d30: '30 dias',
+      d90: '90 dias',
+      all: 'Tudo',
+    },
+    overview: {
+      kpiUsers: 'Usuários',
+      kpiEntries: 'Registros',
+      kpiAvgWeekly: 'Média semanal',
+      kpiValidation: 'Validação IA',
+      qualityTitle: 'Qualidade da IA',
+      viewDetails: 'Ver detalhes',
+      subscriptionsSoon: 'Assinaturas e lojas — em breve',
+      subscriptionsBody: 'Disponível quando o módulo de assinatura e a integração com as lojas forem ligados.',
+    },
+    detail: {
+      empty: 'Sem dados no período.',
+      occurrences: 'ocorrências',
+      validationRate: 'Taxa de validação',
+    },
+    emotionsTab: {
+      mostFrequent: 'Mais frequentes',
+      byIntensity: 'Por intensidade',
+      subtle: 'Sutil',
+      moderate: 'Moderada',
+      strong: 'Alta',
+    },
+    beliefsTab: {
+      recurrent: 'Crenças recorrentes',
+    },
+    patternsTab: {
+      detected: 'Padrões detectados',
+      severity: 'Severidade',
+      status: 'Status',
     },
     menu: {
       viewAsUser: 'Ver como usuário',
@@ -393,6 +432,7 @@ export const ptBR = {
       validated: 'Validadas',
       rejected: 'Rejeitadas',
       edited: 'Editadas',
+      ignored: 'Ignoradas',
     },
     hints: {
       requiresSubscriptions: 'Aguardando o módulo de assinatura',

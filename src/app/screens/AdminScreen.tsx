@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -6,21 +6,18 @@ import {
   RefreshCw,
   Loader2,
   Users,
-  Activity,
   Heart,
   Brain,
   TrendingUp,
   MessageSquare,
-  Sparkles,
   Check,
   Eye,
   CircleDot,
+  ChevronRight,
   LayoutDashboard,
-  UserCircle2,
   LogOut,
   Menu,
   X,
-  ChevronDown,
   Shield,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,8 +26,15 @@ import {
   getAdminFeedback,
   updateFeedbackStatus,
   getAdminUsers,
+  getAdminEmotions,
+  getAdminBeliefs,
+  getAdminPatterns,
   getProfile,
   type AdminStats,
+  type AdminEmotions,
+  type AdminBeliefs,
+  type AdminPatternsData,
+  type AdminPeriod,
   type FeedbackItem,
   type FeedbackStatus,
   type AdminUser,
@@ -39,7 +43,8 @@ import {
 import { formatDate } from '../lib/format';
 
 type FeedbackFilter = 'all' | FeedbackStatus;
-type AdminSection = 'overview' | 'feedback' | 'users';
+type AdminSection = 'overview' | 'emotions' | 'beliefs' | 'patterns' | 'users' | 'feedback';
+const DETAIL_SECTIONS: AdminSection[] = ['emotions', 'beliefs', 'patterns'];
 
 const SIDEBAR_WIDTH = 256;
 
@@ -59,25 +64,19 @@ export function AdminScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Filtro de período (topo das abas de detalhe) e dados das RPCs por aba.
+  const [period, setPeriod] = useState<AdminPeriod>('all');
+  const [emotionsData, setEmotionsData] = useState<AdminEmotions | null>(null);
+  const [beliefsData, setBeliefsData] = useState<AdminBeliefs | null>(null);
+  const [patternsData, setPatternsData] = useState<AdminPatternsData | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   // Carrega profile uma vez
   useEffect(() => {
     if (!user) return;
     getProfile(user.id).then(setProfile);
   }, [user]);
-
-  // Fecha menu do usuário ao clicar fora
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
 
   const load = useCallback(
     async (showSpinner = true) => {
@@ -117,6 +116,26 @@ export function AdminScreen() {
     };
   }, [section, users]);
 
+  // Carrega os dados da aba de detalhe ativa (emoções/crenças/padrões),
+  // refazendo a busca quando o período muda. As RPCs recebem o range.
+  useEffect(() => {
+    if (!DETAIL_SECTIONS.includes(section)) return;
+    let active = true;
+    setDetailLoading(true);
+    const fetcher =
+      section === 'emotions'
+        ? getAdminEmotions(period).then((d) => active && setEmotionsData(d))
+        : section === 'beliefs'
+          ? getAdminBeliefs(period).then((d) => active && setBeliefsData(d))
+          : getAdminPatterns(period).then((d) => active && setPatternsData(d));
+    fetcher.finally(() => {
+      if (active) setDetailLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [section, period]);
+
   async function handleStatusChange(feedbackId: string, status: FeedbackStatus) {
     const ok = await updateFeedbackStatus(feedbackId, status);
     if (ok) {
@@ -129,15 +148,17 @@ export function AdminScreen() {
   }
 
   async function handleSignOut() {
-    setUserMenuOpen(false);
     await signOut();
     navigate('/login', { replace: true });
   }
 
   const sectionTitles: Record<AdminSection, string> = {
     overview: t('admin.nav.overview'),
-    feedback: t('admin.nav.feedback'),
+    emotions: t('admin.nav.emotions'),
+    beliefs: t('admin.nav.beliefs'),
+    patterns: t('admin.nav.patterns'),
     users: t('admin.nav.users'),
+    feedback: t('admin.nav.feedback'),
   };
 
   const initial = (profile?.full_name?.[0] ?? user?.email?.[0] ?? 'A').toUpperCase();
@@ -301,124 +322,52 @@ export function AdminScreen() {
             )}
           </button>
 
-          {/* User menu */}
-          <div ref={userMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
-            <button
-              type="button"
-              onClick={() => setUserMenuOpen((v) => !v)}
-              aria-haspopup="true"
-              aria-expanded={userMenuOpen}
+          {/* Identidade do admin (sem ações — Ver como usuário/Sair ficam só na
+              barra lateral, pra não duplicar). */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '4px 12px 4px 4px',
+              background: 'var(--cam-bg-tint)',
+              borderRadius: '9999px',
+              flexShrink: 0,
+              maxWidth: 220,
+            }}
+            title={displayName}
+          >
+            <div
               style={{
+                width: 30,
+                height: 30,
+                borderRadius: '50%',
+                backgroundColor: 'var(--cam-color-brand)',
+                color: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '4px 8px 4px 4px',
-                background: 'var(--cam-bg-tint)',
-                border: 'none',
-                borderRadius: '9999px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
+                justifyContent: 'center',
+                fontSize: '13px',
+                fontWeight: 700,
+                flexShrink: 0,
               }}
             >
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--cam-color-brand)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                }}
-              >
-                {initial}
-              </div>
-              <ChevronDown size={14} color="var(--cam-text-secondary)" />
-            </button>
-
-            {userMenuOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  right: 0,
-                  minWidth: 220,
-                  backgroundColor: 'var(--cam-bg-card)',
-                  borderRadius: '14px',
-                  boxShadow: 'var(--cam-shadow-card-strong)',
-                  border: `1px solid var(--cam-border-subtle)`,
-                  overflow: 'hidden',
-                  zIndex: 80,
-                }}
-              >
-                <div
-                  style={{
-                    padding: '12px 14px',
-                    borderBottom: `1px solid var(--cam-border-subtle)`,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '11px',
-                      color: 'var(--cam-text-brand)',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    <Shield size={11} />
-                    {t('admin.adminBadge')}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: 'var(--cam-text-primary)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {displayName}
-                  </div>
-                  {user?.email && profile?.full_name && (
-                    <div
-                      style={{
-                        fontSize: '12px',
-                        color: 'var(--cam-text-secondary)',
-                        marginTop: '2px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {user.email}
-                    </div>
-                  )}
-                </div>
-                <MenuItem
-                  icon={<UserCircle2 size={16} />}
-                  label={t('admin.menu.viewAsUser')}
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    navigate('/home');
-                  }}
-                />
-                <MenuItem
-                  icon={<LogOut size={16} />}
-                  label={t('admin.menu.signOut')}
-                  onClick={handleSignOut}
-                  destructive
-                />
-              </div>
-            )}
+              {initial}
+            </div>
+            <span
+              className="hidden sm:block"
+              style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--cam-text-primary)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+              }}
+            >
+              {displayName}
+            </span>
           </div>
         </header>
 
@@ -465,8 +414,22 @@ export function AdminScreen() {
               </div>
             )}
 
+            {/* Filtro de período — só nas abas de detalhe */}
+            {DETAIL_SECTIONS.includes(section) && (
+              <PeriodFilter value={period} onChange={setPeriod} />
+            )}
+
             {!loading && stats && section === 'overview' && (
-              <OverviewView stats={stats} />
+              <OverviewView stats={stats} onNavigate={setSection} />
+            )}
+            {section === 'emotions' && (
+              <EmotionsView data={emotionsData} loading={detailLoading} />
+            )}
+            {section === 'beliefs' && (
+              <BeliefsView data={beliefsData} loading={detailLoading} />
+            )}
+            {section === 'patterns' && (
+              <PatternsView data={patternsData} loading={detailLoading} />
             )}
             {!loading && stats && section === 'feedback' && (
               <FeedbackView
@@ -506,8 +469,11 @@ function SidebarContent({
   const { t } = useTranslation();
   const navItems: { id: AdminSection; label: string; icon: typeof LayoutDashboard }[] = [
     { id: 'overview', label: t('admin.nav.overview'), icon: LayoutDashboard },
-    { id: 'feedback', label: t('admin.nav.feedback'), icon: MessageSquare },
+    { id: 'emotions', label: t('admin.nav.emotions'), icon: Heart },
+    { id: 'beliefs', label: t('admin.nav.beliefs'), icon: Brain },
+    { id: 'patterns', label: t('admin.nav.patterns'), icon: TrendingUp },
     { id: 'users', label: t('admin.nav.users'), icon: Users },
+    { id: 'feedback', label: t('admin.nav.feedback'), icon: MessageSquare },
   ];
 
   return (
@@ -672,221 +638,796 @@ function SidebarContent({
   );
 }
 
-function MenuItem({
-  icon,
-  label,
-  onClick,
-  destructive,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  destructive?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        width: '100%',
-        padding: '12px 14px',
-        background: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        fontSize: '14px',
-        fontWeight: 500,
-        color: destructive ? 'var(--cam-text-error)' : 'var(--cam-text-primary)',
-        textAlign: 'left',
-      }}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
+// Cores das proporções/badges de validação (reaproveitadas em todas as abas).
+const STATUS_COLOR: Record<'confirmed' | 'rejected' | 'edited' | 'ignored' | 'pending', string> = {
+  confirmed: 'var(--cam-color-accent)',
+  rejected: 'var(--cam-color-error)',
+  edited: 'var(--cam-text-warning)',
+  ignored: 'var(--cam-text-secondary)',
+  pending: 'var(--cam-text-secondary)',
+};
 
 // ── Overview ──────────────────────────────────────────────────────────────────
 
-function OverviewView({ stats }: { stats: AdminStats }) {
+function OverviewView({
+  stats,
+  onNavigate,
+}: {
+  stats: AdminStats;
+  onNavigate: (s: AdminSection) => void;
+}) {
   const { t } = useTranslation();
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <Section icon={<Users size={18} />} title={t('admin.sections.users')}>
-        <MetricCard label={t('admin.metrics.totalUsers')} value={stats.total_users} />
-        <MetricCard
-          label={t('admin.metrics.usersTrial')}
-          value={stats.users_trial}
-          hint={t('admin.hints.requiresSubscriptions')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.usersActive')}
-          value={stats.users_active}
-          hint={t('admin.hints.requiresSubscriptions')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.subsAnnual')}
-          value={stats.subs_annual_active}
-          hint={t('admin.hints.requiresSubscriptions')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.subsMonthly')}
-          value={stats.subs_monthly_active}
-          hint={t('admin.hints.requiresSubscriptions')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.usersApple')}
-          value={stats.users_apple}
-          hint={t('admin.hints.requiresStoreData')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.usersGoogle')}
-          value={stats.users_google}
-          hint={t('admin.hints.requiresStoreData')}
-          muted
-        />
-      </Section>
+  const [subsOpen, setSubsOpen] = useState(false);
 
-      <Section icon={<Activity size={18} />} title={t('admin.sections.engagement')}>
-        <MetricCard label={t('admin.metrics.totalEntries')} value={stats.total_entries} />
-        <MetricCard
-          label={t('admin.metrics.avgWeekly')}
+  const suggested = stats.emotions_total + stats.beliefs_total + stats.patterns_total;
+  const confirmed =
+    stats.emotions_confirmed + stats.beliefs_confirmed + stats.patterns_confirmed;
+  const validationRate = suggested > 0 ? Math.round((confirmed / suggested) * 100) : 0;
+
+  const quality: {
+    section: AdminSection;
+    label: string;
+    total: number;
+    confirmed: number;
+    rejected: number;
+    edited: number;
+    ignored: number;
+  }[] = [
+    {
+      section: 'emotions',
+      label: t('admin.sections.emotions'),
+      total: stats.emotions_total,
+      confirmed: stats.emotions_confirmed,
+      rejected: stats.emotions_rejected,
+      edited: stats.emotions_adjusted,
+      ignored: stats.emotions_ignored,
+    },
+    {
+      section: 'beliefs',
+      label: t('admin.sections.beliefs'),
+      total: stats.beliefs_total,
+      confirmed: stats.beliefs_confirmed,
+      rejected: stats.beliefs_rejected,
+      edited: stats.beliefs_adjusted,
+      ignored: stats.beliefs_ignored,
+    },
+    {
+      section: 'patterns',
+      label: t('admin.sections.patterns'),
+      total: stats.patterns_total,
+      confirmed: stats.patterns_confirmed,
+      rejected: stats.patterns_rejected,
+      edited: stats.patterns_adjusted,
+      ignored: stats.patterns_ignored,
+    },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      {/* KPIs-herói */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: '12px',
+        }}
+      >
+        <KpiCard label={t('admin.overview.kpiUsers')} value={stats.total_users} />
+        <KpiCard label={t('admin.overview.kpiEntries')} value={stats.total_entries} />
+        <KpiCard
+          label={t('admin.overview.kpiAvgWeekly')}
           value={formatDecimal(stats.avg_weekly_entries_per_user)}
         />
-      </Section>
+        <KpiCard
+          label={t('admin.overview.kpiValidation')}
+          value={`${validationRate}%`}
+          accent
+        />
+      </div>
 
-      <Section icon={<Heart size={18} />} title={t('admin.sections.emotions')}>
-        <MetricCard label={t('admin.metrics.suggested')} value={stats.emotions_total} />
-        <MetricCard
-          label={t('admin.metrics.validated')}
-          value={stats.emotions_confirmed}
-          accent="accent"
-        />
-        <MetricCard
-          label={t('admin.metrics.rejected')}
-          value={stats.emotions_rejected}
-          accent="error"
-        />
-        <MetricCard
-          label={t('admin.metrics.edited')}
-          value={stats.emotions_adjusted}
-          accent="warning"
-        />
-      </Section>
+      {/* Qualidade da IA */}
+      <section>
+        <SubHeading>{t('admin.overview.qualityTitle')}</SubHeading>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {quality.map((q) => (
+            <div
+              key={q.section}
+              style={{
+                backgroundColor: 'var(--cam-bg-card)',
+                borderRadius: '16px',
+                padding: '16px 18px',
+                boxShadow: 'var(--cam-shadow-card)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  marginBottom: '12px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    color: 'var(--cam-text-primary)',
+                  }}
+                >
+                  {q.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(q.section)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '2px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: 'var(--cam-text-brand)',
+                    padding: 0,
+                    flexShrink: 0,
+                  }}
+                >
+                  {t('admin.overview.viewDetails')}
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+              <ProportionBar
+                total={q.total}
+                confirmed={q.confirmed}
+                rejected={q.rejected}
+                edited={q.edited}
+                ignored={q.ignored}
+              />
+            </div>
+          ))}
+        </div>
+        <ProportionLegend />
+      </section>
 
-      <Section icon={<Sparkles size={18} />} title={t('admin.sections.thoughts')}>
-        <MetricCard
-          label={t('admin.metrics.suggested')}
-          value={stats.thoughts_total}
-          hint={t('admin.hints.requiresThoughtsValidation')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.validated')}
-          value={stats.thoughts_confirmed}
-          hint={t('admin.hints.requiresThoughtsValidation')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.rejected')}
-          value={stats.thoughts_rejected}
-          hint={t('admin.hints.requiresThoughtsValidation')}
-          muted
-        />
-        <MetricCard
-          label={t('admin.metrics.edited')}
-          value={stats.thoughts_adjusted}
-          hint={t('admin.hints.requiresThoughtsValidation')}
-          muted
-        />
-      </Section>
-
-      <Section icon={<Brain size={18} />} title={t('admin.sections.beliefs')}>
-        <MetricCard label={t('admin.metrics.suggested')} value={stats.beliefs_total} />
-        <MetricCard
-          label={t('admin.metrics.validated')}
-          value={stats.beliefs_confirmed}
-          accent="accent"
-        />
-        <MetricCard
-          label={t('admin.metrics.rejected')}
-          value={stats.beliefs_rejected}
-          accent="error"
-        />
-        <MetricCard
-          label={t('admin.metrics.edited')}
-          value={stats.beliefs_adjusted}
-          accent="warning"
-        />
-      </Section>
-
-      <Section icon={<TrendingUp size={18} />} title={t('admin.sections.patterns')}>
-        <MetricCard label={t('admin.metrics.suggested')} value={stats.patterns_total} />
-        <MetricCard
-          label={t('admin.metrics.validated')}
-          value={stats.patterns_confirmed}
-          accent="accent"
-        />
-        <MetricCard
-          label={t('admin.metrics.rejected')}
-          value={stats.patterns_rejected}
-          accent="error"
-        />
-        <MetricCard
-          label={t('admin.metrics.edited')}
-          value={stats.patterns_adjusted}
-          accent="warning"
-        />
-      </Section>
+      {/* Assinaturas e lojas — em breve (recolhível) */}
+      <section>
+        <button
+          type="button"
+          onClick={() => setSubsOpen((v) => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            background: 'var(--cam-bg-card)',
+            border: 'none',
+            borderRadius: '14px',
+            padding: '14px 18px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            boxShadow: 'var(--cam-shadow-card)',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'var(--cam-text-secondary)',
+            }}
+          >
+            {t('admin.overview.subscriptionsSoon')}
+          </span>
+          <ChevronRight
+            size={16}
+            color="var(--cam-text-secondary)"
+            style={{
+              transform: subsOpen ? 'rotate(90deg)' : 'none',
+              transition: 'transform 0.2s ease',
+            }}
+          />
+        </button>
+        {subsOpen && (
+          <p
+            style={{
+              fontSize: '13px',
+              color: 'var(--cam-text-secondary)',
+              lineHeight: 1.5,
+              margin: '10px 4px 0 4px',
+            }}
+          >
+            {t('admin.overview.subscriptionsBody')}
+          </p>
+        )}
+      </section>
     </div>
   );
 }
 
-function Section({
-  icon,
-  title,
-  children,
+// ── Componentes compartilhados das abas ────────────────────────────────────────
+
+function KpiCard({
+  label,
+  value,
+  accent,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
+  label: string;
+  value: number | string;
+  accent?: boolean;
 }) {
   return (
-    <section>
-      <h2
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontSize: '13px',
-          fontWeight: 700,
-          color: 'var(--cam-text-secondary)',
-          margin: '0 0 12px 0',
-          textTransform: 'uppercase',
-          letterSpacing: '0.6px',
-        }}
-      >
-        <span style={{ color: 'var(--cam-text-brand)' }}>{icon}</span>
-        {title}
-      </h2>
+    <div
+      style={{
+        backgroundColor: 'var(--cam-bg-card)',
+        borderRadius: '16px',
+        padding: '18px 20px',
+        boxShadow: 'var(--cam-shadow-card)',
+      }}
+    >
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '12px',
+          fontSize: '32px',
+          fontWeight: 700,
+          color: accent ? 'var(--cam-text-accent)' : 'var(--cam-text-primary)',
+          letterSpacing: '-0.5px',
+          lineHeight: 1.1,
         }}
       >
-        {children}
+        {value}
       </div>
-    </section>
+      <div
+        style={{
+          fontSize: '13px',
+          color: 'var(--cam-text-secondary)',
+          fontWeight: 500,
+          marginTop: '6px',
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function SubHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2
+      style={{
+        fontSize: '14px',
+        fontWeight: 500,
+        color: 'var(--cam-text-secondary)',
+        margin: '0 0 12px 4px',
+      }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+// Barra de proporção empilhada (validadas/rejeitadas/editadas/ignoradas). O
+// espaço restante até o total = itens ainda pendentes (track de fundo).
+function ProportionBar({
+  total,
+  confirmed,
+  rejected,
+  edited,
+  ignored,
+}: {
+  total: number;
+  confirmed: number;
+  rejected: number;
+  edited: number;
+  ignored: number;
+}) {
+  const base = total > 0 ? total : 1;
+  const segs: { value: number; color: string }[] = [
+    { value: confirmed, color: STATUS_COLOR.confirmed },
+    { value: edited, color: STATUS_COLOR.edited },
+    { value: ignored, color: STATUS_COLOR.ignored },
+    { value: rejected, color: STATUS_COLOR.rejected },
+  ];
+  return (
+    <div
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: '10px',
+        borderRadius: '9999px',
+        overflow: 'hidden',
+        backgroundColor: 'var(--cam-bg-muted)',
+      }}
+    >
+      {segs.map((s, i) =>
+        s.value > 0 ? (
+          <div
+            key={i}
+            style={{
+              width: `${(s.value / base) * 100}%`,
+              backgroundColor: s.color,
+            }}
+          />
+        ) : null
+      )}
+    </div>
+  );
+}
+
+function ProportionLegend() {
+  const { t } = useTranslation();
+  const items: { key: 'confirmed' | 'edited' | 'ignored' | 'rejected'; label: string }[] = [
+    { key: 'confirmed', label: t('admin.metrics.validated') },
+    { key: 'edited', label: t('admin.metrics.edited') },
+    { key: 'ignored', label: t('admin.metrics.ignored') },
+    { key: 'rejected', label: t('admin.metrics.rejected') },
+  ];
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '14px',
+        marginTop: '12px',
+        marginLeft: '4px',
+      }}
+    >
+      {items.map((it) => (
+        <span
+          key={it.key}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '12px',
+            color: 'var(--cam-text-secondary)',
+          }}
+        >
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: '3px',
+              backgroundColor: STATUS_COLOR[it.key],
+            }}
+          />
+          {it.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Cards de quantidade por status + taxa de validação. Reutilizado nas 3 abas.
+function StatusCards({
+  total,
+  confirmed,
+  rejected,
+  edited,
+  ignored,
+}: {
+  total: number;
+  confirmed: number;
+  rejected: number;
+  edited: number;
+  ignored: number;
+}) {
+  const { t } = useTranslation();
+  const rate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '12px',
+        marginBottom: '28px',
+      }}
+    >
+      <MetricCard label={t('admin.metrics.suggested')} value={total} />
+      <MetricCard label={t('admin.metrics.validated')} value={confirmed} accent="accent" />
+      <MetricCard label={t('admin.metrics.rejected')} value={rejected} accent="error" />
+      <MetricCard label={t('admin.metrics.edited')} value={edited} accent="warning" />
+      <MetricCard label={t('admin.metrics.ignored')} value={ignored} />
+      <MetricCard label={t('admin.detail.validationRate')} value={`${rate}%`} accent="accent" />
+    </div>
+  );
+}
+
+// Ranking com barras proporcionais ao maior valor (mais frequentes / intensidade).
+function RankingBars({ items }: { items: { label: string; count: number }[] }) {
+  const max = items.reduce((m, i) => Math.max(m, i.count), 0) || 1;
+  return (
+    <div
+      style={{
+        backgroundColor: 'var(--cam-bg-card)',
+        borderRadius: '16px',
+        padding: '16px 18px',
+        boxShadow: 'var(--cam-shadow-card)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '14px',
+      }}
+    >
+      {items.map((it, i) => (
+        <div key={i}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: '12px',
+              marginBottom: '6px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '14px',
+                color: 'var(--cam-text-primary)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+              }}
+            >
+              {it.label}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'var(--cam-text-secondary)',
+                fontVariantNumeric: 'tabular-nums',
+                flexShrink: 0,
+              }}
+            >
+              {it.count}
+            </span>
+          </div>
+          <div
+            style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '9999px',
+              backgroundColor: 'var(--cam-bg-muted)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                width: `${(it.count / max) * 100}%`,
+                height: '100%',
+                backgroundColor: 'var(--cam-color-brand)',
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatusBadge({ validation }: { validation: string }) {
+  const { t } = useTranslation();
+  const map: Record<string, { label: string; color: string }> = {
+    confirmed: { label: t('admin.metrics.validated'), color: STATUS_COLOR.confirmed },
+    rejected: { label: t('admin.metrics.rejected'), color: STATUS_COLOR.rejected },
+    edited: { label: t('admin.metrics.edited'), color: STATUS_COLOR.edited },
+    ignored: { label: t('admin.metrics.ignored'), color: STATUS_COLOR.ignored },
+    pending: { label: t('admin.metrics.suggested'), color: STATUS_COLOR.pending },
+  };
+  const cfg = map[validation] ?? map.pending;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontSize: '12px',
+        fontWeight: 500,
+        color: 'var(--cam-text-secondary)',
+        flexShrink: 0,
+      }}
+    >
+      <span
+        style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: cfg.color }}
+      />
+      {cfg.label}
+    </span>
+  );
+}
+
+function DetailLoading() {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '60px 20px',
+        gap: '10px',
+        color: 'var(--cam-text-secondary)',
+      }}
+    >
+      <Loader2 size={18} className="animate-spin" />
+      <span style={{ fontSize: '14px' }}>{t('common.loading')}</span>
+    </div>
+  );
+}
+
+function DetailEmpty() {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        backgroundColor: 'var(--cam-bg-card)',
+        borderRadius: '16px',
+        padding: '40px 20px',
+        textAlign: 'center',
+        color: 'var(--cam-text-secondary)',
+        fontSize: '14px',
+        boxShadow: 'var(--cam-shadow-card)',
+      }}
+    >
+      {t('admin.detail.empty')}
+    </div>
+  );
+}
+
+// ── Emoções ─────────────────────────────────────────────────────────────────
+
+function EmotionsView({
+  data,
+  loading,
+}: {
+  data: AdminEmotions | null;
+  loading: boolean;
+}) {
+  const { t } = useTranslation();
+  if (loading && !data) return <DetailLoading />;
+  if (!data) return <DetailEmpty />;
+
+  const intensity = [
+    { label: t('admin.emotionsTab.subtle'), count: data.by_intensity.subtle },
+    { label: t('admin.emotionsTab.moderate'), count: data.by_intensity.moderate },
+    {
+      label: t('admin.emotionsTab.strong'),
+      count: data.by_intensity.strong + data.by_intensity.very_strong,
+    },
+  ];
+
+  return (
+    <div>
+      <StatusCards
+        total={data.total}
+        confirmed={data.confirmed}
+        rejected={data.rejected}
+        edited={data.edited}
+        ignored={data.ignored}
+      />
+
+      <section style={{ marginBottom: '28px' }}>
+        <SubHeading>{t('admin.emotionsTab.mostFrequent')}</SubHeading>
+        {data.top.length === 0 ? (
+          <DetailEmpty />
+        ) : (
+          <RankingBars items={data.top.map((e) => ({ label: e.name, count: e.count }))} />
+        )}
+      </section>
+
+      <section>
+        <SubHeading>{t('admin.emotionsTab.byIntensity')}</SubHeading>
+        <RankingBars items={intensity} />
+      </section>
+    </div>
+  );
+}
+
+// ── Crenças ─────────────────────────────────────────────────────────────────
+
+function BeliefsView({
+  data,
+  loading,
+}: {
+  data: AdminBeliefs | null;
+  loading: boolean;
+}) {
+  const { t } = useTranslation();
+  if (loading && !data) return <DetailLoading />;
+  if (!data) return <DetailEmpty />;
+
+  return (
+    <div>
+      <StatusCards
+        total={data.total}
+        confirmed={data.confirmed}
+        rejected={data.rejected}
+        edited={data.edited}
+        ignored={data.ignored}
+      />
+
+      <section>
+        <SubHeading>{t('admin.beliefsTab.recurrent')}</SubHeading>
+        {data.recurrent.length === 0 ? (
+          <DetailEmpty />
+        ) : (
+          <div
+            style={{
+              backgroundColor: 'var(--cam-bg-card)',
+              borderRadius: '16px',
+              boxShadow: 'var(--cam-shadow-card)',
+              overflow: 'hidden',
+            }}
+          >
+            {data.recurrent.map((b, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  gap: '14px',
+                  padding: '14px 18px',
+                  borderBottom:
+                    i === data.recurrent.length - 1
+                      ? 'none'
+                      : `1px solid var(--cam-border-subtle)`,
+                }}
+              >
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p
+                    style={{
+                      fontSize: '14px',
+                      color: 'var(--cam-text-primary)',
+                      lineHeight: 1.4,
+                      margin: '0 0 6px 0',
+                    }}
+                  >
+                    {b.content}
+                  </p>
+                  <StatusBadge validation={b.validation} />
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      color: 'var(--cam-text-primary)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {b.occurrence_count}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--cam-text-secondary)' }}>
+                    {t('admin.detail.occurrences')}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ── Padrões ─────────────────────────────────────────────────────────────────
+
+function PatternsView({
+  data,
+  loading,
+}: {
+  data: AdminPatternsData | null;
+  loading: boolean;
+}) {
+  const { t } = useTranslation();
+  if (loading && !data) return <DetailLoading />;
+  if (!data) return <DetailEmpty />;
+
+  return (
+    <div>
+      <StatusCards
+        total={data.total}
+        confirmed={data.confirmed}
+        rejected={data.rejected}
+        edited={data.edited}
+        ignored={data.ignored}
+      />
+
+      <section>
+        <SubHeading>{t('admin.patternsTab.detected')}</SubHeading>
+        {data.list.length === 0 ? (
+          <DetailEmpty />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {data.list.map((p, i) => (
+              <div
+                key={i}
+                style={{
+                  backgroundColor: 'var(--cam-bg-card)',
+                  borderRadius: '16px',
+                  padding: '16px 18px',
+                  boxShadow: 'var(--cam-shadow-card)',
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '15px',
+                    color: 'var(--cam-text-primary)',
+                    lineHeight: 1.45,
+                    margin: '0 0 12px 0',
+                  }}
+                >
+                  {p.description}
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    flexWrap: 'wrap',
+                    fontSize: '12px',
+                    color: 'var(--cam-text-secondary)',
+                  }}
+                >
+                  <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    {p.occurrence_count} {t('admin.detail.occurrences')}
+                  </span>
+                  <span>
+                    {t('admin.patternsTab.severity')}: {p.severity ?? '—'}
+                  </span>
+                  <StatusBadge validation={p.validation} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ── Filtro de período ──────────────────────────────────────────────────────
+
+function PeriodFilter({
+  value,
+  onChange,
+}: {
+  value: AdminPeriod;
+  onChange: (p: AdminPeriod) => void;
+}) {
+  const { t } = useTranslation();
+  const opts: { value: AdminPeriod; label: string }[] = [
+    { value: '7days', label: t('admin.period.d7') },
+    { value: '30days', label: t('admin.period.d30') },
+    { value: '90days', label: t('admin.period.d90') },
+    { value: 'all', label: t('admin.period.all') },
+  ];
+  return (
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      {opts.map((o) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            style={{
+              padding: '7px 14px',
+              borderRadius: '9999px',
+              border: active ? 'none' : `1.5px solid var(--cam-border)`,
+              backgroundColor: active ? 'var(--cam-color-brand)' : 'var(--cam-bg-card)',
+              color: active ? '#FFFFFF' : 'var(--cam-text-primary)',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
