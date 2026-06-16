@@ -1173,6 +1173,70 @@ function DetailEmpty() {
   );
 }
 
+// Status selecionável nas abas de detalhe ('all' = todos).
+type DetailStatus = 'all' | 'confirmed' | 'edited' | 'rejected' | 'ignored';
+
+// Filtro de status (pills com a contagem em cada). Reutilizado nas 3 abas.
+function StatusFilter({
+  value,
+  onChange,
+  counts,
+}: {
+  value: DetailStatus;
+  onChange: (s: DetailStatus) => void;
+  counts: Record<DetailStatus, number>;
+}) {
+  const { t } = useTranslation();
+  const opts: { value: DetailStatus; label: string }[] = [
+    { value: 'all', label: t('admin.detail.statusAll') },
+    { value: 'confirmed', label: t('admin.metrics.validated') },
+    { value: 'edited', label: t('admin.metrics.edited') },
+    { value: 'rejected', label: t('admin.metrics.rejected') },
+    { value: 'ignored', label: t('admin.metrics.ignored') },
+  ];
+  return (
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+      {opts.map((o) => {
+        const active = value === o.value;
+        const dot = o.value !== 'all' ? STATUS_COLOR[o.value] : null;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '7px',
+              padding: '7px 13px',
+              borderRadius: '9999px',
+              border: active ? 'none' : `1.5px solid var(--cam-border)`,
+              backgroundColor: active ? 'var(--cam-color-brand)' : 'var(--cam-bg-card)',
+              color: active ? '#FFFFFF' : 'var(--cam-text-primary)',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            {dot && (
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: active ? '#FFFFFF' : dot,
+                }}
+              />
+            )}
+            {o.label} · {counts[o.value]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Emoções ─────────────────────────────────────────────────────────────────
 
 function EmotionsView({
@@ -1183,8 +1247,31 @@ function EmotionsView({
   loading: boolean;
 }) {
   const { t } = useTranslation();
+  const [status, setStatus] = useState<DetailStatus>('all');
   if (loading && !data) return <DetailLoading />;
   if (!data) return <DetailEmpty />;
+
+  const counts: Record<DetailStatus, number> = {
+    all: data.total,
+    confirmed: data.confirmed,
+    edited: data.edited,
+    rejected: data.rejected,
+    ignored: data.ignored,
+  };
+
+  // Ranking de nomes dentro do status escolhido. 'all' soma todos os status
+  // (equivalente ao top geral).
+  let ranking: { label: string; count: number }[];
+  if (status === 'all') {
+    const byName = new Map<string, number>();
+    for (const it of data.items) byName.set(it.name, (byName.get(it.name) ?? 0) + it.count);
+    ranking = [...byName.entries()].map(([label, count]) => ({ label, count }));
+  } else {
+    ranking = data.items
+      .filter((it) => it.validation === status)
+      .map((it) => ({ label: it.name, count: it.count }));
+  }
+  ranking = ranking.sort((a, b) => b.count - a.count).slice(0, 30);
 
   const intensity = [
     { label: t('admin.emotionsTab.subtle'), count: data.by_intensity.subtle },
@@ -1205,13 +1292,11 @@ function EmotionsView({
         ignored={data.ignored}
       />
 
+      <StatusFilter value={status} onChange={setStatus} counts={counts} />
+
       <section style={{ marginBottom: '28px' }}>
         <SubHeading>{t('admin.emotionsTab.mostFrequent')}</SubHeading>
-        {data.top.length === 0 ? (
-          <DetailEmpty />
-        ) : (
-          <RankingBars items={data.top.map((e) => ({ label: e.name, count: e.count }))} />
-        )}
+        {ranking.length === 0 ? <DetailEmpty /> : <RankingBars items={ranking} />}
       </section>
 
       <section>
@@ -1232,8 +1317,19 @@ function BeliefsView({
   loading: boolean;
 }) {
   const { t } = useTranslation();
+  const [status, setStatus] = useState<DetailStatus>('all');
   if (loading && !data) return <DetailLoading />;
   if (!data) return <DetailEmpty />;
+
+  const counts: Record<DetailStatus, number> = {
+    all: data.total,
+    confirmed: data.confirmed,
+    edited: data.edited,
+    rejected: data.rejected,
+    ignored: data.ignored,
+  };
+  const filtered =
+    status === 'all' ? data.items : data.items.filter((b) => b.validation === status);
 
   return (
     <div>
@@ -1245,45 +1341,69 @@ function BeliefsView({
         ignored={data.ignored}
       />
 
-      <section>
-        <SubHeading>{t('admin.beliefsTab.recurrent')}</SubHeading>
-        {data.recurrent.length === 0 ? (
-          <DetailEmpty />
-        ) : (
-          <div
-            style={{
-              backgroundColor: 'var(--cam-bg-card)',
-              borderRadius: '16px',
-              boxShadow: 'var(--cam-shadow-card)',
-              overflow: 'hidden',
-            }}
-          >
-            {data.recurrent.map((b, i) => (
+      <StatusFilter value={status} onChange={setStatus} counts={counts} />
+
+      {filtered.length === 0 ? (
+        <DetailEmpty />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {filtered.map((b, i) => {
+            const showDiff =
+              b.validation === 'edited' &&
+              !!b.content_original &&
+              b.content_original !== b.content;
+            return (
               <div
                 key={i}
                 style={{
+                  backgroundColor: 'var(--cam-bg-card)',
+                  borderRadius: '16px',
+                  padding: '16px 18px',
+                  boxShadow: 'var(--cam-shadow-card)',
                   display: 'flex',
                   alignItems: 'flex-start',
                   justifyContent: 'space-between',
                   gap: '14px',
-                  padding: '14px 18px',
-                  borderBottom:
-                    i === data.recurrent.length - 1
-                      ? 'none'
-                      : `1px solid var(--cam-border-subtle)`,
                 }}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <p
-                    style={{
-                      fontSize: '14px',
-                      color: 'var(--cam-text-primary)',
-                      lineHeight: 1.4,
-                      margin: '0 0 6px 0',
-                    }}
-                  >
-                    {b.content}
-                  </p>
+                  {showDiff ? (
+                    <div style={{ marginBottom: '8px' }}>
+                      <p
+                        style={{
+                          fontSize: '13px',
+                          color: 'var(--cam-text-secondary)',
+                          textDecoration: 'line-through',
+                          lineHeight: 1.4,
+                          margin: '0 0 4px 0',
+                        }}
+                      >
+                        {b.content_original}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: '15px',
+                          color: 'var(--cam-text-primary)',
+                          fontWeight: 500,
+                          lineHeight: 1.4,
+                          margin: 0,
+                        }}
+                      >
+                        {b.content}
+                      </p>
+                    </div>
+                  ) : (
+                    <p
+                      style={{
+                        fontSize: '15px',
+                        color: 'var(--cam-text-primary)',
+                        lineHeight: 1.4,
+                        margin: '0 0 8px 0',
+                      }}
+                    >
+                      {b.content}
+                    </p>
+                  )}
                   <StatusBadge validation={b.validation} />
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -1302,10 +1422,10 @@ function BeliefsView({
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1320,8 +1440,19 @@ function PatternsView({
   loading: boolean;
 }) {
   const { t } = useTranslation();
+  const [status, setStatus] = useState<DetailStatus>('all');
   if (loading && !data) return <DetailLoading />;
   if (!data) return <DetailEmpty />;
+
+  const counts: Record<DetailStatus, number> = {
+    all: data.total,
+    confirmed: data.confirmed,
+    edited: data.edited,
+    rejected: data.rejected,
+    ignored: data.ignored,
+  };
+  const filtered =
+    status === 'all' ? data.list : data.list.filter((p) => p.validation === status);
 
   return (
     <div>
@@ -1333,13 +1464,15 @@ function PatternsView({
         ignored={data.ignored}
       />
 
+      <StatusFilter value={status} onChange={setStatus} counts={counts} />
+
       <section>
         <SubHeading>{t('admin.patternsTab.detected')}</SubHeading>
-        {data.list.length === 0 ? (
+        {filtered.length === 0 ? (
           <DetailEmpty />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {data.list.map((p, i) => (
+            {filtered.map((p, i) => (
               <div
                 key={i}
                 style={{

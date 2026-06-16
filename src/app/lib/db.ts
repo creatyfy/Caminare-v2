@@ -1152,6 +1152,9 @@ export interface AdminEmotions {
     very_strong: number;
   };
   top: { name: string; count: number }[];
+  // Quebra por (nome, status) — o front monta o ranking de nomes dentro do
+  // status escolhido (ex.: "emoções mais rejeitadas").
+  items: { name: string; validation: string; count: number }[];
 }
 
 export interface AdminBeliefs {
@@ -1160,7 +1163,15 @@ export interface AdminBeliefs {
   rejected: number;
   edited: number;
   ignored: number;
-  recurrent: { content: string; occurrence_count: number; validation: string }[];
+  // Todas as crenças do período (todos os status), para listar/filtrar por
+  // status e mostrar "antes → depois" nas editadas.
+  items: {
+    content: string;
+    content_original: string;
+    validation: string;
+    occurrence_count: number;
+    last_seen_at: string;
+  }[];
 }
 
 export interface AdminPatternsData {

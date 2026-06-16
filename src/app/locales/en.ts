@@ -378,6 +378,7 @@ export const en = {
       empty: 'No data for this period.',
       occurrences: 'occurrences',
       validationRate: 'Validation rate',
+      statusAll: 'All',
     },
     emotionsTab: {
       mostFrequent: 'Most frequent',
