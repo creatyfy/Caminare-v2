@@ -1,0 +1,22 @@
+-- =============================================================================
+-- Caminare — Migration: GRANT em belief_versions (destrava edição de crença)
+-- =============================================================================
+-- Sintoma: editar o texto de uma crença identificada voltava 403:
+--   42501: permission denied for table belief_versions
+--   hint:  GRANT INSERT ON public.belief_versions TO authenticated;
+--
+-- Causa: editar a crença muda `content`, o que dispara o trigger
+-- `snapshot_belief_version` (BEFORE UPDATE em beliefs), que faz
+-- INSERT INTO belief_versions (...). A tabela já tinha as policies de RLS
+-- (`belief_versions: insert own` / `select own`), mas faltava o privilégio de
+-- tabela GRANT para o papel `authenticated` → o INSERT do trigger falhava e
+-- derrubava o UPDATE inteiro.
+--
+-- Fix: conceder INSERT (necessário ao trigger) e SELECT (leitura do histórico
+-- de versões, coerente com a policy de SELECT existente) ao authenticated.
+--
+-- ATENÇÃO: aplicar à mão no SQL Editor do projeto Supabase (xyflfmmlfylxrxtkjrbz).
+-- O deploy do Vercel NÃO roda migrations.
+-- =============================================================================
+
+grant select, insert on public.belief_versions to authenticated;
