@@ -29,6 +29,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
 import { getProfile, deleteAccount, submitFeedback, type Profile } from '../lib/db';
 import { setLanguage, type Lang } from '../lib/i18n';
+import { DevSubscriptionPanel } from '../components/DevSubscriptionPanel';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
@@ -199,6 +200,9 @@ export function ProfileScreen() {
             <ChevronRight size={18} color="#FFFFFF" />
           </button>
         )}
+
+        {/* Painel de teste de assinatura (Fase 1, só admin) */}
+        {profile?.is_admin && <DevSubscriptionPanel />}
 
         {/* Info card — collapsible */}
         <div

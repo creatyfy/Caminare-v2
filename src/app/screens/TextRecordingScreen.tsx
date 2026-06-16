@@ -3,16 +3,18 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { useEntitlement } from '../contexts/EntitlementContext';
 import { createTextEntry } from '../lib/db';
 import { processEntry } from '../lib/ai';
 
-// Equivalente a aproximadamente 2 min de fala (150 wpm × ~5 chars por palavra)
-const MAX_CHARS = 1500;
+// Equivalente a aproximadamente 2 min de fala (150 wpm × ~6 chars por palavra)
+const MAX_CHARS = 1800;
 
 export function TextRecordingScreen() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const entitlement = useEntitlement();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,11 @@ export function TextRecordingScreen() {
 
   async function handleSubmit() {
     if (!text.trim() || submitting || !user) return;
+    // Barra se estourou o limite do período (75 trial; 150/250 plano).
+    if (!entitlement.canCreate) {
+      setError(t('entitlement.limitReached', { limit: entitlement.limit }));
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -45,6 +52,7 @@ export function TextRecordingScreen() {
         setError(t('textRecording.errorSave'));
         return;
       }
+      void entitlement.refresh();
       // Dispara a análise em background (sem await) para já começar enquanto o
       // usuário navega. A tela de validação aguarda a conclusão via polling.
       void processEntry(entryId, i18n.language).catch((err) =>

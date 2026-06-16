@@ -460,4 +460,15 @@ export const ptBR = {
     summary: 'Resumo',
     profile: 'Perfil',
   },
+  entitlement: {
+    limitReached:
+      'Você atingiu o limite de {{limit}} registros do período. Para continuar, faça upgrade do seu plano.',
+    paywallTitle: 'Acesso restrito',
+    paywallBodyTrialDone:
+      'Seu período de teste terminou. Assine um plano para voltar a criar registros e gerar resumos.',
+    paywallBodyGeneric:
+      'Sua assinatura não está ativa. Assine um plano para criar registros e gerar resumos.',
+    paywallSeeInsights: 'Ver meus insights',
+    backHome: 'Voltar para o início',
+  },
 } as const;

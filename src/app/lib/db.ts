@@ -859,6 +859,91 @@ export async function updatePattern(
   }
 }
 
+// ── Assinatura / entitlement (Fase 1) ───────────────────────────────────────
+// Alinhado ao schema existente de `subscriptions`: status/plan são ENUMs; `plan`
+// é a CADÊNCIA (monthly/annual, p/ IAP na Fase 2) e `tier` (basico/avancado) é o
+// que define o limite mensal. Trial usa `trial_ends_at` e conta desde `created_at`.
+
+export type SubStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'expired';
+export type SubPlan = 'monthly' | 'annual';
+export type SubTier = 'basico' | 'avancado';
+
+export interface Subscription {
+  status: SubStatus;
+  plan: SubPlan | null;
+  tier: SubTier | null;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  external_id: string | null;
+  created_at: string | null;
+}
+
+export async function getSubscription(userId: string): Promise<Subscription | null> {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('status, plan, tier, trial_ends_at, current_period_end, external_id, created_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) {
+      console.error('[db.getSubscription]', error);
+      return null;
+    }
+    return (data as Subscription) ?? null;
+  } catch (err) {
+    console.error('[db.getSubscription]', err);
+    return null;
+  }
+}
+
+// Conta registros CRIADOS desde uma data (inclui excluídos de propósito: é uso
+// do período, não acervo — excluir não devolve cota).
+export async function countEntriesSince(userId: string, sinceISO: string): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('entries')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', sinceISO);
+    if (error) {
+      console.error('[db.countEntriesSince]', error);
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err) {
+    console.error('[db.countEntriesSince]', err);
+    return 0;
+  }
+}
+
+// Painel de teste (admin): força o estado da assinatura via RPC SECURITY DEFINER.
+// Passar null limpa o campo no banco (ex.: plan/tier null no trial).
+export async function devSetSubscription(params: {
+  status?: SubStatus;
+  plan?: SubPlan | null;
+  tier?: SubTier | null;
+  trialEndsAt?: string | null;
+  periodEnd?: string | null;
+}): Promise<{ error: string | null }> {
+  try {
+    const { error } = await supabase.rpc('dev_set_subscription', {
+      p_status: params.status ?? null,
+      p_plan: params.plan ?? null,
+      p_tier: params.tier ?? null,
+      p_trial_ends_at: params.trialEndsAt ?? null,
+      p_period_end: params.periodEnd ?? null,
+    });
+    if (error) {
+      console.error('[db.devSetSubscription]', error);
+      return { error: error.message };
+    }
+    return { error: null };
+  } catch (err) {
+    console.error('[db.devSetSubscription]', err);
+    return { error: 'Erro ao atualizar assinatura (teste).' };
+  }
+}
+
 export async function createTextEntry(
   userId: string,
   rawText: string

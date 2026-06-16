@@ -460,4 +460,15 @@ export const en = {
     summary: 'Summary',
     profile: 'Profile',
   },
+  entitlement: {
+    limitReached:
+      'You reached the limit of {{limit}} entries for this period. Upgrade your plan to continue.',
+    paywallTitle: 'Access restricted',
+    paywallBodyTrialDone:
+      'Your trial has ended. Subscribe to a plan to keep creating entries and summaries.',
+    paywallBodyGeneric:
+      'Your subscription is not active. Subscribe to a plan to create entries and summaries.',
+    paywallSeeInsights: 'See my insights',
+    backHome: 'Back to home',
+  },
 } as const;

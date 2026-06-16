@@ -17,6 +17,7 @@ import {
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { useEntitlement } from '../contexts/EntitlementContext';
 import { createTextEntry } from '../lib/db';
 import { processEntry } from '../lib/ai';
 
@@ -110,6 +111,7 @@ export function RecordingScreen() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const entitlement = useEntitlement();
 
   const [state, setState] = useState<RecState>('idle');
   const [finalText, setFinalText] = useState('');
@@ -336,6 +338,12 @@ export function RecordingScreen() {
     if (!user) return;
     const text = editedText.trim();
     if (!text) return;
+    // Barra se estourou o limite do período (75 trial; 150/250 plano).
+    if (!entitlement.canCreate) {
+      setError(t('entitlement.limitReached', { limit: entitlement.limit }));
+      setState('review');
+      return;
+    }
     setState('saving');
     setError(null);
     try {
@@ -345,6 +353,7 @@ export function RecordingScreen() {
         setState('review');
         return;
       }
+      void entitlement.refresh();
       // Dispara a análise em background (sem await) para já começar enquanto o
       // usuário navega. A tela de validação aguarda a conclusão via polling.
       void processEntry(entryId, i18n.language).catch((err) =>
