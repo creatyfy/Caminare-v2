@@ -383,22 +383,19 @@ export async function ignorePendingEmotions(
 }
 
 // Exclusão de registro = soft delete (deleted_at). Não chama /api/*.
-// Filtra por dono e confere as linhas afetadas: se o RLS bloquear o UPDATE,
-// o Supabase retorna sucesso com 0 linhas — então retornamos false para a UI
-// não remover algo que não foi gravado ("falso sucesso").
+// Filtra por dono (user_id) — o RLS de UPDATE garante que só o dono altera.
+// NÃO usamos .select() como prova de sucesso: a policy de SELECT exige
+// deleted_at IS NULL, então a linha recém-excluída some do retorno e daria
+// "falso negativo" (0 linhas mesmo tendo gravado). Confiamos em !error.
 export async function deleteEntry(userId: string, entryId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('entries')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', entryId)
-      .eq('user_id', userId)
-      .select('id');
-    if (error) {
-      console.error('[db.deleteEntry]', error);
-      return false;
-    }
-    return (data?.length ?? 0) > 0;
+      .eq('user_id', userId);
+    if (error) console.error('[db.deleteEntry]', error);
+    return !error;
   } catch (err) {
     console.error('[db.deleteEntry]', err);
     return false;
@@ -709,24 +706,21 @@ async function updateRowResilient(
 }
 
 // Exclusão de crença = soft delete (deleted_at). Nunca DELETE físico.
-// Filtra por dono e confere linhas afetadas (mesmo motivo do deleteEntry):
-// evita "falso sucesso" quando o RLS bloqueia o UPDATE.
+// Filtra por dono (user_id). Mesmo motivo do deleteEntry: NÃO usar .select()
+// como prova — a policy de SELECT (deleted_at IS NULL) esconde a linha recém
+// -excluída e daria falso negativo. Confiamos em !error.
 export async function deleteBeliefById(
   userId: string,
   beliefId: string
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('beliefs')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', beliefId)
-      .eq('user_id', userId)
-      .select('id');
-    if (error) {
-      console.error('[db.deleteBeliefById]', error);
-      return false;
-    }
-    return (data?.length ?? 0) > 0;
+      .eq('user_id', userId);
+    if (error) console.error('[db.deleteBeliefById]', error);
+    return !error;
   } catch (err) {
     console.error('[db.deleteBeliefById]', err);
     return false;
