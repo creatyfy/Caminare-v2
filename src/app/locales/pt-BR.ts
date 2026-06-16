@@ -378,6 +378,7 @@ export const ptBR = {
       empty: 'Sem dados no período.',
       occurrences: 'ocorrências',
       validationRate: 'Taxa de validação',
+      statusAll: 'Todas',
     },
     emotionsTab: {
       mostFrequent: 'Mais frequentes',
