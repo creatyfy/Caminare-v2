@@ -352,8 +352,47 @@ export const en = {
     errorLoad: 'Could not load admin data.',
     nav: {
       overview: 'Overview',
+      emotions: 'Emotions',
+      beliefs: 'Beliefs',
+      patterns: 'Patterns',
       feedback: 'Suggestions',
       users: 'Users',
+    },
+    period: {
+      d7: '7 days',
+      d30: '30 days',
+      d90: '90 days',
+      all: 'All',
+    },
+    overview: {
+      kpiUsers: 'Users',
+      kpiEntries: 'Entries',
+      kpiAvgWeekly: 'Weekly average',
+      kpiValidation: 'AI validation',
+      qualityTitle: 'AI quality',
+      viewDetails: 'View details',
+      subscriptionsSoon: 'Subscriptions & stores — coming soon',
+      subscriptionsBody: 'Available once the subscription module and store integration are enabled.',
+    },
+    detail: {
+      empty: 'No data for this period.',
+      occurrences: 'occurrences',
+      validationRate: 'Validation rate',
+    },
+    emotionsTab: {
+      mostFrequent: 'Most frequent',
+      byIntensity: 'By intensity',
+      subtle: 'Subtle',
+      moderate: 'Moderate',
+      strong: 'High',
+    },
+    beliefsTab: {
+      recurrent: 'Recurring beliefs',
+    },
+    patternsTab: {
+      detected: 'Detected patterns',
+      severity: 'Severity',
+      status: 'Status',
     },
     menu: {
       viewAsUser: 'View as user',
@@ -393,6 +432,7 @@ export const en = {
       validated: 'Validated',
       rejected: 'Rejected',
       edited: 'Edited',
+      ignored: 'Ignored',
     },
     hints: {
       requiresSubscriptions: 'Waiting for subscription module',

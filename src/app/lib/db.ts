@@ -1039,6 +1039,7 @@ export interface AdminStats {
   emotions_confirmed: number;
   emotions_rejected: number;
   emotions_adjusted: number;
+  emotions_ignored: number;
   thoughts_total: number;
   thoughts_confirmed: number;
   thoughts_rejected: number;
@@ -1047,10 +1048,12 @@ export interface AdminStats {
   beliefs_confirmed: number;
   beliefs_rejected: number;
   beliefs_adjusted: number;
+  beliefs_ignored: number;
   patterns_total: number;
   patterns_confirmed: number;
   patterns_rejected: number;
   patterns_adjusted: number;
+  patterns_ignored: number;
   feedback_total: number;
   feedback_new: number;
   feedback_read: number;
@@ -1121,6 +1124,110 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
   } catch (err) {
     console.error('[db.getAdminUsers]', err);
     return [];
+  }
+}
+
+// ── Admin: abas de detalhe (Emoções / Crenças / Padrões) ────────────────────
+
+// Período do filtro no topo das abas admin. Convertido em timestamptz (p_since)
+// passado às RPCs; 'all' = sem corte (null).
+export type AdminPeriod = '7days' | '30days' | '90days' | 'all';
+
+function adminSince(period: AdminPeriod): string | null {
+  if (period === 'all') return null;
+  const days = period === '7days' ? 7 : period === '30days' ? 30 : 90;
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+export interface AdminEmotions {
+  total: number;
+  confirmed: number;
+  rejected: number;
+  edited: number;
+  ignored: number;
+  by_intensity: {
+    subtle: number;
+    moderate: number;
+    strong: number;
+    very_strong: number;
+  };
+  top: { name: string; count: number }[];
+}
+
+export interface AdminBeliefs {
+  total: number;
+  confirmed: number;
+  rejected: number;
+  edited: number;
+  ignored: number;
+  recurrent: { content: string; occurrence_count: number; validation: string }[];
+}
+
+export interface AdminPatternsData {
+  total: number;
+  confirmed: number;
+  rejected: number;
+  edited: number;
+  ignored: number;
+  list: {
+    description: string;
+    occurrence_count: number;
+    validation: string;
+    severity: string | null;
+  }[];
+}
+
+export async function getAdminEmotions(
+  period: AdminPeriod = 'all'
+): Promise<AdminEmotions | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_admin_emotions', {
+      p_since: adminSince(period),
+    });
+    if (error) {
+      console.error('[db.getAdminEmotions]', error);
+      return null;
+    }
+    return data as AdminEmotions;
+  } catch (err) {
+    console.error('[db.getAdminEmotions]', err);
+    return null;
+  }
+}
+
+export async function getAdminBeliefs(
+  period: AdminPeriod = 'all'
+): Promise<AdminBeliefs | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_admin_beliefs', {
+      p_since: adminSince(period),
+    });
+    if (error) {
+      console.error('[db.getAdminBeliefs]', error);
+      return null;
+    }
+    return data as AdminBeliefs;
+  } catch (err) {
+    console.error('[db.getAdminBeliefs]', err);
+    return null;
+  }
+}
+
+export async function getAdminPatterns(
+  period: AdminPeriod = 'all'
+): Promise<AdminPatternsData | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_admin_patterns', {
+      p_since: adminSince(period),
+    });
+    if (error) {
+      console.error('[db.getAdminPatterns]', error);
+      return null;
+    }
+    return data as AdminPatternsData;
+  } catch (err) {
+    console.error('[db.getAdminPatterns]', err);
+    return null;
   }
 }
 
