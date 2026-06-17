@@ -19,6 +19,8 @@ type Preset = {
 
 const PRESETS: Preset[] = [
   { label: 'Trial ativo (15d)', params: { status: 'trial', plan: null, tier: null, trialEndsAt: daysFromNow(15) }, override: null },
+  { label: 'Trial dia 7 (8d restantes)', params: { status: 'trial', plan: null, tier: null, trialEndsAt: daysFromNow(8) }, override: null },
+  { label: 'Trial dia 14 (1d restante)', params: { status: 'trial', plan: null, tier: null, trialEndsAt: daysFromNow(1) }, override: null },
   { label: 'Trial expirado (dias)', params: { status: 'trial', plan: null, tier: null, trialEndsAt: daysFromNow(-1) }, override: null },
   { label: 'Trial expirado (75 reg.)', params: { status: 'trial', plan: null, tier: null, trialEndsAt: daysFromNow(15) }, override: 75 },
   { label: 'Assinante Básico (150)', params: { status: 'active', plan: 'monthly', tier: 'basico', periodEnd: daysFromNow(30) }, override: null },
@@ -34,6 +36,14 @@ export function DevSubscriptionPanel() {
   async function apply(preset: Preset) {
     setBusy(true);
     setDevOverride(preset.override);
+    // Limpa a marcação de "já dispensei" dos avisos de trial p/ poder re-disparar
+    // os modais de dia 7 / dia 14 ao testar.
+    try {
+      window.localStorage.removeItem('cam_trial_notice_day7');
+      window.localStorage.removeItem('cam_trial_notice_day14');
+    } catch {
+      // ignore
+    }
     const { error } = await devSetSubscription(preset.params);
     if (error) console.error('[DevSubscriptionPanel]', error);
     await ent.refresh();

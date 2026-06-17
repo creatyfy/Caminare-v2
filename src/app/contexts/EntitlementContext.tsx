@@ -15,10 +15,12 @@ import {
   type SubStatus,
   type SubTier,
 } from '../lib/db';
+import { TRIAL_ENTRY_LIMIT, TIER_MONTHLY_LIMITS } from '../lib/pricing';
 
-// Regras da Fase 1
-export const TRIAL_LIMIT = 75;
-export const TIER_LIMITS: Record<SubTier, number> = { basico: 150, avancado: 250 };
+// Regras de limite — fonte única em src/app/lib/pricing.ts (re-exportadas aqui
+// para compatibilidade com quem já importava daqui).
+export const TRIAL_LIMIT = TRIAL_ENTRY_LIMIT;
+export const TIER_LIMITS: Record<SubTier, number> = TIER_MONTHLY_LIMITS;
 
 // Override de teste (admin) p/ simular a contagem de registros sem criar N
 // registros de verdade. Fica só no localStorage do navegador (Fase 1 é client-side).
@@ -57,6 +59,7 @@ export interface Entitlement {
   canCreate: boolean; // access full E ainda dentro do teto
   windowKind: WindowKind;
   trialEndsAt: string | null;
+  periodEnd: string | null; // fim do período pago (assinatura ativa)
   refresh: () => Promise<void>;
 }
 
@@ -74,6 +77,7 @@ const RESTRICTED: EntitlementState = {
   canCreate: false,
   windowKind: 'none',
   trialEndsAt: null,
+  periodEnd: null,
 };
 
 // Início do mês civil corrente (limite mensal dos planos é por mês civil).
@@ -120,6 +124,7 @@ export function EntitlementProvider({ children }: { children: ReactNode }) {
         canCreate: remaining > 0,
         windowKind: 'month',
         trialEndsAt: sub.trial_ends_at,
+        periodEnd: sub.current_period_end,
       });
       return;
     }
@@ -146,6 +151,7 @@ export function EntitlementProvider({ children }: { children: ReactNode }) {
         canCreate: active && remaining > 0,
         windowKind: 'trial',
         trialEndsAt: sub.trial_ends_at,
+        periodEnd: sub.current_period_end,
       });
       return;
     }
@@ -157,6 +163,7 @@ export function EntitlementProvider({ children }: { children: ReactNode }) {
       plan: sub.plan,
       tier: sub.tier,
       trialEndsAt: sub.trial_ends_at,
+      periodEnd: sub.current_period_end,
     });
   }, [user]);
 

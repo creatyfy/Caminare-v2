@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
+import { useEntitlement } from '../contexts/EntitlementContext';
 import { getProfile, deleteAccount, submitFeedback, type Profile } from '../lib/db';
 import { setLanguage, type Lang } from '../lib/i18n';
 import { DevSubscriptionPanel } from '../components/DevSubscriptionPanel';
@@ -155,6 +156,9 @@ export function ProfileScreen() {
             </div>
           </div>
         </div>
+
+        {/* Tipo de conta (a partir de subscriptions / entitlement) */}
+        <AccountTypeCard />
 
         {/* Admin entry (apenas pra admins) */}
         {profile?.is_admin && (
@@ -414,6 +418,115 @@ export function ProfileScreen() {
       </div>
 
       {showDeleteConfirm && <DeleteAccountModal onCancel={() => setShowDeleteConfirm(false)} />}
+    </div>
+  );
+}
+
+function AccountTypeCard() {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const ent = useEntitlement();
+
+  function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString(i18n.language, {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+
+  let label = '—';
+  let detail = '';
+  let usage = '';
+
+  if (!ent.loading) {
+    if (ent.status === 'trial' && ent.access === 'full') {
+      label = t('profile.accountTrial');
+      const left = ent.trialEndsAt
+        ? Math.ceil((new Date(ent.trialEndsAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+        : null;
+      detail =
+        left == null
+          ? ''
+          : left <= 0
+            ? t('profile.accountTrialEndsToday')
+            : t('profile.accountTrialDaysLeft', { count: left });
+      usage = t('profile.accountUsage', { used: ent.used, limit: ent.limit });
+    } else if (ent.status === 'active') {
+      label = ent.tier === 'avancado' ? t('profile.accountTierAvancado') : t('profile.accountTierBasico');
+      const cadence =
+        ent.plan === 'annual' ? t('profile.accountCadenceAnnual') : t('profile.accountCadenceMonthly');
+      detail = ent.periodEnd
+        ? `${cadence} · ${t('profile.accountRenewsOn', { date: formatDate(ent.periodEnd) })}`
+        : cadence;
+      usage = t('profile.accountUsage', { used: ent.used, limit: ent.limit });
+    } else if (ent.status === 'trial') {
+      label = t('profile.accountTrialDone');
+    } else {
+      label = t('profile.accountRestricted');
+    }
+  }
+
+  return (
+    <div
+      style={{
+        backgroundColor: 'var(--cam-bg-card)',
+        borderRadius: '20px',
+        padding: '20px',
+        boxShadow: 'var(--cam-shadow-card)',
+      }}
+    >
+      <SectionLabel text={t('profile.accountTypeSection')} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            backgroundColor: 'var(--cam-bg-tint)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <CreditCard size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--cam-text-primary)' }}>{label}</div>
+          {detail && (
+            <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', fontWeight: 500, marginTop: '2px' }}>
+              {detail}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {usage && (
+        <div style={{ fontSize: '12px', color: 'var(--cam-text-secondary)', fontWeight: 500, marginTop: '12px' }}>
+          {usage}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => navigate('/assinatura')}
+        style={{
+          marginTop: '16px',
+          width: '100%',
+          height: '44px',
+          borderRadius: '9999px',
+          backgroundColor: 'var(--cam-bg-tint)',
+          color: 'var(--cam-text-brand)',
+          border: 'none',
+          fontSize: '14px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        {t('profile.accountViewPlans')}
+      </button>
     </div>
   );
 }

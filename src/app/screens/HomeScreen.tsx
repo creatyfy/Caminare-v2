@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { usePendingPattern } from '../contexts/PendingPatternContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { TrialNotices } from '../components/TrialNotices';
 import { getProfile, getHomeStats, dismissPattern, type Profile, type HomeStats } from '../lib/db';
 
 export function HomeScreen() {
@@ -284,6 +285,8 @@ export function HomeScreen() {
           }
         }}
       />
+
+      <TrialNotices />
     </div>
   );
 }
