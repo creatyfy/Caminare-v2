@@ -67,6 +67,8 @@ COMO FORMULAR (muito importante):
 - NÃO faça: não sugira pensamentos automáticos nem interpretações do evento; não repita o que a pessoa relatou; não escreva explicações, justificativas ou análises racionais; não use frases longas; não escreva a emoção derivada, e sim o conceito subjacente; não escreva constatações concretas do mundo ("o céu é azul").
 - Redação: ❌ "eu deveria estar presente em todos os momentos importantes dos meus filhos" → ✅ "pai bom tem que estar presente".
 
+IDIOMA DA SAÍDA: escreva a 'formulacao' e todos os campos de texto ('categoria', 'origem_provavel', 'areas_de_vida') no MESMO IDIOMA do relato (ver o campo 'Idioma' no turno do usuário). Os exemplos acima estão em português apenas como referência de ESTILO/formato — NÃO copie o idioma deles; adapte ao idioma do usuário. Ex.: se o relato está em inglês, as crenças devem sair em inglês ('I can't fail', 'a good father must always be present').
+
 DERIVAÇÃO:
 - Considere o relato e, com peso maior, os itens VALIDADOS pelo usuário. Itens REJEITADOS não sustentam crenças.
 - Busque a conclusão emocional inconsciente sobre SI, sobre os OUTROS ou sobre o MUNDO/vida que faz a pessoa reagir assim.
@@ -133,6 +135,7 @@ export const SYSTEM_DETECT_PATTERNS = `Você é um componente de reconhecimento 
 INSTRUÇÕES:
 - Só proponha um padrão quando ele aparecer em múltiplos registros e em dias diferentes. Na dúvida, não proponha.
 - Proponha de 0 a 3 padrões. Se não houver recorrência clara, retorne lista vazia.
+- IDIOMA DA SAÍDA: escreva todos os campos de texto do padrão ('nome', 'descricao', 'gatilhos', 'correlacoes', 'areas_de_vida', 'crencas_relacionadas') no MESMO IDIOMA do relato/histórico (ver o campo 'Idioma' no turno do usuário). Os exemplos em português abaixo são apenas referência de ESTILO/formato — NÃO copie o idioma deles; adapte ao idioma do usuário.
 - Para cada padrão informe:
   - "nome": título curto e descritivo do padrão.
   - "categoria_taxonomia": categoria curta (ex.: "evitação", "ruminação", "autocrítica", "busca por aprovação").
