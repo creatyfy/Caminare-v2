@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { ArrowLeft, Mic, X } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useEntitlement } from '../contexts/EntitlementContext';
@@ -15,9 +15,15 @@ export function TextRecordingScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const entitlement = useEntitlement();
+  const [searchParams] = useSearchParams();
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Quando o usuário chega pelo botão "Novo Registro por Voz" (?dica=voz),
+  // mostramos uma dica pra usar o microfone do teclado (ditado nativo).
+  const [showVoiceHint, setShowVoiceHint] = useState(
+    () => searchParams.get('dica') === 'voz'
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Foca antes do paint pra tentar herdar o gesto da navegação anterior
@@ -115,6 +121,50 @@ export function TextRecordingScreen() {
           minHeight: 0,
         }}
       >
+        {showVoiceHint && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              backgroundColor: 'var(--cam-bg-tint)',
+              borderRadius: '14px',
+              padding: '12px 14px',
+              marginBottom: '12px',
+              flexShrink: 0,
+            }}
+          >
+            <Mic size={18} color="var(--cam-text-brand)" strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span
+              style={{
+                flex: 1,
+                fontSize: '13px',
+                color: 'var(--cam-text-primary)',
+                fontWeight: 500,
+                lineHeight: 1.45,
+              }}
+            >
+              {t('textRecording.voiceHint')}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowVoiceHint(false)}
+              aria-label={t('common.cancel')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '2px',
+                cursor: 'pointer',
+                color: 'var(--cam-text-secondary)',
+                display: 'flex',
+                flexShrink: 0,
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         <textarea
           ref={textareaRef}
           autoFocus

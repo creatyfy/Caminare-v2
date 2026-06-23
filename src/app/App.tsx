@@ -6,13 +6,13 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { PendingPatternProvider } from './contexts/PendingPatternContext';
 import { EntitlementProvider, useEntitlement } from './contexts/EntitlementContext';
 import { BottomNav } from './components/BottomNav';
+import { NativeAuthBridge } from './components/NativeAuthBridge';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { SignUpScreen } from './screens/SignUpScreen';
 import { ForgotPasswordScreen } from './screens/ForgotPasswordScreen';
 import { ResetPasswordScreen } from './screens/ResetPasswordScreen';
 import { HomeScreen } from './screens/HomeScreen';
-import { RecordingScreen } from './screens/RecordingScreen';
 import { TextRecordingScreen } from './screens/TextRecordingScreen';
 import { EmotionValidationScreen } from './screens/EmotionValidationScreen';
 import { BeliefValidationScreen } from './screens/BeliefValidationScreen';
@@ -110,7 +110,6 @@ function AppRoutes() {
         />
 
         <Route path="/home" element={<RequireAuth><HomeScreen /></RequireAuth>} />
-        <Route path="/gravacao" element={<RequireAuth><RequireAccess><RecordingScreen /></RequireAccess></RequireAuth>} />
         <Route path="/registro-texto" element={<RequireAuth><RequireAccess><TextRecordingScreen /></RequireAccess></RequireAuth>} />
         <Route path="/validacao-emocoes" element={<RequireAuth><EmotionValidationScreen /></RequireAuth>} />
         <Route path="/validacao-crencas" element={<RequireAuth><BeliefValidationScreen /></RequireAuth>} />
@@ -152,6 +151,7 @@ export default function App() {
         <EntitlementProvider>
           <BrowserRouter>
             <PendingPatternProvider>
+              <NativeAuthBridge />
               <div
                 className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
                 style={{ backgroundColor: 'var(--cam-bg-page)' }}

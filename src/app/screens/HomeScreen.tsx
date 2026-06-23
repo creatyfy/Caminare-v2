@@ -211,7 +211,7 @@ export function HomeScreen() {
           }}
         >
           <button
-            onClick={() => navigate('/gravacao')}
+            onClick={() => navigate('/registro-texto?dica=voz')}
             style={{
               width: '100%',
               height: '72px',
