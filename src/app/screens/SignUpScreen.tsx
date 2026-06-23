@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
+import { AppleSignInButton } from '../components/AppleSignInButton';
 
 export function SignUpScreen() {
   const navigate = useNavigate();
@@ -352,6 +353,12 @@ export function SignUpScreen() {
 
         <GoogleSignInButton
           label={t('signup.google')}
+          disabled={!acceptedTerms}
+          onError={(msg) => setError(translateSignupError(msg, t))}
+        />
+
+        <AppleSignInButton
+          label={t('signup.apple')}
           disabled={!acceptedTerms}
           onError={(msg) => setError(translateSignupError(msg, t))}
         />

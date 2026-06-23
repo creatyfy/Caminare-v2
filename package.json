@@ -5,10 +5,23 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "cap": "cap",
+    "cap:sync": "cap sync",
+    "native:build": "vite build && cap sync"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
+    "@capacitor-community/apple-sign-in": "^6.0.0",
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/browser": "^6.0.6",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/ios": "^6.2.1",
+    "@capacitor/keyboard": "^6.0.4",
+    "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.5",

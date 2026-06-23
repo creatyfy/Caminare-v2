@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
+import { AppleSignInButton } from '../components/AppleSignInButton';
 import { getProfile } from '../lib/db';
 
 export function LoginScreen() {
@@ -205,6 +206,8 @@ export function LoginScreen() {
         <AuthDivider />
 
         <GoogleSignInButton onError={(msg) => setError(translateLoginError(msg, t))} />
+
+        <AppleSignInButton onError={(msg) => setError(translateLoginError(msg, t))} />
 
         <div
           style={{

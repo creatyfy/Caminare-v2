@@ -1,0 +1,93 @@
+# Codemagic CI/CD — Caminare (Fase 3)
+# Dois workflows: Android (compila aqui mesmo) e iOS (scaffold + build no Mac da CI,
+# já que a pasta ios/ não é versionada — foi gerada só no Codemagic).
+#
+# Antes do primeiro build, configure no Codemagic:
+#  - Android: grupo de variáveis "android_signing" com o keystore (CM_KEYSTORE,
+#    CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD) e a conta de serviço do
+#    Google Play (GCLOUD_SERVICE_ACCOUNT_CREDENTIALS) p/ publicação.
+#  - iOS: integração "App Store Connect API key" + certificado de distribuição.
+#    Ajuste o bundle id com.caminare.app e o team id.
+#  - Variáveis do app (build web): VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY.
+#    NÃO defina VITE_SHOW_DEV_TOOLS (painel de teste fica escondido em produção).
+
+workflows:
+  android:
+    name: Android (Play Store)
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      groups:
+        - android_signing
+        - app_env
+      node: 20
+      java: 17
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Build web + sync Capacitor
+        script: npm run native:build
+      - name: Configurar keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > "$CM_BUILD_DIR/release.keystore"
+          cat >> "$CM_BUILD_DIR/android/key.properties" <<EOF
+          storeFile=$CM_BUILD_DIR/release.keystore
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+      - name: Build AAB (release)
+        script: |
+          cd android
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  ios:
+    name: iOS (App Store)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    integrations:
+      app_store_connect: codemagic_asc_api_key
+    environment:
+      groups:
+        - app_env
+      node: 20
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.caminare.app
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Build web
+        script: npm run build
+      - name: Adicionar plataforma iOS (não versionada)
+        script: |
+          npx cap add ios || true
+          npx cap sync ios
+      - name: Instalar pods
+        script: |
+          cd ios/App && pod install
+      - name: Configurar code signing
+        script: |
+          xcode-project use-profiles
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/App/App.xcworkspace" \
+            --scheme "App"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

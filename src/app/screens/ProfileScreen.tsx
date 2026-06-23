@@ -31,6 +31,7 @@ import { useEntitlement } from '../contexts/EntitlementContext';
 import { getProfile, deleteAccount, submitFeedback, type Profile } from '../lib/db';
 import { setLanguage, type Lang } from '../lib/i18n';
 import { DevSubscriptionPanel } from '../components/DevSubscriptionPanel';
+import { showDevTools } from '../lib/native';
 
 export function ProfileScreen() {
   const navigate = useNavigate();
@@ -205,8 +206,9 @@ export function ProfileScreen() {
           </button>
         )}
 
-        {/* Painel de teste de assinatura (Fase 1, só admin) */}
-        {profile?.is_admin && <DevSubscriptionPanel />}
+        {/* Painel de teste de assinatura (Fase 1, só admin) — escondido em
+            produção (flag VITE_SHOW_DEV_TOOLS); não pode aparecer p/ revisor. */}
+        {profile?.is_admin && showDevTools && <DevSubscriptionPanel />}
 
         {/* Info card — collapsible */}
         <div

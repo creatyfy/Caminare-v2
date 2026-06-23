@@ -33,6 +33,7 @@ export const ptBR = {
     noAccount: 'Não tem conta?',
     createAccount: 'Criar conta',
     google: 'Continuar com Google',
+    apple: 'Continuar com Apple',
     errors: {
       missingFields: 'Preencha email e senha.',
       invalidCredentials: 'Email ou senha incorretos.',
@@ -52,6 +53,7 @@ export const ptBR = {
     hasAccount: 'Já tem conta?',
     goToLogin: 'Já tenho conta',
     google: 'Cadastrar com Google',
+    apple: 'Cadastrar com Apple',
     acceptTerms:
       'Li e concordo com os <terms>Termos de Uso</terms> e a <privacy>Política de Privacidade</privacy>.',
     successTitle: 'Conta criada!',
@@ -186,6 +188,7 @@ export const ptBR = {
   textRecording: {
     title: 'Novo Registro por Texto',
     placeholder: 'Como você está se sentindo hoje? O que aconteceu?',
+    voiceHint: 'Para ditar por voz, toque no campo e use o microfone do teclado do seu celular.',
     submit: 'Concluir Registro',
     submitting: 'Salvando...',
     errorSave: 'Não foi possível salvar o registro. Tente novamente.',

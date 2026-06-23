@@ -33,6 +33,7 @@ export const en = {
     noAccount: "Don't have an account?",
     createAccount: 'Sign up',
     google: 'Continue with Google',
+    apple: 'Continue with Apple',
     errors: {
       missingFields: 'Enter your email and password.',
       invalidCredentials: 'Incorrect email or password.',
@@ -52,6 +53,7 @@ export const en = {
     hasAccount: 'Already have an account?',
     goToLogin: 'Sign in',
     google: 'Sign up with Google',
+    apple: 'Sign up with Apple',
     acceptTerms:
       'I have read and agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>.',
     successTitle: 'Account created!',
@@ -186,6 +188,7 @@ export const en = {
   textRecording: {
     title: 'New Text Entry',
     placeholder: 'How are you feeling today? What happened?',
+    voiceHint: 'To dictate, tap the field and use the microphone on your phone keyboard.',
     submit: 'Finish Entry',
     submitting: 'Saving...',
     errorSave: 'Could not save the entry. Try again.',
