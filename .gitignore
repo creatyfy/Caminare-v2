@@ -7,3 +7,6 @@ dist/
 .DS_Store
 .claude/
 .vercel/
+
+# Chaves privadas da Apple (Sign in with Apple) — NUNCA commitar
+*.p8
