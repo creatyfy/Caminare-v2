@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Entitlements do app iOS (Caminare).
+  Copiado no CI para ios/App/App/App.entitlements depois de `npx cap add ios`
+  (a pasta ios/ não é versionada). Ver codemagic.yaml e guidelines/native-setup.md.
+
+  - applesignin: habilita "Sign in with Apple" (já implementado via AppleSignInButton).
+  - associated-domains: Universal Links para o domínio de produção (OAuth + reset de
+    senha por https). TROCAR __DOMINIO_PROD__ pelo domínio real (ex.: caminare.com.br)
+    ANTES do build de release. O esquema custom com.caminare.app:// continua valendo
+    em paralelo (configurado no Info.plist), então o login não depende disto.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:__DOMINIO_PROD__</string>
+	</array>
+</dict>
+</plist>

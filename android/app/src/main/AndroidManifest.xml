@@ -33,6 +33,20 @@
                 <data android:scheme="com.caminare.app" />
             </intent-filter>
 
+            <!-- App Links (https) p/ o domínio de produção — camada extra ao esquema
+                 custom acima. Abre o app direto nos links de OAuth/reset servidos por
+                 https, verificado via /.well-known/assetlinks.json (autoVerify=true).
+                 ⚠️ TROCAR __DOMINIO_PROD__ pelo host real (ex.: caminare.com.br) e
+                 publicar o assetlinks.json com o SHA-256 da chave de release ANTES de
+                 enviar pra loja. A NativeAuthBridge já trata estes paths. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="__DOMINIO_PROD__" android:pathPrefix="/auth-callback" />
+                <data android:scheme="https" android:host="__DOMINIO_PROD__" android:pathPrefix="/reset-callback" />
+            </intent-filter>
+
         </activity>
 
         <provider
