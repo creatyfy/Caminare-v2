@@ -494,7 +494,8 @@ export const ptBR = {
     salesTitle: 'Continue sua jornada',
     salesSubtitle:
       'Escolha um plano e siga registrando, percebendo padrões e cuidando de você com o Caminare.',
-    // Cabeçalho — teste encerrado (dia 15+ → paywall). Preços do POST_TRIAL_OFFER.
+    // Cabeçalho — teste encerrado (dia 15+ → paywall). Preços do POST_TRIAL_OFFER
+    // = Plano Básico da vitrine (R$8,90 / R$87,58 / 18%).
     trialDoneTitle: 'Seu período de teste terminou',
     trialDoneSubtitle:
       'Assine o Caminare para continuar usando todas as funcionalidades por apenas {{monthly}}/mês, ou o plano anual com {{pct}}% de desconto por {{annual}}/ano.',
