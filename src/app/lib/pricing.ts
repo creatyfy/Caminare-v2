@@ -64,18 +64,15 @@ export const PLANS: Record<Tier, TierPricing> = {
 
 export const PLAN_ORDER: Tier[] = ['basico', 'avancado'];
 
-// ⚠️ PENDENTE DE CONFIRMAÇÃO DO CLIENTE (Ricardo) ──────────────────────────────
-// O documento usa, no aviso de "teste encerrado" (dia 15+), preços DIFERENTES do
-// Plano Básico da vitrine (R$8,90 / R$87,58 / 18%):
-//     R$7,90/mês · anual R$78,90 · 16,8% de desconto
-// Não está claro se é uma OFERTA ESPECIAL pós-trial ou um engano de digitação.
-// Até confirmar, o aviso de dia 15+ usa estes valores (basta trocar aqui depois,
-// ou apontar para PLANS.basico se for engano).
+// CONFIRMADO PELO CLIENTE (Ricardo): o aviso de "teste encerrado" (dia 15+) usa
+// os MESMOS preços do Plano Básico da vitrine (R$8,90/mês · R$87,58/ano · 18%),
+// não uma oferta especial. Por isso derivamos direto de PLANS.basico — assim o
+// número nunca diverge da tela de planos.
 export const POST_TRIAL_OFFER = {
-  confirmed: false, // vira true quando o cliente confirmar
-  monthlyBRL: 7.9,
-  annualBRL: 78.9,
-  discountPct: 16.8,
+  confirmed: true,
+  monthlyBRL: PLANS.basico.monthly.priceBRL,
+  annualBRL: PLANS.basico.annual.priceBRL,
+  discountPct: PLANS.basico.annual.discountPct,
 };
 
 // Aviso de trial (dias 7 e 14) usa o Plano Básico da vitrine.
