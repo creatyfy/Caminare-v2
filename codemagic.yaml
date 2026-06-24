@@ -73,6 +73,21 @@ workflows:
         script: |
           npx cap add ios || true
           npx cap sync ios
+      - name: Configurar iOS (deep links + entitlements)
+        script: |
+          set -e
+          PLIST="ios/App/App/Info.plist"
+          # Esquema custom de deep link (com.caminare.app://) — o Info.plist gerado
+          # pelo Capacitor não traz; adiciona via PlistBuddy (idempotente).
+          /usr/libexec/PlistBuddy -c "Delete :CFBundleURLTypes" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string com.caminare.app" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string com.caminare.app" "$PLIST"
+          # Entitlements: Sign in with Apple + Associated Domains (Universal Links).
+          # ⚠️ Trocar __DOMINIO_PROD__ no arquivo native/ios/App.entitlements antes do release.
+          cp native/ios/App.entitlements ios/App/App/App.entitlements
       - name: Instalar pods
         script: |
           cd ios/App && pod install

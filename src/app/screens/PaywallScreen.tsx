@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Lock, Sparkles, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Check, Lock, Sparkles, RotateCcw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useEntitlement } from '../contexts/EntitlementContext';
+import { useIap } from '../lib/useIap';
+import { productIdFor } from '../lib/iap';
+import { isIOS, isAndroid } from '../lib/native';
 import {
   PLANS,
   PLAN_ORDER,
@@ -12,25 +15,28 @@ import {
   type TierPricing,
 } from '../lib/pricing';
 
-// Tela de planos / paywall (Fase 2 — AINDA SEM IAP).
+// Tela de planos / paywall (Fase B — IAP ligado).
 // Servida em /assinatura. Atende dois cenários:
 //  • Usuário restrito (trial encerrado por dias/75, ou assinatura inativa) é
 //    redirecionado pra cá pelo gating → mostra a mensagem de "teste encerrado".
 //  • Usuário em trial chega via "Ver planos" no Perfil → vitrine de venda.
-// O botão "Assinar" e "Restaurar compras" são STUBS (Fase 4 liga no IAP das lojas).
+// Preço: no app nativo vem JÁ LOCALIZADO do offering da loja (useIap); no web
+// (sem loja) cai no fallback de pricing.ts. "Assinar"/"Restaurar" usam o IAP real.
 export function PaywallScreen() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { status, access } = useEntitlement();
+  const { status, access, refresh } = useEntitlement();
+  const iap = useIap();
 
   // Anual é o destaque (desconto) → cadência padrão.
   const [cadence, setCadence] = useState<Cadence>('annual');
-  const [notice, setNotice] = useState<'payment' | 'restore' | null>(null);
+  const [busyProduct, setBusyProduct] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ kind: 'error' | 'success'; msg: string } | null>(null);
 
   // "Primeiro acesso": enquanto o trial está ATIVO (nunca assinou) a promo de 1º
-  // acesso (anual, 25% off) está disponível. Depois do trial encerrado o header
-  // já usa a oferta pós-trial, então a promo some. Na Fase 4 o offering decide.
-  const firstAccess = status === 'trial' && access === 'full';
+  // acesso (anual, 25% off) está disponível NO FALLBACK web. No app nativo o
+  // offering da loja decide o preço, então a promo não se aplica.
+  const firstAccess = status === 'trial' && access === 'full' && !iap.available;
 
   const restrictedTrial = access === 'restricted' && status === 'trial';
   const restrictedOther = access === 'restricted' && status !== 'trial';
@@ -48,6 +54,45 @@ export function PaywallScreen() {
     title = t('plans.restrictedTitle');
     subtitle = t('plans.restrictedSubtitle');
   }
+
+  async function handleSubscribe(tier: TierPricing['tier']) {
+    if (busyProduct) return;
+    setFeedback(null);
+    const productId = productIdFor(tier, cadence);
+    setBusyProduct(productId);
+    try {
+      const r = await iap.purchase(tier, cadence);
+      if (r === 'cancelled') return; // usuário fechou o pagamento — sem aviso
+      await refresh();
+      navigate('/home', { replace: true });
+    } catch {
+      setFeedback({ kind: 'error', msg: t('plans.purchaseError') });
+    } finally {
+      setBusyProduct(null);
+    }
+  }
+
+  async function handleRestore() {
+    if (iap.restoring) return;
+    setFeedback(null);
+    try {
+      await iap.restore();
+      await refresh();
+      // refresh() atualiza `access` no próximo render; checamos o valor atual.
+      setFeedback({
+        kind: 'success',
+        msg: access === 'restricted' ? t('plans.restoreNone') : t('plans.restoreSuccess'),
+      });
+    } catch {
+      setFeedback({ kind: 'error', msg: t('plans.restoreError') });
+    }
+  }
+
+  const manageText = isIOS
+    ? t('plans.manageApple')
+    : isAndroid
+      ? t('plans.manageGoogle')
+      : `${t('plans.manageApple')} ${t('plans.manageGoogle')}`;
 
   return (
     <div
@@ -118,24 +163,31 @@ export function PaywallScreen() {
 
       {/* Cards de plano */}
       <div style={{ padding: '20px 24px 4px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {PLAN_ORDER.map((tier) => (
-          <PlanCard
-            key={tier}
-            plan={PLANS[tier]}
-            cadence={cadence}
-            firstAccess={firstAccess}
-            onSubscribe={() => setNotice('payment')}
-          />
-        ))}
+        {PLAN_ORDER.map((tier) => {
+          const productId = productIdFor(tier, cadence);
+          const offering = iap.offerings.get(productId);
+          return (
+            <PlanCard
+              key={tier}
+              plan={PLANS[tier]}
+              cadence={cadence}
+              firstAccess={firstAccess}
+              storePrice={offering?.priceText ?? null}
+              loading={busyProduct === productId}
+              disabled={Boolean(busyProduct) || iap.restoring}
+              onSubscribe={() => handleSubscribe(tier)}
+            />
+          );
+        })}
       </div>
 
-      {/* Aviso discreto "pagamento em breve" / restauração */}
-      {notice && (
+      {/* Feedback de compra/restauração */}
+      {feedback && (
         <div style={{ padding: '4px 24px 0 24px' }}>
           <div
             style={{
-              backgroundColor: 'var(--cam-bg-tint)',
-              color: 'var(--cam-text-brand)',
+              backgroundColor: feedback.kind === 'error' ? 'var(--cam-bg-danger, #FDECEC)' : 'var(--cam-bg-tint)',
+              color: feedback.kind === 'error' ? 'var(--cam-text-danger, #B42318)' : 'var(--cam-text-brand)',
               borderRadius: '12px',
               padding: '10px 14px',
               fontSize: '13px',
@@ -143,16 +195,41 @@ export function PaywallScreen() {
               textAlign: 'center',
             }}
           >
-            {notice === 'payment' ? t('plans.paymentSoon') : t('plans.restoreSoon')}
+            {feedback.msg}
           </div>
         </div>
       )}
 
-      {/* Rodapé: restaurar compras (stub) + atalho pros insights se restrito */}
+      {/* Aviso de assinatura auto-renovável (exigência Apple/Google) */}
+      <div style={{ padding: '16px 24px 0 24px' }}>
+        <p style={{ fontSize: '12px', color: 'var(--cam-text-secondary)', margin: 0, lineHeight: 1.5, textAlign: 'center' }}>
+          {t('plans.autoRenew', {
+            cadence:
+              cadence === 'annual' ? t('plans.cadenceAnnualWord') : t('plans.cadenceMonthlyWord'),
+          })}
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--cam-text-secondary)', margin: '6px 0 0 0', lineHeight: 1.5, textAlign: 'center' }}>
+          {manageText}
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--cam-text-secondary)', margin: '6px 0 0 0', lineHeight: 1.5, textAlign: 'center' }}>
+          {t('plans.legalIntro')}{' '}
+          <a href="/termos" target="_blank" rel="noopener noreferrer" style={legalLinkStyle}>
+            {t('legal.termsLink')}
+          </a>{' '}
+          {t('plans.legalAnd')}{' '}
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer" style={legalLinkStyle}>
+            {t('legal.privacyLink')}
+          </a>
+          .
+        </p>
+      </div>
+
+      {/* Rodapé: restaurar compras + atalho pros insights se restrito */}
       <div style={{ padding: '16px 24px 0 24px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
         <button
           type="button"
-          onClick={() => setNotice('restore')}
+          onClick={handleRestore}
+          disabled={iap.restoring || Boolean(busyProduct)}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -162,12 +239,13 @@ export function PaywallScreen() {
             color: 'var(--cam-text-secondary)',
             fontSize: '14px',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: iap.restoring ? 'default' : 'pointer',
             fontFamily: 'inherit',
+            opacity: iap.restoring ? 0.7 : 1,
           }}
         >
-          <RotateCcw size={15} strokeWidth={2.2} />
-          {t('plans.restore')}
+          {iap.restoring ? <Loader2 size={15} strokeWidth={2.2} className="animate-spin" /> : <RotateCcw size={15} strokeWidth={2.2} />}
+          {iap.restoring ? t('plans.restoring') : t('plans.restore')}
         </button>
 
         {access === 'restricted' && (
@@ -260,11 +338,17 @@ function PlanCard({
   plan,
   cadence,
   firstAccess,
+  storePrice,
+  loading,
+  disabled,
   onSubscribe,
 }: {
   plan: TierPricing;
   cadence: Cadence;
   firstAccess: boolean;
+  storePrice: string | null;
+  loading: boolean;
+  disabled: boolean;
   onSubscribe: () => void;
 }) {
   const { t } = useTranslation();
@@ -274,19 +358,22 @@ function PlanCard({
   const tierLabel = t(`plans.tier${capitalize(plan.tier)}` as const);
   const tagline = plan.tier === 'basico' ? t('plans.basicoTagline') : t('plans.avancadoTagline');
 
-  // Preço grande + sufixo
+  // Preço grande + sufixo. Loja (localizado) > promo de 1º acesso > vitrine.
+  const suffix = isAnnual ? t('plans.perYearSuffix') : t('plans.perMonthSuffix');
   let price: string;
-  let suffix: string;
-  if (!isAnnual) {
+  if (storePrice) {
+    price = storePrice; // já localizado pela loja (moeda do país)
+  } else if (!isAnnual) {
     price = formatBRL(plan.monthly.priceBRL);
-    suffix = t('plans.perMonthSuffix');
   } else if (usePromo) {
     price = formatBRL(plan.firstAccessPromo.priceBRL);
-    suffix = t('plans.perYearSuffix');
   } else {
     price = formatBRL(plan.annual.priceBRL);
-    suffix = t('plans.perYearSuffix');
   }
+
+  // Linhas de apoio (equivalente mensal / preço riscado da promo) só fazem
+  // sentido no fallback da vitrine; com preço da loja mostramos só o preço.
+  const showSupportLines = isAnnual && !storePrice;
 
   return (
     <div
@@ -337,8 +424,8 @@ function PlanCard({
         <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--cam-text-secondary)' }}>{suffix}</span>
       </div>
 
-      {/* Linha de apoio (equivalente mensal + desconto, no anual) */}
-      {isAnnual && (
+      {/* Linha de apoio (equivalente mensal + promo, só no fallback) */}
+      {showSupportLines && (
         <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <span style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', fontWeight: 500 }}>
             {t('plans.annualEquiv', {
@@ -361,10 +448,11 @@ function PlanCard({
         </span>
       </div>
 
-      {/* Assinar (STUB) */}
+      {/* Assinar */}
       <button
         type="button"
         onClick={onSubscribe}
+        disabled={disabled}
         style={{
           marginTop: '18px',
           width: '100%',
@@ -376,11 +464,17 @@ function PlanCard({
           boxShadow: isAnnual ? 'var(--cam-shadow-brand)' : 'none',
           fontSize: '16px',
           fontWeight: 700,
-          cursor: 'pointer',
+          cursor: disabled ? 'default' : 'pointer',
+          opacity: disabled && !loading ? 0.6 : 1,
           fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
         }}
       >
-        {t('plans.subscribe')}
+        {loading && <Loader2 size={18} strokeWidth={2.4} className="animate-spin" />}
+        {loading ? t('plans.subscribing') : t('plans.subscribe')}
       </button>
     </div>
   );
@@ -389,3 +483,9 @@ function PlanCard({
 function capitalize<T extends string>(s: T): Capitalize<T> {
   return (s.charAt(0).toUpperCase() + s.slice(1)) as Capitalize<T>;
 }
+
+const legalLinkStyle: React.CSSProperties = {
+  color: 'var(--cam-text-brand)',
+  fontWeight: 700,
+  textDecoration: 'underline',
+};

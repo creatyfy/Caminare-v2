@@ -13,10 +13,13 @@ export const platform = Capacitor.getPlatform(); // 'web' | 'ios' | 'android'
 export const isIOS = platform === 'ios';
 export const isAndroid = platform === 'android';
 
-// Painel de teste de assinatura (admin): só aparece quando a flag está ligada.
-// Em produção (build da loja / Vercel sem a env) fica escondido — exigência da
-// Apple/Google de não deixar ferramenta de teste visível.
-export const showDevTools = import.meta.env.VITE_SHOW_DEV_TOOLS === 'true';
+// Painel de teste de assinatura (admin): só aparece em DEV e com a flag ligada.
+// Dupla trava de propósito — em QUALQUER build de produção (`vite build`, que é
+// o usado no CI/lojas) `import.meta.env.DEV` é false, então o painel NUNCA
+// renderiza, mesmo que alguém defina VITE_SHOW_DEV_TOOLS por engano. Exigência
+// da Apple/Google de não deixar ferramenta de teste visível.
+export const showDevTools =
+  import.meta.env.DEV === true && import.meta.env.VITE_SHOW_DEV_TOOLS === 'true';
 
 // Esquema de deep link do app (precisa bater com o intent-filter do Android e o
 // CFBundleURLSchemes do iOS, e estar na allow-list de Redirect URLs do Supabase).

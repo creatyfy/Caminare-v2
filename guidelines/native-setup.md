@@ -35,8 +35,8 @@ Esquema custom: `com.caminare.app://`
 - `com.caminare.app://reset-callback` — retorno do link de reset de senha
 
 Android: intent-filter já adicionado em `android/app/src/main/AndroidManifest.xml`.
-iOS (TODO no Mac): adicionar em `ios/App/App/Info.plist` o `CFBundleURLTypes` com o
-scheme `com.caminare.app`.
+iOS: o `codemagic.yaml` injeta o `CFBundleURLTypes` (scheme `com.caminare.app`) no
+`Info.plist` via PlistBuddy após `npx cap add ios` — não precisa fazer à mão.
 
 ## ⚠️ Configuração externa pendente (sem isto o login social não funciona no app)
 
@@ -79,8 +79,23 @@ speech-to-text dedicado, declarar:
 - Grupo `app_env`: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. **Não** definir
   `VITE_SHOW_DEV_TOOLS` (mantém o painel de teste escondido em produção).
 
-## Pendente p/ Fase 4 (IAP)
+## IAP (compras) — LIGADO
 
-`src/app/lib/iap.ts` tem `startPurchase`/`restorePurchases` como STUB. A Fase 4 liga o
-plugin de compras (StoreKit/Billing) e chama `validatePurchase` com o token real.
-Sem o IAP real, **não** enviar pra revisão (a tela de planos não pode ir com botão stub).
+`src/app/lib/iap.ts` usa **cordova-plugin-purchase (CdvPurchase v13)** — DIY, sem
+RevenueCat. O `PaywallScreen` lê o *offering* da loja (preço já localizado),
+dispara a compra nativa, e ao aprovar envia o recibo/token p/ `/api/validate-purchase`
+validar e ativar a assinatura. "Restaurar compras" usa `store.restorePurchases()`.
+Os 4 product IDs (assinatura auto-renovável) já estão criados nas lojas.
+
+Backend de validação precisa das env vars de loja (Vercel) — ver `.env.example` e o
+README (`APPLE_IAP_*`, `GOOGLE_*`). Sem elas, a validação responde 503 tratado.
+
+## Universal Links / App Links (camada extra ao esquema custom)
+
+Além do `com.caminare.app://`, há suporte a links **https** abrindo o app:
+- `public/.well-known/assetlinks.json` (Android) e `apple-app-site-association` (iOS),
+  servidos pela Vercel (ver `vercel.json`).
+- AndroidManifest tem um intent-filter `autoVerify=true`; iOS usa Associated Domains
+  em `native/ios/App.entitlements`.
+- ⚠️ Trocar `__DOMINIO_PROD__`, `__SHA256_FINGERPRINT_RELEASE__` e `__APPLE_TEAM_ID__`
+  antes do release (ver README). A `NativeAuthBridge` já trata ambos os formatos.
