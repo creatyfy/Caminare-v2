@@ -32,6 +32,9 @@ import { getProfile } from './lib/db';
 const LegalScreen = lazy(() =>
   import('./screens/LegalScreen').then((m) => ({ default: m.LegalScreen }))
 );
+const DeleteAccountScreen = lazy(() =>
+  import('./screens/DeleteAccountScreen').then((m) => ({ default: m.DeleteAccountScreen }))
+);
 const AdminScreen = lazy(() =>
   import('./screens/AdminScreen').then((m) => ({ default: m.AdminScreen }))
 );
@@ -105,6 +108,14 @@ function AppRoutes() {
           element={
             <Suspense fallback={null}>
               <LegalScreen kind="privacy" />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/excluir-conta"
+          element={
+            <Suspense fallback={null}>
+              <DeleteAccountScreen />
             </Suspense>
           }
         />
