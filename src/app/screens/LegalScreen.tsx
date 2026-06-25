@@ -1,13 +1,19 @@
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { legalDocs, type LegalKind, type LegalBlock } from '../content/legal';
+import { legalDocs, type LegalKind, type LegalBlock, type LegalDoc } from '../content/legal';
 
 export function LegalScreen({ kind }: { kind: LegalKind }) {
-  const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('en') ? 'en' : 'pt-BR';
-  const doc = legalDocs[kind][lang];
+  return <LegalView doc={legalDocs[kind][lang]} />;
+}
+
+// Layout reutilizável de página jurídica/informativa pública (Termos,
+// Privacidade, Exclusão de Conta). Recebe um LegalDoc já resolvido no idioma.
+export function LegalView({ doc }: { doc: LegalDoc }) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
