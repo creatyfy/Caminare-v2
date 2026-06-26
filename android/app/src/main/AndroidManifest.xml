@@ -63,4 +63,17 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Gravação por voz com transcrição nativa (@capacitor-community/speech-recognition).
+         RECORD_AUDIO é exigida pelo SpeechRecognizer. Nenhum áudio é gravado/guardado:
+         o sistema transcreve e nós só recebemos o texto. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Android 11+ (package visibility): permite localizar o serviço de
+         reconhecimento de fala do aparelho. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 </manifest>

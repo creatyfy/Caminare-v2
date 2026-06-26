@@ -63,12 +63,27 @@ Em **Authentication → URL Configuration → Redirect URLs**, adicionar:
   está publicada e o domínio do Supabase autorizado.
 - Confirmar que o redirect do Supabase está na allow-list (item 1).
 
-### 4. Permissão de microfone (ditado)
-A voz agora usa o **ditado do teclado nativo** (não há plugin de microfone do app),
-então o app **não** pede permissão de microfone. Se no futuro entrar um plugin de
-speech-to-text dedicado, declarar:
-- iOS: `NSMicrophoneUsageDescription` e `NSSpeechRecognitionUsageDescription` no Info.plist.
-- Android: `RECORD_AUDIO` no AndroidManifest.
+### 4. Gravação por voz com transcrição nativa
+"Novo Registro por Voz" usa **transcrição nativa em tempo real** via
+`@capacitor-community/speech-recognition` (SFSpeechRecognizer no iOS,
+SpeechRecognizer no Android). No **web** o motor é a **Web Speech API**
+(`webkitSpeechRecognition`). A escolha é por plataforma (`isNative`) em
+`src/app/lib/speech.ts`; a UI (`TextRecordingScreen`) é a mesma nos dois.
+**Nenhum áudio é gravado/armazenado** — o sistema do aparelho transcreve e o app só
+guarda o texto.
+
+Permissões/strings que entram no build nativo (já configuradas no repo):
+- **iOS** (`Info.plist`): `NSMicrophoneUsageDescription` e
+  `NSSpeechRecognitionUsageDescription`, ambas com
+  _"O Caminare usa o microfone para transcrever sua fala em texto no seu registro."_
+  → injetadas via PlistBuddy no `codemagic.yaml` (passo "Configurar iOS"), porque a
+  pasta `ios/` é gerada no Mac. Se rodar `npx cap add ios` manualmente, rode também
+  esse passo (ou adicione as duas chaves à mão no Xcode).
+- **Android** (`AndroidManifest.xml`): `RECORD_AUDIO` + `<queries>` com
+  `android.speech.RecognitionService` (visibilidade de pacote no Android 11+) — já no
+  manifesto versionado.
+- Rodar `npm run native:build` (faz `cap sync`) depois de instalar o plugin para
+  registrar o nativo no Android/iOS.
 
 ### 5. Codemagic (build/assinatura)
 - Android: grupo `android_signing` com keystore (`CM_KEYSTORE` em base64,
