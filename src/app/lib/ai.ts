@@ -7,6 +7,7 @@
 // =============================================================================
 
 import { supabase } from './supabase';
+import { apiUrl } from './api';
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
@@ -18,7 +19,8 @@ async function authHeaders(): Promise<Record<string, string>> {
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(path, {
+  // apiUrl() prefixa a base absoluta no app nativo (no web fica relativo).
+  const res = await fetch(apiUrl(path), {
     method: 'POST',
     headers: await authHeaders(),
     body: JSON.stringify(body),
