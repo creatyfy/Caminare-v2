@@ -15,6 +15,7 @@
 
 import { supabase } from './supabase';
 import { isNative, isIOS } from './native';
+import { apiUrl } from './api';
 import type { Cadence, Tier } from './pricing';
 
 export type StorePlatform = 'apple' | 'google';
@@ -63,7 +64,7 @@ export async function validatePurchase(input: {
   const { data } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
 
-  const res = await fetch('/api/validate-purchase', {
+  const res = await fetch(apiUrl('/api/validate-purchase'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
