@@ -10,3 +10,11 @@ dist/
 
 # Chaves privadas da Apple (Sign in with Apple) — NUNCA commitar
 *.p8
+
+# Assinatura Android — NUNCA commitar. Keystore e senhas vivem no Codemagic (CM_*);
+# o key.properties é gerado no build. Tudo isto é segredo de upload do app.
+*.jks
+*.keystore
+key.properties
+android/key.properties
+android-signing-SECRETO.txt

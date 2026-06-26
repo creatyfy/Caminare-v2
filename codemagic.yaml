@@ -43,11 +43,14 @@ workflows:
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/*.apk
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
+    # 1º build: ainda NÃO temos a conta de serviço do Google Play. Vamos baixar o
+    # .aab dos artifacts e subir manualmente na Play Console. Quando a conta de
+    # serviço (GCLOUD_SERVICE_ACCOUNT_CREDENTIALS) estiver configurada, descomente.
+    # publishing:
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal
+    #     submit_as_draft: true
 
   ios:
     name: iOS (App Store)
