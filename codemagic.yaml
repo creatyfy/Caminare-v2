@@ -25,6 +25,11 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm ci
+      - name: Gerar .env de produção
+        script: |
+          printf "VITE_SUPABASE_URL=%s\n" "$VITE_SUPABASE_URL" > .env.production
+          printf "VITE_SUPABASE_ANON_KEY=%s\n" "$VITE_SUPABASE_ANON_KEY" >> .env.production
+          echo "URL len: ${#VITE_SUPABASE_URL} | ANON len: ${#VITE_SUPABASE_ANON_KEY}"
       - name: Build web + sync Capacitor
         script: npm run native:build
       - name: Configurar keystore
@@ -71,6 +76,11 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm ci
+      - name: Gerar .env de produção
+        script: |
+          printf "VITE_SUPABASE_URL=%s\n" "$VITE_SUPABASE_URL" > .env.production
+          printf "VITE_SUPABASE_ANON_KEY=%s\n" "$VITE_SUPABASE_ANON_KEY" >> .env.production
+          echo "URL len: ${#VITE_SUPABASE_URL} | ANON len: ${#VITE_SUPABASE_ANON_KEY}"
       - name: Build web
         script: npm run build
       - name: Adicionar plataforma iOS (não versionada)
