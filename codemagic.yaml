@@ -85,6 +85,14 @@ workflows:
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string com.caminare.app" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" "$PLIST"
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string com.caminare.app" "$PLIST"
+          # Permissões de voz (gravação por voz com transcrição nativa). O Info.plist
+          # gerado pelo Capacitor não traz; sem estas strings o iOS rejeita o uso de
+          # microfone/SFSpeechRecognizer (crash) e a App Store reprova. Idempotente.
+          MIC_MSG="O Caminare usa o microfone para transcrever sua fala em texto no seu registro."
+          /usr/libexec/PlistBuddy -c "Delete :NSMicrophoneUsageDescription" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string $MIC_MSG" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Delete :NSSpeechRecognitionUsageDescription" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSSpeechRecognitionUsageDescription string $MIC_MSG" "$PLIST"
           # Entitlements: Sign in with Apple + Associated Domains (Universal Links).
           # ⚠️ Trocar __DOMINIO_PROD__ no arquivo native/ios/App.entitlements antes do release.
           cp native/ios/App.entitlements ios/App/App/App.entitlements
