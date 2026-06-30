@@ -61,7 +61,11 @@ export function EmotionValidationScreen() {
           }
         } catch (err) {
           console.error('[EmotionValidation] process-entry falhou:', err);
-          if (active) setAnalyzeError(t('emotionValidation.analyzeError'));
+          // Mostra a mensagem REAL (status + texto da resposta / falha de rede)
+          // para diagnosticar — antes o erro só ia pro console (invisível no app
+          // nativo) e a tela exibia um texto genérico.
+          const detail = err instanceof Error ? err.message : String(err);
+          if (active) setAnalyzeError(`${t('emotionValidation.analyzeError')} — ${detail}`);
         }
         if (!active) return;
         setAnalyzing(false);

@@ -15,6 +15,7 @@ import {
   sendJson,
   sendError,
 } from './_lib/runtime.js';
+import { applyCors } from './_lib/cors.js';
 import { runStructured, CLAUDE_MODEL } from './_lib/claude.js';
 import { SYSTEM_PROCESS_ENTRY, buildProcessEntryUser } from './_lib/prompts.js';
 
@@ -72,6 +73,8 @@ function mapIntensity(v?: string): 'subtle' | 'moderate' | 'strong' | 'very_stro
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   const body = readJsonBody<Body>(req, res);
   if (!body) return;
 

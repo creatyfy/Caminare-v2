@@ -18,6 +18,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { readJsonBody, serviceClient, sendJson, sendError } from './_lib/runtime.js';
+import { applyCors } from './_lib/cors.js';
 import { productInfo, IapNotConfiguredError } from './_lib/iap-products.js';
 import { parseAppleNotification } from './_lib/iap-apple.js';
 import {
@@ -41,6 +42,8 @@ interface Body {
 type Db = ReturnType<typeof serviceClient>;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   const body = readJsonBody<Body>(req, res);
   if (!body) return;
 
