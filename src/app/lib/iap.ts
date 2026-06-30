@@ -64,18 +64,26 @@ export async function validatePurchase(input: {
   const { data } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
 
-  const res = await fetch(apiUrl('/api/validate-purchase'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: JSON.stringify({
-      platform: input.platform,
-      product_id: input.productId,
-      token: input.token,
-    }),
-  });
+  const url = apiUrl('/api/validate-purchase');
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: JSON.stringify({
+        platform: input.platform,
+        product_id: input.productId,
+        token: input.token,
+      }),
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error(`[iap] falha de rede/CORS em ${url}:`, detail);
+    throw new Error(`Falha de conexão ao validar a compra (${detail}). Verifique VITE_API_BASE_URL e o CORS da função.`);
+  }
 
   const text = await res.text();
   let json: unknown = {};
@@ -85,7 +93,10 @@ export async function validatePurchase(input: {
     // resposta não-JSON → tratada como erro abaixo
   }
   if (!res.ok) {
-    throw new Error((json as { error?: string })?.error || `Erro ${res.status}`);
+    const apiMsg = (json as { error?: string })?.error;
+    const snippet = text ? text.slice(0, 300) : '(corpo vazio)';
+    console.error(`[iap] validate-purchase respondeu ${res.status}:`, snippet);
+    throw new Error(apiMsg || `Erro ${res.status} em /api/validate-purchase: ${snippet}`);
   }
   return json as ValidatePurchaseResult;
 }

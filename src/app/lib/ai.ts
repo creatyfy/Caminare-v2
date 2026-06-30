@@ -20,11 +20,24 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   // apiUrl() prefixa a base absoluta no app nativo (no web fica relativo).
-  const res = await fetch(apiUrl(path), {
-    method: 'POST',
-    headers: await authHeaders(),
-    body: JSON.stringify(body),
-  });
+  const url = apiUrl(path);
+
+  // fetch só rejeita em falha de REDE/CORS (não em status HTTP de erro). No app
+  // nativo é o caso mais comum: preflight CORS bloqueado ou domínio errado.
+  // Capturamos para reportar uma mensagem útil em vez de "Failed to fetch".
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error(`[ai] falha de rede/CORS em ${url}:`, detail);
+    throw new Error(`Falha de conexão ao chamar ${path} (${detail}). Verifique VITE_API_BASE_URL e o CORS da função.`);
+  }
+
   const text = await res.text();
   let json: unknown = {};
   try {
@@ -33,8 +46,11 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
     // resposta não-JSON (ex.: HTML de erro) — trataremos como erro abaixo
   }
   if (!res.ok) {
-    const msg = (json as { error?: string })?.error || `Erro ${res.status}`;
-    throw new Error(msg);
+    // Mostra status + corpo (texto da resposta) para diagnosticar o erro real.
+    const apiMsg = (json as { error?: string })?.error;
+    const snippet = text ? text.slice(0, 300) : '(corpo vazio)';
+    console.error(`[ai] ${path} respondeu ${res.status}:`, snippet);
+    throw new Error(apiMsg || `Erro ${res.status} em ${path}: ${snippet}`);
   }
   return json as T;
 }

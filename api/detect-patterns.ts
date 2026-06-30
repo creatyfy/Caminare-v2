@@ -15,6 +15,7 @@ import {
   sendJson,
   sendError,
 } from './_lib/runtime.js';
+import { applyCors } from './_lib/cors.js';
 import { runStructured } from './_lib/claude.js';
 import { SYSTEM_DETECT_PATTERNS, buildDetectPatternsUser } from './_lib/prompts.js';
 
@@ -55,6 +56,8 @@ const asStrArray = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string' && !!x.trim()).map((x) => x.trim()) : [];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   const body = readJsonBody<Body>(req, res);
   if (!body) return;
 

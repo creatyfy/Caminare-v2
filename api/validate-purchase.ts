@@ -12,6 +12,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { readJsonBody, requireUser, serviceClient, sendJson, sendError } from './_lib/runtime.js';
+import { applyCors } from './_lib/cors.js';
 import {
   productInfo,
   IapNotConfiguredError,
@@ -32,6 +33,8 @@ interface Body {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (applyCors(req, res)) return;
+
   const body = readJsonBody<Body>(req, res);
   if (!body) return;
 
