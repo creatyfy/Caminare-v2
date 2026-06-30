@@ -53,10 +53,12 @@ export async function initNative(): Promise<void> {
   if (!isNative) return;
   try {
     const { StatusBar, Style } = await import('@capacitor/status-bar');
+    // Edge-to-edge: status bar transparente, webview desenha atrás. O conteúdo
+    // respeita o inset via CSS (env(safe-area-inset-top) no container raiz).
+    await StatusBar.setOverlaysWebView({ overlay: true });
+    // Ícones escuros (cam-bg-page é claro). Em overlay o backgroundColor é
+    // ignorado (a barra é transparente), então não chamamos setBackgroundColor.
     await StatusBar.setStyle({ style: Style.Light });
-    if (isAndroid) {
-      await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
-    }
   } catch (e) {
     console.warn('[native] StatusBar indisponível:', e);
   }

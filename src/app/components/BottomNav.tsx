@@ -29,6 +29,10 @@ export function BottomNav() {
         backgroundColor: 'var(--cam-bg-card)',
         borderTop: `1px solid var(--cam-border-subtle)`,
         zIndex: 50,
+        // Edge-to-edge: a barra é fixa na viewport (ignora o padding do shell),
+        // então some o inset da base aqui — a linha de ícones sobe acima da barra
+        // de navegação do sistema e o fundo do card preenche atrás dela.
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       <div
