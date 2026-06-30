@@ -163,9 +163,24 @@ export default function App() {
           <BrowserRouter>
             <PendingPatternProvider>
               <NativeAuthBridge />
+              {/* Container raiz do app. No nativo (edge-to-edge, Android 15/iOS):
+                  - 100dvh em vez de 100vh: a altura acompanha a viewport real do
+                    webview (não estoura com as barras/toolbar dinâmica).
+                  - padding de safe area nas 4 bordas (box-border): o conteúdo
+                    nunca fica embaixo da status bar (topo) nem da barra de
+                    navegação/notch (base e laterais). A BottomNav, por ser fixed,
+                    trata o inset da base por conta própria. */}
               <div
-                className="h-screen w-full max-w-[375px] mx-auto relative overflow-hidden"
-                style={{ backgroundColor: 'var(--cam-bg-page)' }}
+                className="w-full max-w-[375px] mx-auto relative overflow-hidden"
+                style={{
+                  backgroundColor: 'var(--cam-bg-page)',
+                  height: '100dvh',
+                  boxSizing: 'border-box',
+                  paddingTop: 'env(safe-area-inset-top)',
+                  paddingBottom: 'env(safe-area-inset-bottom)',
+                  paddingLeft: 'env(safe-area-inset-left)',
+                  paddingRight: 'env(safe-area-inset-right)',
+                }}
               >
                 <AppRoutes />
               </div>

@@ -12,12 +12,6 @@ import {
   type EmotionFull,
 } from '../lib/db';
 import { processEntry, analyzeBeliefs } from '../lib/ai';
-import { apiUrl, API_BASE } from '../lib/api';
-
-// [DEBUG TEMPORÁRIO] URL final da função que gera as emoções. No APK precisa ser
-// a ABSOLUTA da Vercel; se for só "/api/process-entry" a VITE_API_BASE_URL não
-// entrou no build. Remover este bloco e o banner quando o diagnóstico terminar.
-const PROCESS_ENTRY_URL = apiUrl('/api/process-entry');
 
 export function EmotionValidationScreen() {
   const navigate = useNavigate();
@@ -68,7 +62,7 @@ export function EmotionValidationScreen() {
             }
             if (active && finalStatus !== 'done') {
               setAnalyzeError(
-                `${t('emotionValidation.analyzeError')} — análise não concluiu (status: ${finalStatus}). URL: ${PROCESS_ENTRY_URL}`
+                `${t('emotionValidation.analyzeError')} — análise não concluiu (status: ${finalStatus}).`
               );
             }
           }
@@ -234,23 +228,6 @@ export function EmotionValidationScreen() {
               {analyzing ? <AnalyzingMessages /> : t('common.loading')}
             </div>
           )}
-
-          {/* [DEBUG TEMPORÁRIO] Confirma a URL absoluta no APK. Remover depois. */}
-          <div
-            style={{
-              backgroundColor: 'var(--cam-bg-error-soft)',
-              color: 'var(--cam-text-secondary)',
-              borderRadius: '12px',
-              padding: '10px 12px',
-              fontSize: '11px',
-              fontFamily: 'monospace',
-              wordBreak: 'break-all',
-              marginBottom: '16px',
-              lineHeight: 1.4,
-            }}
-          >
-            DEBUG · API_BASE="{API_BASE || '(vazio → relativo)'}" · chamando: {PROCESS_ENTRY_URL}
-          </div>
 
           {!loading && analyzeError && (
             <div

@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { supabase } from './supabase';
-import { apiUrl, API_BASE } from './api';
+import { apiUrl } from './api';
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
@@ -21,12 +21,6 @@ async function authHeaders(): Promise<Record<string, string>> {
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   // apiUrl() prefixa a base absoluta no app nativo (no web fica relativo).
   const url = apiUrl(path);
-
-  // [DEBUG TEMPORÁRIO] Mostra a URL final chamada. No APK precisa ser a ABSOLUTA
-  // da Vercel (https://caminare-v2.vercel.app/api/...). Se aparecer só "/api/..."
-  // relativa, a VITE_API_BASE_URL não entrou no build → chamada vai pro
-  // capacitor://localhost e falha. Remover quando o diagnóstico terminar.
-  console.warn(`[ai][debug] POST ${url} (API_BASE="${API_BASE}")`);
 
   // fetch só rejeita em falha de REDE/CORS (não em status HTTP de erro). No app
   // nativo é o caso mais comum: preflight CORS bloqueado ou domínio errado.
