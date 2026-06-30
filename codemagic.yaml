@@ -89,6 +89,10 @@ workflows:
         script: |
           npx cap add ios || true
           npx cap sync ios
+          # Ícones + splash da marca (coruja) a partir de assets/. A pasta ios/ só
+          # existe aqui no CI, então geramos os ícones do iOS neste passo (no
+          # Android os assets já vêm versionados em android/.../res/).
+          npx @capacitor/assets generate --ios
       - name: Configurar iOS (deep links + entitlements)
         script: |
           set -e
