@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { getEntriesForSummary, getProfile, type EntryDetail, type Profile } from '../lib/db';
 import { formatDate } from '../lib/format';
+import { isNative } from '../lib/native';
+import { sharePdfNative } from '../lib/pdfShare';
 import type { TherapyReportData } from '../lib/pdf/TherapyReportPDF';
 
 type SummaryPeriod = '7days' | '15days' | '30days';
@@ -21,6 +23,7 @@ export function SummaryScreen() {
   const [period, setPeriod] = useState<SummaryPeriod>('30days');
   const [pdfBusy, setPdfBusy] = useState<PdfBusy>('idle');
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pdfSuccess, setPdfSuccess] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<EntryDetail | null>(null);
 
   useEffect(() => {
@@ -155,9 +158,22 @@ export function SummaryScreen() {
     if (pdfBusy !== 'idle' || loading || entries.length === 0) return;
     setPdfBusy('downloading');
     setPdfError(null);
+    setPdfSuccess(null);
     try {
       const blob = await buildPdfBlob();
-      triggerDownload(blob, buildFilename());
+      const filename = buildFilename();
+      if (isNative) {
+        // Nativo: <a download> não funciona no webview. Salva o arquivo e abre a
+        // folha nativa (que inclui "Salvar em Arquivos"/Drive).
+        await sharePdfNative(blob, filename, {
+          title: t('summary.pdfTitle'),
+          text: t('summary.shareText'),
+          dialogTitle: t('summary.pdfDialogTitle'),
+        });
+        setPdfSuccess(t('summary.pdfNativeDone'));
+      } else {
+        triggerDownload(blob, filename);
+      }
     } catch (err) {
       console.error('[pdf.download]', err);
       setPdfError(t('summary.pdfError'));
@@ -170,11 +186,25 @@ export function SummaryScreen() {
     if (pdfBusy !== 'idle' || loading || entries.length === 0) return;
     setPdfBusy('sharing');
     setPdfError(null);
+    setPdfSuccess(null);
     try {
       const blob = await buildPdfBlob();
       const filename = buildFilename();
-      const file = new File([blob], filename, { type: 'application/pdf' });
 
+      // Nativo (Capacitor): navigator.share de arquivos não funciona no webview.
+      // Usa Filesystem + Share (folha de compartilhamento nativa).
+      if (isNative) {
+        await sharePdfNative(blob, filename, {
+          title: t('summary.pdfTitle'),
+          text: t('summary.shareText'),
+          dialogTitle: t('summary.pdfDialogTitle'),
+        });
+        setPdfSuccess(t('summary.pdfNativeDone'));
+        return;
+      }
+
+      // Web: Web Share API de arquivos quando disponível, senão download direto.
+      const file = new File([blob], filename, { type: 'application/pdf' });
       const canShareFiles =
         typeof navigator !== 'undefined' &&
         typeof navigator.share === 'function' &&
@@ -455,6 +485,23 @@ export function SummaryScreen() {
               }}
             >
               {pdfError}
+            </div>
+          )}
+
+          {pdfSuccess && (
+            <div
+              role="status"
+              style={{
+                backgroundColor: 'var(--cam-bg-accent-soft)',
+                color: 'var(--cam-text-accent)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                fontSize: '13px',
+                fontWeight: 500,
+                marginBottom: '12px',
+              }}
+            >
+              {pdfSuccess}
             </div>
           )}
 

@@ -284,6 +284,8 @@ export const en = {
     pdfError: 'Could not generate the PDF. Try again.',
     generating: 'Generating...',
     shareText: 'My Caminare summary',
+    pdfNativeDone: 'Done! Use the menu to save to Files or share.',
+    pdfDialogTitle: 'Therapy Summary',
   },
   profile: {
     title: 'Profile',

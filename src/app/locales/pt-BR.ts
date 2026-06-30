@@ -284,6 +284,8 @@ export const ptBR = {
     pdfError: 'Não foi possível gerar o PDF. Tente novamente.',
     generating: 'Gerando...',
     shareText: 'Meu resumo do Caminare',
+    pdfNativeDone: 'Pronto! Use o menu para salvar em Arquivos ou compartilhar.',
+    pdfDialogTitle: 'Resumo para Terapia',
   },
   profile: {
     title: 'Perfil',

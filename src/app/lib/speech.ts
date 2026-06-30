@@ -81,6 +81,8 @@ export function useSpeechToText(): SpeechToText {
   // Nativo
   const committedRef = useRef(''); // utterances já fechadas (Android fecha a cada pausa)
   const lastPartialRef = useRef('');
+  const restartingRef = useRef(false); // evita reinícios concorrentes (BUSY)
+  const watchdogRef = useRef<ReturnType<typeof setInterval> | null>(null); // detecta morte sem evento 'stopped'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nativeRef = useRef<any>(null);
 
@@ -88,6 +90,10 @@ export function useSpeechToText(): SpeechToText {
     manualStopRef.current = true;
     activeRef.current = false;
     setListening(false);
+    if (watchdogRef.current) {
+      clearInterval(watchdogRef.current);
+      watchdogRef.current = null;
+    }
     if (isNative) {
       try {
         if (nativeRef.current) {
@@ -189,6 +195,44 @@ export function useSpeechToText(): SpeechToText {
   }
 
   // ------------------------------------------------------------------- NATIVO
+  // Fecha o trecho parcial atual no texto acumulado (chamado antes de reiniciar).
+  function commitPartial() {
+    if (lastPartialRef.current) {
+      committedRef.current = (
+        committedRef.current ? committedRef.current + ' ' + lastPartialRef.current : lastPartialRef.current
+      ).trim();
+      lastPartialRef.current = '';
+    }
+  }
+
+  // Reinício contínuo do reconhecimento. O Android encerra a cada pausa/silêncio
+  // (onEndOfSpeech → 'stopped') E também em erros como ERROR_NO_MATCH/
+  // ERROR_SPEECH_TIMEOUT — mas nesse último caso o plugin NÃO emite 'stopped'
+  // (só chama stopListening internamente). Por isso reiniciamos tanto pelo evento
+  // 'stopped' quanto por um watchdog que checa isListening(). A guarda
+  // `restartingRef` + a pequena espera evitam ERROR_RECOGNIZER_BUSY (recognizer
+  // ainda não liberado) e reinícios concorrentes que duplicariam/perderiam texto.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function restartNative(SpeechRecognition: any, opts: StartOptions) {
+    if (!activeRef.current || manualStopRef.current) return;
+    if (restartingRef.current) return;
+    restartingRef.current = true;
+    commitPartial();
+    await new Promise((r) => setTimeout(r, 320)); // deixa o recognizer liberar
+    if (!activeRef.current || manualStopRef.current) {
+      restartingRef.current = false;
+      return;
+    }
+    try {
+      await SpeechRecognition.start({ language: opts.lang, partialResults: true, popup: false });
+      setListening(true);
+    } catch {
+      // Falhou (provável BUSY) — o watchdog tenta de novo no próximo ciclo.
+    } finally {
+      restartingRef.current = false;
+    }
+  }
+
   async function startNative(opts: StartOptions) {
     try {
       const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
@@ -226,29 +270,33 @@ export function useSpeechToText(): SpeechToText {
       // (como no web), comitamos o trecho e reiniciamos enquanto estiver ativo.
       await SpeechRecognition.addListener(
         'listeningState',
-        async (data: { status: 'started' | 'stopped' }) => {
+        (data: { status: 'started' | 'stopped' }) => {
           if (data.status === 'started') {
             setListening(true);
             return;
           }
-          // status === 'stopped'
+          // status === 'stopped' (fim de fala natural)
           if (activeRef.current && !manualStopRef.current) {
-            if (lastPartialRef.current) {
-              committedRef.current = (
-                committedRef.current ? committedRef.current + ' ' + lastPartialRef.current : lastPartialRef.current
-              ).trim();
-              lastPartialRef.current = '';
-            }
-            try {
-              await SpeechRecognition.start({ language: opts.lang, partialResults: true, popup: false });
-            } catch {
-              setListening(false);
-            }
+            void restartNative(SpeechRecognition, opts);
           } else {
             setListening(false);
           }
         }
       );
+
+      // Watchdog: cobre o caso em que o recognizer morreu por ERRO (NO_MATCH/
+      // SPEECH_TIMEOUT etc.) SEM emitir 'stopped'. Se ainda queremos ouvir mas o
+      // motor parou, reinicia. Só age quando não há um reinício já em andamento.
+      if (watchdogRef.current) clearInterval(watchdogRef.current);
+      watchdogRef.current = setInterval(async () => {
+        if (!activeRef.current || manualStopRef.current || restartingRef.current) return;
+        try {
+          const { listening: isL } = await SpeechRecognition.isListening();
+          if (!isL) await restartNative(SpeechRecognition, opts);
+        } catch {
+          // ignore — tenta de novo no próximo ciclo
+        }
+      }, 1200);
 
       await SpeechRecognition.start({ language: opts.lang, partialResults: true, popup: false });
       setListening(true);
