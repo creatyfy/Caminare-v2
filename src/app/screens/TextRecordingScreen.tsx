@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useEntitlement } from '../contexts/EntitlementContext';
 import { createTextEntry } from '../lib/db';
-import { processEntry } from '../lib/ai';
 import { useSpeechToText, type SpeechErrorKind } from '../lib/speech';
 
 // Equivalente a aproximadamente 2 min de fala (150 wpm × ~6 chars por palavra)
@@ -159,11 +158,12 @@ export function TextRecordingScreen() {
         return;
       }
       void entitlement.refresh();
-      // Dispara a análise em background (sem await) para já começar enquanto o
-      // usuário navega. A tela de validação aguarda a conclusão via polling.
-      void processEntry(entryId, i18n.language).catch((err) =>
-        console.error('[TextRecording] process-entry (background) falhou:', err)
-      );
+      // NÃO disparamos a análise aqui em background. Antes era um fire-and-forget
+      // (`void processEntry().catch(console.error)`) que ENGOLIA qualquer falha da
+      // IA (CORS/rede/500) e ainda reivindicava o registro → a tela de validação
+      // recebia 202 'processing' e só fazia polling, sem nunca ver o erro real.
+      // Agora a EmotionValidationScreen é a ÚNICA a chamar process-entry: ela
+      // aguarda (await) e mostra a mensagem de erro real na tela.
       navigate(`/validacao-emocoes?entryId=${entryId}`);
     } catch (err) {
       console.error('Erro ao salvar registro:', err);

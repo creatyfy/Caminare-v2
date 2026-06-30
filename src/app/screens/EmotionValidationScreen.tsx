@@ -12,6 +12,12 @@ import {
   type EmotionFull,
 } from '../lib/db';
 import { processEntry, analyzeBeliefs } from '../lib/ai';
+import { apiUrl, API_BASE } from '../lib/api';
+
+// [DEBUG TEMPORÁRIO] URL final da função que gera as emoções. No APK precisa ser
+// a ABSOLUTA da Vercel; se for só "/api/process-entry" a VITE_API_BASE_URL não
+// entrou no build. Remover este bloco e o banner quando o diagnóstico terminar.
+const PROCESS_ENTRY_URL = apiUrl('/api/process-entry');
 
 export function EmotionValidationScreen() {
   const navigate = useNavigate();
@@ -48,22 +54,29 @@ export function EmotionValidationScreen() {
         setAnalyzing(true);
         try {
           const res = await processEntry(entryId, i18n.language);
-          // Se a análise já foi disparada na gravação (background), o endpoint
-          // responde 'processing' — aguardamos a conclusão via polling do status
-          // em vez de reprocessar (evita emoções duplicadas).
+          // Se outra requisição já reivindicou o registro, o endpoint responde
+          // 'processing' (202) — aguardamos a conclusão via polling do status.
+          // Se o polling terminar SEM 'done' (ficou 'failed' ou estourou o tempo),
+          // surfaceamos o erro em vez de cair em silêncio na lista vazia.
           if (active && res.status === 'processing') {
+            let finalStatus = 'processing';
             for (let i = 0; i < 30 && active; i++) {
               await sleep(2000);
               if (!active) return;
-              const s = await getEntryProcessingStatus(user.id, entryId);
-              if (s === 'done' || s === 'failed') break;
+              finalStatus = await getEntryProcessingStatus(user.id, entryId);
+              if (finalStatus === 'done' || finalStatus === 'failed') break;
+            }
+            if (active && finalStatus !== 'done') {
+              setAnalyzeError(
+                `${t('emotionValidation.analyzeError')} — análise não concluiu (status: ${finalStatus}). URL: ${PROCESS_ENTRY_URL}`
+              );
             }
           }
         } catch (err) {
           console.error('[EmotionValidation] process-entry falhou:', err);
-          // Mostra a mensagem REAL (status + texto da resposta / falha de rede)
-          // para diagnosticar — antes o erro só ia pro console (invisível no app
-          // nativo) e a tela exibia um texto genérico.
+          // Mostra a mensagem REAL (status + texto da resposta / falha de rede +
+          // URL) para diagnosticar — antes o erro só ia pro console (invisível no
+          // app nativo) e a tela exibia um texto genérico.
           const detail = err instanceof Error ? err.message : String(err);
           if (active) setAnalyzeError(`${t('emotionValidation.analyzeError')} — ${detail}`);
         }
@@ -221,6 +234,23 @@ export function EmotionValidationScreen() {
               {analyzing ? <AnalyzingMessages /> : t('common.loading')}
             </div>
           )}
+
+          {/* [DEBUG TEMPORÁRIO] Confirma a URL absoluta no APK. Remover depois. */}
+          <div
+            style={{
+              backgroundColor: 'var(--cam-bg-error-soft)',
+              color: 'var(--cam-text-secondary)',
+              borderRadius: '12px',
+              padding: '10px 12px',
+              fontSize: '11px',
+              fontFamily: 'monospace',
+              wordBreak: 'break-all',
+              marginBottom: '16px',
+              lineHeight: 1.4,
+            }}
+          >
+            DEBUG · API_BASE="{API_BASE || '(vazio → relativo)'}" · chamando: {PROCESS_ENTRY_URL}
+          </div>
 
           {!loading && analyzeError && (
             <div

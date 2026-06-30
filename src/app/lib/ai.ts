@@ -7,7 +7,7 @@
 // =============================================================================
 
 import { supabase } from './supabase';
-import { apiUrl } from './api';
+import { apiUrl, API_BASE } from './api';
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession();
@@ -21,6 +21,12 @@ async function authHeaders(): Promise<Record<string, string>> {
 async function postJson<T>(path: string, body: unknown): Promise<T> {
   // apiUrl() prefixa a base absoluta no app nativo (no web fica relativo).
   const url = apiUrl(path);
+
+  // [DEBUG TEMPORÁRIO] Mostra a URL final chamada. No APK precisa ser a ABSOLUTA
+  // da Vercel (https://caminare-v2.vercel.app/api/...). Se aparecer só "/api/..."
+  // relativa, a VITE_API_BASE_URL não entrou no build → chamada vai pro
+  // capacitor://localhost e falha. Remover quando o diagnóstico terminar.
+  console.warn(`[ai][debug] POST ${url} (API_BASE="${API_BASE}")`);
 
   // fetch só rejeita em falha de REDE/CORS (não em status HTTP de erro). No app
   // nativo é o caso mais comum: preflight CORS bloqueado ou domínio errado.
@@ -46,11 +52,15 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
     // resposta não-JSON (ex.: HTML de erro) — trataremos como erro abaixo
   }
   if (!res.ok) {
-    // Mostra status + corpo (texto da resposta) para diagnosticar o erro real.
+    // Mostra status + corpo (texto da resposta) + URL para diagnosticar o erro real.
     const apiMsg = (json as { error?: string })?.error;
     const snippet = text ? text.slice(0, 300) : '(corpo vazio)';
-    console.error(`[ai] ${path} respondeu ${res.status}:`, snippet);
-    throw new Error(apiMsg || `Erro ${res.status} em ${path}: ${snippet}`);
+    console.error(`[ai] ${url} respondeu ${res.status}:`, snippet);
+    throw new Error(
+      apiMsg
+        ? `${apiMsg} [${res.status} em ${url}]`
+        : `Erro ${res.status} em ${url}: ${snippet}`
+    );
   }
   return json as T;
 }
