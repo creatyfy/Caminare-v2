@@ -113,8 +113,14 @@ workflows:
           /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string $MIC_MSG" "$PLIST"
           /usr/libexec/PlistBuddy -c "Delete :NSSpeechRecognitionUsageDescription" "$PLIST" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :NSSpeechRecognitionUsageDescription string $MIC_MSG" "$PLIST"
-          # Entitlements: Sign in with Apple + Associated Domains (Universal Links).
-          # ⚠️ Trocar __DOMINIO_PROD__ no arquivo native/ios/App.entitlements antes do release.
+          # Conformidade de exportação (encryption): o app só usa HTTPS/criptografia
+          # padrão (isenta), então declaramos ITSAppUsesNonExemptEncryption=false. Sem
+          # isto a App Store bloqueia cada build pedindo a resposta manual. Idempotente.
+          /usr/libexec/PlistBuddy -c "Delete :ITSAppUsesNonExemptEncryption" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+          # Entitlements: só Sign in with Apple. O associated-domains (Universal Links)
+          # está desativado em native/ios/App.entitlements enquanto o domínio de produção
+          # não existe (o placeholder quebrava a assinatura). Restaurar lá quando houver domínio.
           cp native/ios/App.entitlements ios/App/App/App.entitlements
       - name: Instalar pods
         script: |

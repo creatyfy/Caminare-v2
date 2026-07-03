@@ -6,20 +6,26 @@
   (a pasta ios/ não é versionada). Ver codemagic.yaml e guidelines/native-setup.md.
 
   - applesignin: habilita "Sign in with Apple" (já implementado via AppleSignInButton).
-  - associated-domains: Universal Links para o domínio de produção (OAuth + reset de
-    senha por https). TROCAR __DOMINIO_PROD__ pelo domínio real (ex.: caminare.com.br)
-    ANTES do build de release. O esquema custom com.caminare.app:// continua valendo
-    em paralelo (configurado no Info.plist), então o login não depende disto.
+
+  ⚠️ associated-domains (Universal Links) REMOVIDO temporariamente: enquanto o domínio
+  de produção não estiver definido, o placeholder applinks:__DOMINIO_PROD__ quebra a
+  ASSINATURA do iOS no CI (o provisioning profile não casa com um domínio inválido).
+  O login não depende disto — o esquema custom com.caminare.app:// (configurado no
+  Info.plist via PlistBuddy no codemagic.yaml) continua valendo.
+
+  PARA RESTAURAR quando o domínio real existir (ex.: caminare.com.br), adicionar de
+  volta dentro do <dict> abaixo e habilitar Associated Domains no App ID:
+
+      <key>com.apple.developer.associated-domains</key>
+      <array>
+          <string>applinks:caminare.com.br</string>
+      </array>
 -->
 <plist version="1.0">
 <dict>
 	<key>com.apple.developer.applesignin</key>
 	<array>
 		<string>Default</string>
-	</array>
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:__DOMINIO_PROD__</string>
 	</array>
 </dict>
 </plist>
