@@ -126,7 +126,13 @@ workflows:
         script: |
           set -e
           keychain initialize
-          app-store-connect fetch-signing-files "com.caminare.app" --type IOS_APP_STORE --create
+          # --certificate-key: a conta não tem certificado de distribuição, então o
+          # --create precisa GERAR um, e pra isso precisa da chave privada RSA. Ela
+          # vem da var segura CERTIFICATE_PRIVATE_KEY (grupo app_env no Codemagic).
+          app-store-connect fetch-signing-files "com.caminare.app" \
+            --type IOS_APP_STORE \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
+            --create
           keychain add-certificates
           # Aplica os perfis ao projeto (seta CODE_SIGN_STYLE=Manual, team e specifier).
           xcode-project use-profiles

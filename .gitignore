@@ -19,3 +19,7 @@ dist/
 key.properties
 android/key.properties
 android-signing-SECRETO.txt
+# Assinatura iOS — chave privada RSA do certificado de distribuição. Colada no
+# Codemagic como CERTIFICATE_PRIVATE_KEY (secure). NUNCA commitar.
+*-SECRETO.txt
+ios-cert-key-SECRETO.txt
