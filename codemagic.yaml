@@ -124,15 +124,29 @@ workflows:
           cd ios/App && pod install
       - name: Configurar code signing
         script: |
+          set -e
           keychain initialize
           app-store-connect fetch-signing-files "com.caminare.app" --type IOS_APP_STORE --create
           keychain add-certificates
+          # Aplica os perfis ao projeto (seta CODE_SIGN_STYLE=Manual, team e specifier).
           xcode-project use-profiles
+          # O use-profiles às vezes não persiste no target "App" (o App.xcodeproj é
+          # regenerado pelo `cap add ios`), causando "requires a provisioning profile"
+          # no archive. Extraímos nome/UUID do perfil recém-criado para forçar a
+          # assinatura por linha de comando no build-ipa (override de maior prioridade).
+          PROFILE=$(ls -t "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision | head -1)
+          security cms -D -i "$PROFILE" > /tmp/profile.plist
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /tmp/profile.plist)
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /tmp/profile.plist)
+          echo "Perfil aplicado: $PROFILE_NAME ($PROFILE_UUID)"
+          # Exporta o UUID pro próximo passo (Codemagic propaga vars via \$CM_ENV).
+          echo "PROFILE_UUID=$PROFILE_UUID" >> "$CM_ENV"
       - name: Build IPA
         script: |
           xcode-project build-ipa \
             --workspace "ios/App/App.xcworkspace" \
-            --scheme "App"
+            --scheme "App" \
+            --archive-xcargs "CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=N4GBC57KVM PROVISIONING_PROFILE_SPECIFIER=$PROFILE_UUID"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
