@@ -47,15 +47,31 @@ Em **Authentication → URL Configuration → Redirect URLs**, adicionar:
 (Manter também as URLs web atuais da Vercel.)
 
 ### 2. Sign in with Apple
-- **Apple Developer**: criar um **App ID** `com.caminare.app` com "Sign In with Apple"
-  habilitado; criar um **Service ID** + **Key** (Sign in with Apple) e anotar o Key ID
-  e Team ID.
-- **Supabase**: em **Authentication → Providers → Apple**, habilitar e preencher o
-  Service ID (client id), Team ID, Key ID e a chave `.p8`. Adicionar
-  `com.caminare.app` como client id permitido (audience) p/ o fluxo nativo
-  (`signInWithIdToken`).
-- iOS: habilitar a capability "Sign in with Apple" no target do Xcode (o workflow de
-  signing cuida do provisioning; confirmar no portal).
+> ⚠️ **Causa da reprovação 2.1a (ASAuthorizationError 1000):** o IPA saía SEM a
+> entitlement `com.apple.developer.applesignin`. Duas coisas precisam estar certas —
+> a #A já foi corrigida no CI; a #B e #C dependem de config externa (portal/Supabase).
+
+**A. Entitlement no build (CORRIGIDO no `codemagic.yaml`).** Copiar
+`native/ios/App.entitlements` não basta: o template iOS do Capacitor não seta
+`CODE_SIGN_ENTITLEMENTS`, então o Xcode ignorava o arquivo e o app assinado não tinha
+a capability → erro 1000 em runtime (iPhone e iPad). O passo "Configurar iOS" agora
+aponta `CODE_SIGN_ENTITLEMENTS = App/App.entitlements` no target `App` (via gem
+`xcodeproj`) antes de assinar. Se rodar `npx cap add ios` à mão, faça o mesmo no Xcode
+(target App → Build Settings → Code Signing Entitlements).
+
+**B. Apple Developer (App ID).** O **App ID** `com.caminare.app` PRECISA ter
+"Sign In with Apple" habilitado. Sem isso, o provisioning profile gerado pelo Codemagic
+não inclui a entitlement e o build passa a FALHAR na assinatura (após o fix A). Depois
+de habilitar, deixe o Codemagic regenerar o profile (o `fetch-signing-files --create`
+baixa o profile atualizado). Também: criar **Service ID** + **Key** (Sign in with Apple)
+e anotar Key ID e Team ID (usados no Supabase).
+
+**C. Supabase (Apple provider).** Em **Authentication → Providers → Apple**, habilitar e
+preencher Service ID (client id), Team ID, Key ID e a chave `.p8`. **Confirmar que
+`com.caminare.app` (bundle id nativo) está na lista de Client IDs / "Authorized Client
+IDs"** — é a audience que o Supabase valida no `signInWithIdToken` do fluxo nativo. Sem
+isso o prompt da Apple até abre, mas o `signInWithIdToken` rejeita o token (não é o erro
+1000, é um erro depois do prompt).
 
 ### 3. Google OAuth no app nativo
 - **Google Cloud Console**: o client OAuth web do Supabase continua valendo (o fluxo

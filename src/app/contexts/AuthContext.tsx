@@ -31,6 +31,46 @@ async function sha256Hex(input: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => ('0' + b.toString(16)).slice(-2)).join('');
 }
 
+// Traduz o erro nativo do Sign in with Apple (ASAuthorizationError) numa mensagem
+// amigável. O plugin rejeita com o localizedDescription cru — algo como
+// "...AuthorizationError error 1000.)" — que não serve pro usuário. Devolver:
+//   { cancelled }  → usuário fechou o prompt; não é erro pra mostrar.
+//   { message }    → texto pronto pra tela.
+// Códigos: 1000 unknown · 1001 canceled · 1002 invalidResponse · 1003 notHandled
+//          1004 failed · 1005 notInteractive.
+function describeAppleError(raw: string): { cancelled: boolean; message: string } {
+  const codeMatch = raw.match(/error\s+(100[0-9])/i);
+  const code = codeMatch ? Number(codeMatch[1]) : null;
+
+  // Cancelamento: usuário fechou o prompt. Silencioso.
+  if (code === 1001 || /cancel/i.test(raw)) {
+    return { cancelled: true, message: '' };
+  }
+
+  // 1000 (unknown) em device real é quase sempre configuração de assinatura:
+  // a entitlement "Sign in with Apple" não está no build/provisioning. Damos uma
+  // mensagem acionável em vez do texto técnico da Apple.
+  if (code === 1000) {
+    return {
+      cancelled: false,
+      message:
+        'Não foi possível iniciar o Sign in with Apple. Tente novamente ou use outra forma de entrar.',
+    };
+  }
+
+  if (code === 1004 || code === 1002) {
+    return {
+      cancelled: false,
+      message: 'A Apple não conseguiu concluir o login. Tente novamente em instantes.',
+    };
+  }
+
+  return {
+    cancelled: false,
+    message: 'Não foi possível entrar com a Apple. Tente novamente ou use outra forma de entrar.',
+  };
+}
+
 // Abre um provedor OAuth (web: redirect normal; nativo: browser in-app + deep link).
 async function startOAuth(provider: 'google' | 'apple'): Promise<{ error: string | null }> {
   const redirectTo = getOAuthRedirectUrl();
@@ -172,6 +212,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const rawNonce = generateRawNonce();
             const hashedNonce = await sha256Hex(rawNonce);
             const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+            // clientId/redirectURI só valem no fallback web/Android do plugin; no iOS
+            // nativo o ASAuthorizationAppleIDProvider usa o bundle id do app. Mantidos
+            // por compatibilidade da assinatura do método.
             const result = await SignInWithApple.authorize({
               clientId: 'com.caminare.app',
               redirectURI: AUTH_CALLBACK_URL,
@@ -179,7 +222,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               nonce: hashedNonce,
             });
             const identityToken = result.response?.identityToken;
-            if (!identityToken) return { error: 'Apple não retornou um token válido.' };
+            if (!identityToken) {
+              return { error: 'A Apple não retornou um token válido. Tente novamente.' };
+            }
+            // Supabase confere sha256(rawNonce) contra a claim nonce do token e valida
+            // a audience (bundle id) contra a lista de Client IDs do provider Apple.
             const { error } = await supabase.auth.signInWithIdToken({
               provider: 'apple',
               token: identityToken,
@@ -187,10 +234,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
             return { error: error?.message ?? null };
           } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            // Usuário cancelou o prompt da Apple → não é erro pra mostrar.
-            if (/cancel/i.test(msg) || /1001/.test(msg)) return { error: null };
-            return { error: msg };
+            const raw = e instanceof Error ? e.message : String(e);
+            const { cancelled, message } = describeAppleError(raw);
+            // Cancelamento não vira erro na tela; loga o cru p/ diagnóstico.
+            if (cancelled) return { error: null };
+            console.warn('[apple-signin] falha nativa:', raw);
+            return { error: message };
           }
         }
         // Web e Android: OAuth da Apple via Supabase (redirect/browser).
