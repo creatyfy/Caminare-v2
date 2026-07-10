@@ -72,9 +72,35 @@ export function signRs256Jwt(parts: JwtParts, privateKeyPem: string): string {
   return `${signingInput}.${base64urlEncode(signature)}`;
 }
 
-// Aceita a chave .p8/PEM com quebras de linha reais ou escapadas (\n) — comum
-// quando a chave é colada numa env var de uma só linha.
+// Normaliza a chave .p8/PEM vinda de env var — que quase sempre chega "suja"
+// (copiar/colar no Vercel/Windows): aspas em volta, \r reais do clipboard (CRLF),
+// \r/\n literais escapados. Sem essa limpeza o createPrivateKey estoura e a Apple
+// só devolve 401 lá na frente. Também aceita a .p8 inteira em base64 (sem headers
+// PEM), que é imune a problema de quebra de linha.
+function normalizePem(input: string): string {
+  let s = input.trim();
+  // Remove um par de aspas simples/duplas em volta (colagem em YAML/CLI).
+  if (
+    s.length >= 2 &&
+    ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'")))
+  ) {
+    s = s.slice(1, -1);
+  }
+  // \r literais (\\r) e reais fora; \n literais (\\n) viram quebra real.
+  s = s
+    .replace(/\\r/g, '')
+    .replace(/\r/g, '')
+    .replace(/\\n/g, '\n')
+    .trim();
+  return s;
+}
+
 function loadKey(pem: string): KeyObject {
-  const normalized = pem.includes('\\n') ? pem.replace(/\\n/g, '\n') : pem;
-  return createPrivateKey(normalized);
+  const normalized = normalizePem(pem);
+  // Se não parece PEM, tratar como base64 da .p8 inteira e decodificar (blindagem
+  // extra: base64 não sofre com \r\n). Suporta APPLE_IAP_PRIVATE_KEY_B64 também.
+  const pemText = normalized.includes('-----BEGIN')
+    ? normalized
+    : Buffer.from(normalized.replace(/\s+/g, ''), 'base64').toString('utf8');
+  return createPrivateKey(pemText);
 }

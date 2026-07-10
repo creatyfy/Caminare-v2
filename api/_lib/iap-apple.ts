@@ -42,12 +42,15 @@ export function appleConfig(): AppleConfig {
   const bundleId = readOptional('APPLE_IAP_BUNDLE_ID');
   const issuerId = readOptional('APPLE_IAP_ISSUER_ID');
   const keyId = readOptional('APPLE_IAP_KEY_ID');
-  const privateKey = readOptional('APPLE_IAP_PRIVATE_KEY');
+  // PEM direto (APPLE_IAP_PRIVATE_KEY) OU a .p8 inteira em base64
+  // (APPLE_IAP_PRIVATE_KEY_B64) — o loadKey normaliza/decoda os dois. O base64 é
+  // imune a \r\n de clipboard, então é a opção à prova de bala.
+  const privateKey = readOptional('APPLE_IAP_PRIVATE_KEY') ?? readOptional('APPLE_IAP_PRIVATE_KEY_B64');
   const missing = [
     ['APPLE_IAP_BUNDLE_ID', bundleId],
     ['APPLE_IAP_ISSUER_ID', issuerId],
     ['APPLE_IAP_KEY_ID', keyId],
-    ['APPLE_IAP_PRIVATE_KEY', privateKey],
+    ['APPLE_IAP_PRIVATE_KEY (ou APPLE_IAP_PRIVATE_KEY_B64)', privateKey],
   ].filter(([, v]) => !v).map(([k]) => k);
   if (missing.length) {
     throw new IapNotConfiguredError(`Apple IAP não configurado: faltam ${missing.join(', ')}.`);
