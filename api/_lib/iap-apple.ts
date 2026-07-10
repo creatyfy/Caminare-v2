@@ -62,6 +62,10 @@ const API_BASE: Record<AppleConfig['environment'], string> = {
 };
 
 // JWT de autenticação na App Store Server API (validade curta, aud fixo).
+// ⚠️ O claim `bid` (bundle id) é OBRIGATÓRIO porque a chave é uma In-App Purchase
+// key (a chave de assinatura das transações). Diferente da chave de Team (App Store
+// Connect API), a IAP key exige o `bid` no token — SEM ELE a Apple responde 401.
+// Não remover.
 function appStoreApiJwt(cfg: AppleConfig): string {
   const now = Math.floor(Date.now() / 1000);
   return signEs256Jwt(
@@ -115,7 +119,15 @@ export async function validateApplePurchase(params: {
       continue; // tenta o outro ambiente
     }
     if (!r.ok) {
-      throw new IapValidationError(`App Store Server API respondeu ${r.status}.`);
+      // 401/403 = a Apple RECUSOU nosso JWT de auth — não é problema da transação.
+      // Causas: APPLE_IAP_PRIVATE_KEY malformada no ambiente (tem que ser o PEM numa
+      // única linha com \n literais), Key ID / Issuer ID errados, ou bundle id (bid)
+      // fora do app da chave. Mensagem acionável p/ não caçar no escuro de novo.
+      const hint =
+        r.status === 401 || r.status === 403
+          ? ' Auth recusada: confira APPLE_IAP_PRIVATE_KEY (PEM em 1 linha com \\n), APPLE_IAP_KEY_ID, APPLE_IAP_ISSUER_ID e APPLE_IAP_BUNDLE_ID no Vercel.'
+          : '';
+      throw new IapValidationError(`App Store Server API respondeu ${r.status}.${hint}`);
     }
     const body = (await r.json()) as { signedTransactionInfo?: string };
     if (!body.signedTransactionInfo) {
