@@ -101,7 +101,10 @@ export interface AppleValidationResult {
 
 /**
  * Valida um transactionId na App Store Server API e devolve os dados normalizados.
- * Tenta produção e, em 404, o ambiente sandbox (transações de TestFlight/sandbox).
+ * Tenta produção e, se QUALQUER falha (401/403/404), cai pro sandbox — só lança
+ * erro depois que TODOS os ambientes falham. No App Review/TestFlight a transação é
+ * sandbox (produção devolve 401 pro id), então a validação acontece no fallback;
+ * depois do launch, produção valida direto.
  */
 export async function validateApplePurchase(params: {
   transactionId: string;
@@ -114,23 +117,28 @@ export async function validateApplePurchase(params: {
     cfg.environment === 'production' ? ['production', 'sandbox'] : ['sandbox', 'production'];
 
   let lastStatus = 0;
-  for (const env of order) {
+  for (let i = 0; i < order.length; i++) {
+    const env = order[i];
+    const isLast = i === order.length - 1;
     const url = `${API_BASE[env]}/inApps/v1/transactions/${encodeURIComponent(params.transactionId)}`;
     const r = await fetch(url, { headers: { Authorization: `Bearer ${jwt}` } });
-    if (r.status === 404) {
-      lastStatus = 404;
-      continue; // tenta o outro ambiente
-    }
+
     if (!r.ok) {
-      // 401/403 = a Apple RECUSOU nosso JWT de auth — não é problema da transação.
-      // Causas: APPLE_IAP_PRIVATE_KEY malformada no ambiente (tem que ser o PEM numa
-      // única linha com \n literais), Key ID / Issuer ID errados, ou bundle id (bid)
-      // fora do app da chave. Mensagem acionável p/ não caçar no escuro de novo.
+      // A MESMA transação vive em UM só ambiente: sandbox (TestFlight/App Review)
+      // ou produção (app live). O outro ambiente devolve 401/404 pro mesmo id — o
+      // 401 aqui NÃO é auth ruim, é "essa transação não é deste ambiente". Por isso
+      // só desistimos DEPOIS de tentar todos; qualquer status ruim que não seja o
+      // último ambiente faz fallback pro próximo.
+      lastStatus = r.status;
+      if (!isLast) continue;
+      // Último ambiente também falhou → agora sim é erro de verdade.
       const hint =
         r.status === 401 || r.status === 403
-          ? ' Auth recusada: confira APPLE_IAP_PRIVATE_KEY (PEM em 1 linha com \\n), APPLE_IAP_KEY_ID, APPLE_IAP_ISSUER_ID e APPLE_IAP_BUNDLE_ID no Vercel.'
+          ? ' Auth recusada: confira APPLE_IAP_PRIVATE_KEY (ou _B64), APPLE_IAP_KEY_ID, APPLE_IAP_ISSUER_ID e APPLE_IAP_BUNDLE_ID no Vercel.'
           : '';
-      throw new IapValidationError(`App Store Server API respondeu ${r.status}.${hint}`);
+      throw new IapValidationError(
+        `App Store Server API respondeu ${r.status} em todos os ambientes.${hint}`
+      );
     }
     const body = (await r.json()) as { signedTransactionInfo?: string };
     if (!body.signedTransactionInfo) {
@@ -151,9 +159,9 @@ export async function validateApplePurchase(params: {
     };
   }
 
-  throw new IapValidationError(
-    lastStatus === 404 ? 'Transação não encontrada na Apple.' : 'Falha ao validar na Apple.'
-  );
+  // Inalcançável na prática (o loop sempre retorna ou lança no último ambiente),
+  // mas mantém o TS feliz e cobre o caso teórico de `order` vazio.
+  throw new IapValidationError(`Falha ao validar na Apple (último status ${lastStatus}).`);
 }
 
 // ─── Notificações (App Store Server Notifications V2) ────────────────────────
