@@ -298,14 +298,25 @@ export function SignUpScreen() {
             <Trans
               i18nKey="signup.acceptTerms"
               components={{
+                // Navegação in-app (igual ao Perfil). target="_blank" não abre no
+                // WebView nativo — abria "nova aba" que ia pra lugar nenhum.
                 terms: (
-                  <a href="/termos" target="_blank" rel="noopener noreferrer" style={legalLinkStyle} />
+                  <a
+                    href="/termos"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/termos');
+                    }}
+                    style={legalLinkStyle}
+                  />
                 ),
                 privacy: (
                   <a
                     href="/privacidade"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/privacidade');
+                    }}
                     style={legalLinkStyle}
                   />
                 ),
