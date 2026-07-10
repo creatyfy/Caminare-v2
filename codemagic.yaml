@@ -119,6 +119,22 @@ workflows:
           # está desativado em native/ios/App.entitlements enquanto o domínio de produção
           # não existe (o placeholder quebrava a assinatura). Restaurar lá quando houver domínio.
           cp native/ios/App.entitlements ios/App/App/App.entitlements
+          # ⚠️ CRÍTICO: copiar o arquivo NÃO basta. O template iOS do Capacitor não seta
+          # CODE_SIGN_ENTITLEMENTS, então o Xcode ignora o App.entitlements e o IPA assinado
+          # sai SEM a entitlement com.apple.developer.applesignin. Resultado: "Sign in with
+          # Apple" falha em runtime com ASAuthorizationError 1000 (.unknown) — foi o que a
+          # Apple reprovou (2.1a). Aqui apontamos o build setting p/ o arquivo em TODAS as
+          # configs do target "App" via o gem xcodeproj (pré-instalado no Mac do Codemagic).
+          ruby -e '
+            require "xcodeproj"
+            project = Xcodeproj::Project.open("ios/App/App.xcodeproj")
+            target = project.targets.find { |t| t.name == "App" } or abort("target App nao encontrado")
+            target.build_configurations.each do |c|
+              c.build_settings["CODE_SIGN_ENTITLEMENTS"] = "App/App.entitlements"
+              puts "CODE_SIGN_ENTITLEMENTS -> App/App.entitlements (#{c.name})"
+            end
+            project.save
+          '
       - name: Instalar pods
         script: |
           cd ios/App && pod install
