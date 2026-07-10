@@ -95,7 +95,7 @@ function normalizePem(input: string): string {
   return s;
 }
 
-function loadKey(pem: string): KeyObject {
+export function loadKey(pem: string): KeyObject {
   const normalized = normalizePem(pem);
   // Se não parece PEM, tratar como base64 da .p8 inteira e decodificar (blindagem
   // extra: base64 não sofre com \r\n). Suporta APPLE_IAP_PRIVATE_KEY_B64 também.
