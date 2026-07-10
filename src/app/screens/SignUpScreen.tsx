@@ -361,6 +361,7 @@ export function SignUpScreen() {
           label={t('signup.apple')}
           disabled={!acceptedTerms}
           onError={(msg) => setError(translateSignupError(msg, t))}
+          onSuccess={() => navigate('/home', { replace: true })}
         />
 
         <div

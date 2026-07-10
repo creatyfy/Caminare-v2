@@ -227,12 +227,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             // Supabase confere sha256(rawNonce) contra a claim nonce do token e valida
             // a audience (bundle id) contra a lista de Client IDs do provider Apple.
-            const { error } = await supabase.auth.signInWithIdToken({
+            // Passar o nonce CRU é obrigatório: sem ele o token não valida e o fluxo
+            // fica travado (a promise resolve com erro, mas antes ficava girando).
+            const { data, error } = await supabase.auth.signInWithIdToken({
               provider: 'apple',
               token: identityToken,
               nonce: rawNonce,
             });
-            return { error: error?.message ?? null };
+            if (error) {
+              console.warn('[apple-signin] signInWithIdToken falhou:', error.message);
+              return { error: error.message };
+            }
+            console.info('[apple-signin] sessão criada:', !!data?.session);
+            return { error: null };
           } catch (e) {
             const raw = e instanceof Error ? e.message : String(e);
             const { cancelled, message } = describeAppleError(raw);

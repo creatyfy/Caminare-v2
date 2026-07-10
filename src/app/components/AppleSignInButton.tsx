@@ -9,10 +9,12 @@ import { useAuth } from '../contexts/AuthContext';
 export function AppleSignInButton({
   label,
   onError,
+  onSuccess,
   disabled = false,
 }: {
   label?: string;
   onError?: (msg: string) => void;
+  onSuccess?: () => void;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
@@ -22,10 +24,21 @@ export function AppleSignInButton({
   async function handleClick() {
     if (loading || disabled) return;
     setLoading(true);
-    const { error } = await signInWithApple();
-    if (error) {
+    try {
+      const { error } = await signInWithApple();
+      if (error) {
+        onError?.(error);
+        return;
+      }
+      // Sucesso: a sessão foi criada. No fluxo nativo da Apple (signInWithIdToken)
+      // nada navega sozinho — sem isto o botão ficava girando pra sempre na tela de
+      // login com a sessão já criada. onSuccess leva pra home.
+      onSuccess?.();
+    } finally {
+      // SEMPRE reseta o loading — resolvendo ou rejeitando. Antes, no sucesso, o
+      // loading nunca era limpo (dependia da tela desmontar), e como não havia
+      // navegação, girava pra sempre.
       setLoading(false);
-      onError?.(error);
     }
   }
 
