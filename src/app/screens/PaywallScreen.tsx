@@ -213,11 +213,26 @@ export function PaywallScreen() {
         </p>
         <p style={{ fontSize: '12px', color: 'var(--cam-text-secondary)', margin: '6px 0 0 0', lineHeight: 1.5, textAlign: 'center' }}>
           {t('plans.legalIntro')}{' '}
-          <a href="/termos" target="_blank" rel="noopener noreferrer" style={legalLinkStyle}>
+          {/* Navegação in-app (igual ao Perfil). target="_blank" não abre no WebView nativo. */}
+          <a
+            href="/termos"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/termos');
+            }}
+            style={legalLinkStyle}
+          >
             {t('legal.termsLink')}
           </a>{' '}
           {t('plans.legalAnd')}{' '}
-          <a href="/privacidade" target="_blank" rel="noopener noreferrer" style={legalLinkStyle}>
+          <a
+            href="/privacidade"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/privacidade');
+            }}
+            style={legalLinkStyle}
+          >
             {t('legal.privacyLink')}
           </a>
           .
