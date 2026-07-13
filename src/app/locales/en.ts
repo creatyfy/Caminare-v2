@@ -534,6 +534,10 @@ export const en = {
     restoreSuccess: 'All set! Your purchases have been restored.',
     restoreNone: 'We couldn’t find previous purchases to restore.',
     restoreError: 'We couldn’t restore purchases right now.',
+    // Store showcase loading (native app)
+    loadingStore: 'Loading plans…',
+    loadError: 'We couldn’t load the plans. Check your connection and try again.',
+    retry: 'Try again',
   },
   trialNotices: {
     day7Title: 'Enjoying Caminare?',

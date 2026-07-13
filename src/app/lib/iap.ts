@@ -126,7 +126,12 @@ function cdv(): any | null {
 }
 
 let initPromise: Promise<void> | null = null;
-let storeReady = false;
+let storeReady = false; // store.initialize() já resolveu (listeners registrados)
+// Estado de carga da vitrine da loja, refletido na UI (useIap):
+//  • storeLoading: ainda tentando obter os preços (init + polling).
+//  • loadFailed: desistiu sem nenhum preço REAL (mostra "tentar novamente").
+let storeLoading = isNative;
+let loadFailed = false;
 const changeListeners = new Set<() => void>();
 // Compras em andamento, resolvidas quando a transação do produto é validada+finalizada.
 const pendingOrders = new Map<string, { resolve: () => void; reject: (e: Error) => void }>();
@@ -135,8 +140,17 @@ function notifyChange() {
   for (const cb of changeListeners) cb();
 }
 
-/** Aguarda o global do plugin ficar disponível (pode demorar 1 tick no boot). */
-async function waitForCdv(timeoutMs = 4000): Promise<any | null> {
+/** true se a loja já entregou ao menos um preço localizado real. */
+function hasRealPrice(): boolean {
+  return getOfferings().some((o) => o.priceText);
+}
+
+/**
+ * Aguarda o global do plugin ficar disponível. No cold start o Capacitor pode
+ * demorar vários segundos pra injetar o CdvPurchase; damos um teto generoso
+ * (15s) pra não desistir cedo — sintoma que o revisor viu (caiu no fallback).
+ */
+async function waitForCdv(timeoutMs = 15000): Promise<any | null> {
   if (!isNative) return null;
   const start = Date.now();
   // sem Date.now()? roda só no app nativo, ok.
@@ -146,6 +160,31 @@ async function waitForCdv(timeoutMs = 4000): Promise<any | null> {
     await new Promise((r) => setTimeout(r, 100));
   }
   return cdv();
+}
+
+/**
+ * Após o initialize, os preços podem NÃO vir de imediato — num app recém-publicado
+ * a App Store leva um tempo pra deixar os produtos consultáveis pelo StoreKit, e
+ * mesmo depois o StoreKit às vezes entrega os produtos alguns segundos após o
+ * boot. Aqui insistimos por ~30s: reconsultamos a loja com backoff e notificamos
+ * a UI assim que os preços aparecerem. Retorna quando há preço real ou no timeout.
+ */
+async function pollForPrices(C: any, totalMs = 30000): Promise<void> {
+  const start = Date.now();
+  let delay = 600;
+  while (Date.now() - start < totalMs) {
+    if (hasRealPrice()) return;
+    // Pede à loja pra reconsultar os produtos (recupera de erros transitórios).
+    try {
+      await C.store?.update?.();
+    } catch (e) {
+      console.warn('[iap] store.update falhou (segue tentando):', e);
+    }
+    notifyChange();
+    if (hasRealPrice()) return;
+    await new Promise((r) => setTimeout(r, delay));
+    delay = Math.min(Math.round(delay * 1.5), 3000);
+  }
 }
 
 function platformConst(C: any): any {
@@ -191,36 +230,87 @@ async function handleApproved(C: any, tx: any): Promise<void> {
  */
 export function initIap(): Promise<void> {
   if (initPromise) return initPromise;
-  initPromise = (async () => {
-    const C = await waitForCdv();
-    if (!C?.store) return; // web ou plugin indisponível
-    const store = C.store;
-    const plat = platformConst(C);
-
-    store.register(
-      ALL_PRODUCTS.map((p) => ({
-        id: p.id,
-        type: C.ProductType.PAID_SUBSCRIPTION,
-        platform: plat,
-      })),
-    );
-
-    store
-      .when()
-      .approved((tx: any) => void handleApproved(C, tx))
-      .productUpdated(() => notifyChange())
-      .receiptUpdated(() => notifyChange());
-
-    store.error((err: any) => {
-      console.warn('[iap] store error:', err?.code, err?.message);
-      notifyChange();
-    });
-
-    await store.initialize([plat]);
-    storeReady = true;
-    notifyChange();
-  })();
+  initPromise = runLoad();
   return initPromise;
+}
+
+/**
+ * Re-tenta carregar a vitrine da loja sob demanda (botão "Tentar novamente" do
+ * paywall). Reaproveita o plugin já inicializado — só reconsulta os produtos e
+ * volta a fazer polling dos preços.
+ */
+export function reloadIap(): Promise<void> {
+  initPromise = runLoad();
+  return initPromise;
+}
+
+/**
+ * Carrega a vitrine: espera o plugin, registra/inicializa (uma vez), e insiste
+ * pelos preços por ~30s. Marca `storeLoading`/`loadFailed` pra UI. No web é no-op.
+ */
+async function runLoad(): Promise<void> {
+  storeLoading = isNative;
+  loadFailed = false;
+  notifyChange();
+
+  const C = await waitForCdv();
+  if (!C?.store) {
+    // web ou plugin indisponível — nada a carregar, sem erro de loja.
+    storeLoading = false;
+    notifyChange();
+    return;
+  }
+  const store = C.store;
+  const plat = platformConst(C);
+
+  // Por padrão o plugin ignora store.update() chamado <10min após o último
+  // (minTimeBetweenUpdates = 600000). Isso mataria nosso polling de recuperação
+  // — zeramos e controlamos a cadência pelo backoff em pollForPrices.
+  store.minTimeBetweenUpdates = 0;
+
+  try {
+    if (!storeReady) {
+      store.register(
+        ALL_PRODUCTS.map((p) => ({
+          id: p.id,
+          type: C.ProductType.PAID_SUBSCRIPTION,
+          platform: plat,
+        })),
+      );
+
+      store
+        .when()
+        .approved((tx: any) => void handleApproved(C, tx))
+        .productUpdated(() => notifyChange())
+        .receiptUpdated(() => notifyChange());
+
+      store.error((err: any) => {
+        console.warn('[iap] store error:', err?.code, err?.message);
+        notifyChange();
+      });
+
+      await store.initialize([plat]);
+      storeReady = true;
+      notifyChange();
+    } else {
+      // Reload após já inicializado: só reconsulta os produtos.
+      try {
+        await store.update?.();
+      } catch (e) {
+        console.warn('[iap] store.update no reload falhou:', e);
+      }
+      notifyChange();
+    }
+
+    // Preços podem não vir de imediato — insiste com backoff.
+    await pollForPrices(C);
+  } catch (e) {
+    console.warn('[iap] carga da vitrine falhou:', e);
+  }
+
+  storeLoading = false;
+  loadFailed = !hasRealPrice();
+  notifyChange();
 }
 
 /** Assina os eventos do plugin (produtos/recibos atualizados). */
@@ -252,9 +342,19 @@ export function getOfferings(): IapOffering[] {
   });
 }
 
-/** true se o plugin está pronto e há produtos carregados (app nativo). */
+/** true só quando a loja entregou preço REAL (app nativo configurado). */
 export function isIapAvailable(): boolean {
-  return storeReady && getOfferings().some((o) => o.priceText);
+  return hasRealPrice();
+}
+
+/** true enquanto tentamos carregar a vitrine da loja (init + polling). */
+export function isIapLoading(): boolean {
+  return storeLoading;
+}
+
+/** true quando desistimos de carregar sem nenhum preço real (mostra retry). */
+export function iapLoadFailed(): boolean {
+  return loadFailed;
 }
 
 /**
