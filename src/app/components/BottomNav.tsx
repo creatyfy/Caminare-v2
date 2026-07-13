@@ -23,16 +23,19 @@ export function BottomNav() {
     <nav
       style={{
         position: 'fixed',
-        bottom: 0,
+        // Barra FLUTUANTE (padrão iOS novo): descolada da borda de baixo
+        // (safe area + folga) e centralizada, sem ocupar a largura toda. O
+        // container transparente não captura toque — só a "pílula" é clicável
+        // (pointerEvents), então o conteúdo atrás das margens continua rolável.
+        bottom: 'calc(env(safe-area-inset-bottom) + 12px)',
         left: 0,
         right: 0,
-        backgroundColor: 'var(--cam-bg-card)',
-        borderTop: `1px solid var(--cam-border-subtle)`,
         zIndex: 50,
-        // Edge-to-edge: a barra é fixa na viewport (ignora o padding do shell),
-        // então some o inset da base aqui — a linha de ícones sobe acima da barra
-        // de navegação do sistema e o fundo do card preenche atrás dela.
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        display: 'flex',
+        justifyContent: 'center',
+        paddingLeft: 'calc(env(safe-area-inset-left) + 16px)',
+        paddingRight: 'calc(env(safe-area-inset-right) + 16px)',
+        pointerEvents: 'none',
       }}
     >
       <div
@@ -41,11 +44,15 @@ export function BottomNav() {
           flexDirection: 'row',
           justifyContent: 'space-around',
           alignItems: 'center',
-          height: '68px',
+          height: '64px',
           width: '100%',
-          maxWidth: '448px',
-          margin: '0 auto',
-          padding: '0 8px',
+          maxWidth: '360px',
+          padding: '0 6px',
+          backgroundColor: 'var(--cam-bg-card)',
+          border: '1px solid var(--cam-border-subtle)',
+          borderRadius: '26px',
+          boxShadow: 'var(--cam-shadow-card, 0 8px 28px rgba(0, 0, 0, 0.14))',
+          pointerEvents: 'auto',
         }}
       >
         {navItems.map((item) => {
