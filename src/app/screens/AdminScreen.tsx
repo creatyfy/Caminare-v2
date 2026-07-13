@@ -179,6 +179,15 @@ export function AdminScreen() {
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
         display: 'flex',
         overflow: 'hidden',
+        // Áreas seguras: o painel é fixo em toda a viewport (inset:0), então
+        // precisa insetar o conteúdo pra não sumir atrás da Dynamic Island, dos
+        // cantos arredondados e da barra inferior do iPhone. No desktop os insets
+        // são 0 (sem efeito).
+        boxSizing: 'border-box',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
       }}
     >
       {/* Sidebar — desktop */}
