@@ -538,6 +538,10 @@ export const ptBR = {
     restoreSuccess: 'Tudo certo! Suas compras foram restauradas.',
     restoreNone: 'Não encontramos compras anteriores para restaurar.',
     restoreError: 'Não foi possível restaurar as compras agora.',
+    // Carga da vitrine da loja (app nativo)
+    loadingStore: 'Carregando planos…',
+    loadError: 'Não foi possível carregar os planos. Verifique sua conexão e tente novamente.',
+    retry: 'Tentar novamente',
   },
   trialNotices: {
     day7Title: 'Está gostando do Caminare?',

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useEntitlement } from '../contexts/EntitlementContext';
 import { useIap } from '../lib/useIap';
 import { productIdFor } from '../lib/iap';
-import { isIOS, isAndroid } from '../lib/native';
+import { isIOS, isAndroid, isNative } from '../lib/native';
 import {
   PLANS,
   PLAN_ORDER,
@@ -161,25 +161,43 @@ export function PaywallScreen() {
         <CadenceToggle cadence={cadence} onChange={setCadence} />
       </div>
 
-      {/* Cards de plano */}
-      <div style={{ padding: '20px 24px 4px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {PLAN_ORDER.map((tier) => {
-          const productId = productIdFor(tier, cadence);
-          const offering = iap.offerings.get(productId);
-          return (
-            <PlanCard
-              key={tier}
-              plan={PLANS[tier]}
-              cadence={cadence}
-              firstAccess={firstAccess}
-              storePrice={offering?.priceText ?? null}
-              loading={busyProduct === productId}
-              disabled={Boolean(busyProduct) || iap.restoring}
-              onSubscribe={() => handleSubscribe(tier)}
-            />
-          );
-        })}
-      </div>
+      {/* Cards de plano.
+          No app nativo o preço vem SEMPRE da loja: só mostramos os cards quando
+          há preço real (iap.available). Enquanto carrega → spinner; se falhar →
+          mensagem + "Tentar novamente". Nunca exibimos preço de fallback nem
+          botão de assinar clicável sem preço real. No web mantemos a vitrine. */}
+      {isNative && !iap.available ? (
+        <div style={{ padding: '32px 24px 4px 24px' }}>
+          {iap.loadFailed ? (
+            <StoreLoadError onRetry={() => void iap.reload()} />
+          ) : (
+            <StoreLoading />
+          )}
+        </div>
+      ) : (
+        <div style={{ padding: '20px 24px 4px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {PLAN_ORDER.map((tier) => {
+            const productId = productIdFor(tier, cadence);
+            const offering = iap.offerings.get(productId);
+            const storePrice = offering?.priceText ?? null;
+            // No nativo, um card só é comprável com preço real desse produto.
+            const nativeNoPrice = isNative && !storePrice;
+            return (
+              <PlanCard
+                key={tier}
+                plan={PLANS[tier]}
+                cadence={cadence}
+                firstAccess={firstAccess}
+                storePrice={storePrice}
+                nativeNoPrice={nativeNoPrice}
+                loading={busyProduct === productId}
+                disabled={Boolean(busyProduct) || iap.restoring || nativeNoPrice}
+                onSubscribe={() => handleSubscribe(tier)}
+              />
+            );
+          })}
+        </div>
+      )}
 
       {/* Feedback de compra/restauração */}
       {feedback && (
@@ -354,6 +372,7 @@ function PlanCard({
   cadence,
   firstAccess,
   storePrice,
+  nativeNoPrice,
   loading,
   disabled,
   onSubscribe,
@@ -362,6 +381,7 @@ function PlanCard({
   cadence: Cadence;
   firstAccess: boolean;
   storePrice: string | null;
+  nativeNoPrice: boolean;
   loading: boolean;
   disabled: boolean;
   onSubscribe: () => void;
@@ -374,10 +394,13 @@ function PlanCard({
   const tagline = plan.tier === 'basico' ? t('plans.basicoTagline') : t('plans.avancadoTagline');
 
   // Preço grande + sufixo. Loja (localizado) > promo de 1º acesso > vitrine.
+  // No nativo sem preço da loja NÃO caímos no fallback: mostramos "—".
   const suffix = isAnnual ? t('plans.perYearSuffix') : t('plans.perMonthSuffix');
   let price: string;
   if (storePrice) {
     price = storePrice; // já localizado pela loja (moeda do país)
+  } else if (nativeNoPrice) {
+    price = '—';
   } else if (!isAnnual) {
     price = formatBRL(plan.monthly.priceBRL);
   } else if (usePromo) {
@@ -490,6 +513,70 @@ function PlanCard({
       >
         {loading && <Loader2 size={18} strokeWidth={2.4} className="animate-spin" />}
         {loading ? t('plans.subscribing') : t('plans.subscribe')}
+      </button>
+    </div>
+  );
+}
+
+/** Estado "carregando planos" — enquanto a loja ainda não entregou os preços. */
+function StoreLoading() {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '14px',
+        padding: '24px 0',
+        color: 'var(--cam-text-secondary)',
+      }}
+    >
+      <Loader2 size={26} strokeWidth={2.2} className="animate-spin" />
+      <span style={{ fontSize: '14px', fontWeight: 600 }}>{t('plans.loadingStore')}</span>
+    </div>
+  );
+}
+
+/** Estado de falha ao carregar a vitrine — oferece "Tentar novamente" (reload). */
+function StoreLoadError({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '16px',
+        padding: '16px 0',
+        textAlign: 'center',
+      }}
+    >
+      <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0, lineHeight: 1.5 }}>
+        {t('plans.loadError')}
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          height: '48px',
+          padding: '0 24px',
+          borderRadius: '9999px',
+          backgroundColor: 'var(--cam-color-brand)',
+          color: 'var(--cam-text-on-brand)',
+          border: 'none',
+          boxShadow: 'var(--cam-shadow-brand)',
+          fontSize: '15px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        <RotateCcw size={16} strokeWidth={2.4} />
+        {t('plans.retry')}
       </button>
     </div>
   );
