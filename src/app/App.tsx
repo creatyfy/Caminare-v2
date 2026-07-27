@@ -25,6 +25,7 @@ import { SummaryScreen } from './screens/SummaryScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 import { getProfile } from './lib/db';
+import { isNative } from './lib/native';
 
 // Telas pesadas carregadas sob demanda (code splitting):
 // - LegalScreen tem o conteúdo completo dos Termos e Política em PT e EN
@@ -171,7 +172,7 @@ export default function App() {
                     navegação/notch (base e laterais). A BottomNav, por ser fixed,
                     trata o inset da base por conta própria. */}
               <div
-                className="w-full max-w-[375px] mx-auto relative overflow-hidden"
+                className={`w-full ${isNative ? '' : 'max-w-[375px]'} mx-auto relative overflow-hidden`}
                 style={{
                   backgroundColor: 'var(--cam-bg-page)',
                   height: '100dvh',

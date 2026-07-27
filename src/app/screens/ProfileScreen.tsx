@@ -24,11 +24,12 @@ import {
   Send,
   LayoutDashboard,
   CreditCard,
+  Pencil,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
 import { useEntitlement } from '../contexts/EntitlementContext';
-import { getProfile, deleteAccount, submitFeedback, type Profile } from '../lib/db';
+import { getProfile, deleteAccount, submitFeedback, updateFullName, type Profile } from '../lib/db';
 import { setLanguage, type Lang } from '../lib/i18n';
 import { DevSubscriptionPanel } from '../components/DevSubscriptionPanel';
 import { showDevTools } from '../lib/native';
@@ -45,6 +46,7 @@ export function ProfileScreen() {
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showEditName, setShowEditName] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -270,6 +272,39 @@ export function ProfileScreen() {
                 value={isOAuthUser ? capitalize(provider) : t('profile.emailPassword')}
                 icon={<Lock size={16} color="var(--cam-text-secondary)" />}
               />
+              {showEditName ? (
+                <EditNameForm
+                  userId={user?.id ?? ''}
+                  currentName={profile?.full_name ?? ''}
+                  onSaved={(n) => {
+                    setProfile((p) => (p ? { ...p, full_name: n } : p));
+                    setShowEditName(false);
+                  }}
+                  onClose={() => setShowEditName(false)}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowEditName(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    alignSelf: 'flex-start',
+                    background: 'none',
+                    border: 'none',
+                    padding: '4px 0',
+                    cursor: 'pointer',
+                    color: 'var(--cam-text-brand)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <Pencil size={14} strokeWidth={2.2} />
+                  {t('profile.editName')}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -335,32 +370,6 @@ export function ProfileScreen() {
             icon={<Shield size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
             label={t('legal.privacyLink')}
             onClick={() => navigate('/privacidade')}
-          />
-        </div>
-
-        {/* Subscription management */}
-        <div
-          style={{
-            backgroundColor: 'var(--cam-bg-card)',
-            borderRadius: '20px',
-            boxShadow: 'var(--cam-shadow-card)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ padding: '16px 20px 8px 20px' }}>
-            <SectionLabel text={t('profile.subscriptionSection')} />
-          </div>
-          <ActionRow
-            icon={<CreditCard size={18} color="var(--cam-text-brand)" strokeWidth={2.2} />}
-            label={t('profile.manageSubscription')}
-            onClick={() => {
-              const ua =
-                typeof window !== 'undefined' ? window.navigator.userAgent : '';
-              const url = /Android/.test(ua)
-                ? 'https://play.google.com/store/account/subscriptions'
-                : 'https://apps.apple.com/account/subscriptions';
-              window.open(url, '_blank', 'noopener,noreferrer');
-            }}
           />
         </div>
 
@@ -529,6 +538,34 @@ function AccountTypeCard() {
       >
         {t('profile.accountViewPlans')}
       </button>
+
+      {ent.status === 'active' && (
+        <button
+          type="button"
+          onClick={() => {
+            const ua = typeof window !== 'undefined' ? window.navigator.userAgent : '';
+            const url = /Android/.test(ua)
+              ? 'https://play.google.com/store/account/subscriptions'
+              : 'https://apps.apple.com/account/subscriptions';
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }}
+          style={{
+            marginTop: '10px',
+            width: '100%',
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'transparent',
+            color: 'var(--cam-text-secondary)',
+            border: '1px solid var(--cam-border)',
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {t('profile.cancelSubscription')}
+        </button>
+      )}
     </div>
   );
 }
@@ -1212,6 +1249,128 @@ function PasswordField({
         )}
       </button>
     </div>
+  );
+}
+
+function EditNameForm({
+  userId,
+  currentName,
+  onSaved,
+  onClose,
+}: {
+  userId: string;
+  currentName: string;
+  onSaved: (name: string) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [name, setName] = useState(currentName);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError(t('profile.errors.missingFields'));
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    const { error: err } = await updateFullName(userId, trimmed);
+    setSubmitting(false);
+    if (err) {
+      setError(t('profile.errors.invalidSession'));
+      return;
+    }
+    onSaved(trimmed);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder={t('profile.namePlaceholder')}
+        autoFocus
+        style={{
+          width: '100%',
+          height: '48px',
+          padding: '0 14px',
+          borderRadius: '12px',
+          border: `1.5px solid var(--cam-border)`,
+          backgroundColor: 'var(--cam-bg-input)',
+          fontSize: '14px',
+          color: 'var(--cam-text-primary)',
+          outline: 'none',
+          boxSizing: 'border-box',
+          fontFamily: 'inherit',
+          fontWeight: 500,
+        }}
+      />
+      {error && (
+        <div
+          role="alert"
+          style={{
+            backgroundColor: 'var(--cam-bg-error-soft)',
+            color: 'var(--cam-text-error)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+        >
+          {error}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          style={{
+            flex: 1,
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'transparent',
+            color: 'var(--cam-text-secondary)',
+            border: `1.5px solid var(--cam-border)`,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {t('common.cancel')}
+        </button>
+        <button
+          type="submit"
+          disabled={submitting}
+          style={{
+            flex: 1,
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            opacity: submitting ? 0.85 : 1,
+            fontFamily: 'inherit',
+          }}
+        >
+          {submitting && <Loader2 size={14} className="animate-spin" />}
+          {submitting ? t('common.saving') : t('common.save')}
+        </button>
+      </div>
+    </form>
   );
 }
 

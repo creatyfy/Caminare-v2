@@ -80,11 +80,14 @@ export function BeliefValidationScreen() {
     if (!trimmed || savingEdit) return;
     setSavingEdit(true);
     const ok = await updateBelief(id, trimmed);
+    // Editar uma crença já subentende confirmação: persiste como 'confirmed'
+    // para não ficar pendente (e não ser marcada como 'ignored' ao continuar).
+    if (ok) await setBeliefValidation(id, 'confirmed');
     setSavingEdit(false);
     if (ok) {
       setBeliefs((prev) =>
         prev.map((b) =>
-          b.id === id ? { ...b, content: trimmed, validation: 'edited' } : b
+          b.id === id ? { ...b, content: trimmed, validation: 'confirmed' } : b
         )
       );
       cancelEdit();

@@ -59,6 +59,9 @@ export function SummaryScreen() {
     const counts: Record<string, number> = {};
     for (const entry of entries) {
       for (const emotion of entry.emotions) {
+        // Conta só as emoções VALIDADAS pelo usuário (confirmadas), não as
+        // sugeridas pela IA que ficaram pendentes/ignoradas/rejeitadas.
+        if (emotion.validation !== 'confirmed') continue;
         counts[emotion.name] = (counts[emotion.name] ?? 0) + 1;
       }
     }
@@ -449,7 +452,7 @@ export function SummaryScreen() {
                         {summary}
                       </p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {entry.emotions.map((emotion) => (
+                        {entry.emotions.filter((e) => e.validation === 'confirmed').map((emotion) => (
                           <span
                             key={emotion.id}
                             style={{
@@ -665,9 +668,9 @@ export function SummaryScreen() {
               >
                 {t('entryDetail.emotionsTitle')}
               </h3>
-              {selectedEntry.emotions.length > 0 ? (
+              {selectedEntry.emotions.filter((e) => e.validation === 'confirmed').length > 0 ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {selectedEntry.emotions.map((emotion) => (
+                  {selectedEntry.emotions.filter((e) => e.validation === 'confirmed').map((emotion) => (
                     <span
                       key={emotion.id}
                       style={{

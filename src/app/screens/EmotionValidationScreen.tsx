@@ -53,7 +53,7 @@ export function EmotionValidationScreen() {
           // Se o polling terminar SEM 'done' (ficou 'failed' ou estourou o tempo),
           // surfaceamos o erro em vez de cair em silêncio na lista vazia.
           if (active && res.status === 'processing') {
-            let finalStatus = 'processing';
+            let finalStatus: string | null = 'processing';
             for (let i = 0; i < 30 && active; i++) {
               await sleep(2000);
               if (!active) return;
@@ -486,32 +486,29 @@ function AnalyzingMessages({
     ? (raw as string[])
     : [t(fallbackKey)];
   const [idx, setIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (steps.length <= 1) return;
-    let fadeTimeout: ReturnType<typeof setTimeout>;
     const interval = setInterval(() => {
-      setVisible(false);
-      fadeTimeout = setTimeout(() => {
-        setIdx((i) => (i + 1) % steps.length);
-        setVisible(true);
-      }, 400);
+      setIdx((i) => (i + 1) % steps.length);
     }, 3000);
-    return () => {
-      clearInterval(interval);
-      clearTimeout(fadeTimeout);
-    };
+    return () => clearInterval(interval);
   }, [steps.length]);
 
+  // key={idx}: força o React a desmontar a mensagem anterior antes de montar a
+  // próxima — garante UMA mensagem por vez, sem sobreposição de textos. nowrap +
+  // ellipsis evita que uma frase longa quebre linha e "empilhe" no botão.
   return (
     <span
+      key={idx}
       style={{
         display: 'inline-block',
         verticalAlign: 'middle',
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.4s ease',
         color,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '100%',
       }}
     >
       {steps[idx]}
