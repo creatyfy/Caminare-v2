@@ -7,6 +7,7 @@ import { PendingPatternProvider } from './contexts/PendingPatternContext';
 import { EntitlementProvider, useEntitlement } from './contexts/EntitlementContext';
 import { BottomNav } from './components/BottomNav';
 import { NativeAuthBridge } from './components/NativeAuthBridge';
+import { NameGate } from './components/NameGate';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { SignUpScreen } from './screens/SignUpScreen';
@@ -164,6 +165,7 @@ export default function App() {
           <BrowserRouter>
             <PendingPatternProvider>
               <NativeAuthBridge />
+              <NameGate />
               {/* Container raiz do app. No nativo (edge-to-edge, Android 15/iOS):
                   - 100dvh em vez de 100vh: a altura acompanha a viewport real do
                     webview (não estoura com as barras/toolbar dinâmica).

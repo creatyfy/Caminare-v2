@@ -287,6 +287,12 @@ export const ptBR = {
     pdfNativeDone: 'Pronto! Use o menu para salvar em Arquivos ou compartilhar.',
     pdfDialogTitle: 'Resumo para Terapia',
   },
+  nameGate: {
+    title: 'Como podemos te chamar?',
+    subtitle: 'Digite seu nome para personalizar sua experiência no Caminare.',
+    placeholder: 'Seu nome',
+    error: 'Digite um nome válido.',
+  },
   profile: {
     title: 'Perfil',
     subtitle: 'Suas informações e configurações',
