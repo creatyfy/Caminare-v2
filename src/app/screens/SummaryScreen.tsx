@@ -115,6 +115,7 @@ export function SummaryScreen() {
           time,
           text: entry.raw_text,
           emotions: entry.emotions.map((e) => e.name),
+          beliefs: entry.beliefs?.map((b) => b.content) ?? [],
         };
       }),
       labels: {
@@ -433,16 +434,36 @@ export function SummaryScreen() {
                         cursor: 'pointer',
                       }}
                     >
-                      <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', marginBottom: '8px' }}>
                         {date} • {time}
                       </div>
+                      {/* Ordem: emoções → acontecimento (texto) → crenças */}
+                      {entry.emotions.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                          {entry.emotions.map((emotion) => (
+                            <span
+                              key={emotion.id}
+                              style={{
+                                backgroundColor: 'var(--cam-bg-muted)',
+                                color: 'var(--cam-text-brand)',
+                                padding: '4px 10px',
+                                borderRadius: '9999px',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                              }}
+                            >
+                              {emotion.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <p
                         style={{
                           fontSize: '14px',
                           fontWeight: 400,
                           color: 'var(--cam-text-primary)',
                           lineHeight: 1.5,
-                          margin: '0 0 12px 0',
+                          margin: entry.beliefs && entry.beliefs.length > 0 ? '0 0 10px 0' : 0,
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
@@ -451,23 +472,25 @@ export function SummaryScreen() {
                       >
                         {summary}
                       </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {entry.emotions.filter((e) => e.validation === 'confirmed').map((emotion) => (
-                          <span
-                            key={emotion.id}
-                            style={{
-                              backgroundColor: 'var(--cam-bg-muted)',
-                              color: 'var(--cam-text-brand)',
-                              padding: '4px 10px',
-                              borderRadius: '9999px',
-                              fontSize: '12px',
-                              fontWeight: 500,
-                            }}
-                          >
-                            {emotion.name}
-                          </span>
-                        ))}
-                      </div>
+                      {entry.beliefs && entry.beliefs.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {entry.beliefs.map((b) => (
+                            <span
+                              key={b.id}
+                              style={{
+                                backgroundColor: 'var(--cam-bg-tint)',
+                                color: 'var(--cam-text-secondary)',
+                                padding: '4px 10px',
+                                borderRadius: '9999px',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                              }}
+                            >
+                              💭 {b.content.length > 40 ? b.content.slice(0, 40) + '…' : b.content}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -645,19 +668,7 @@ export function SummaryScreen() {
 
             {/* Corpo: relato completo + emoções */}
             <div style={{ overflowY: 'auto', padding: '20px', flex: 1 }}>
-              <p
-                style={{
-                  color: 'var(--cam-text-primary)',
-                  fontSize: '16px',
-                  fontWeight: 400,
-                  lineHeight: 1.6,
-                  margin: '0 0 24px 0',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {selectedEntry.raw_text}
-              </p>
-
+              {/* Ordem: emoções → acontecimento (relato) → crenças */}
               <h3
                 style={{
                   fontSize: '13px',
@@ -668,9 +679,9 @@ export function SummaryScreen() {
               >
                 {t('entryDetail.emotionsTitle')}
               </h3>
-              {selectedEntry.emotions.filter((e) => e.validation === 'confirmed').length > 0 ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {selectedEntry.emotions.filter((e) => e.validation === 'confirmed').map((emotion) => (
+              {selectedEntry.emotions.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                  {selectedEntry.emotions.map((emotion) => (
                     <span
                       key={emotion.id}
                       style={{
@@ -687,9 +698,54 @@ export function SummaryScreen() {
                   ))}
                 </div>
               ) : (
-                <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: 0 }}>
+                <p style={{ fontSize: '14px', color: 'var(--cam-text-secondary)', margin: '0 0 24px 0' }}>
                   {t('entryDetail.emotionsEmpty')}
                 </p>
+              )}
+
+              <p
+                style={{
+                  color: 'var(--cam-text-primary)',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  margin: '0 0 24px 0',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {selectedEntry.raw_text}
+              </p>
+
+              {selectedEntry.beliefs && selectedEntry.beliefs.length > 0 && (
+                <>
+                  <h3
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: 'var(--cam-text-secondary)',
+                      margin: '0 0 12px 0',
+                    }}
+                  >
+                    {t('patterns.beliefsHeader')}
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedEntry.beliefs.map((b) => (
+                      <div
+                        key={b.id}
+                        style={{
+                          backgroundColor: 'var(--cam-bg-tint)',
+                          borderRadius: '12px',
+                          padding: '10px 14px',
+                          fontSize: '14px',
+                          color: 'var(--cam-text-primary)',
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {b.content}
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>

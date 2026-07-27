@@ -186,6 +186,12 @@ const styles = StyleSheet.create({
     gap: 4,
     marginTop: 2,
   },
+  beliefText: {
+    fontSize: 10,
+    color: colors.textSoft,
+    marginTop: 3,
+    lineHeight: 1.5,
+  },
   // Misc
   empty: {
     fontSize: 11,
@@ -228,6 +234,7 @@ export interface TherapyReportEvent {
   time: string;
   text: string;
   emotions: string[];
+  beliefs: string[];
 }
 
 export interface TherapyReportEmotion {
@@ -328,9 +335,9 @@ export function TherapyReportPDF({ data }: { data: TherapyReportData }) {
               <Text style={styles.eventMeta}>
                 {ev.date} · {ev.time}
               </Text>
-              <Text style={styles.eventText}>{ev.text}</Text>
+              {/* Ordem: emoções → acontecimento (texto) → crenças */}
               {ev.emotions.length > 0 && (
-                <View style={styles.eventTags}>
+                <View style={[styles.eventTags, { marginTop: 0, marginBottom: 6 }]}>
                   {ev.emotions.map((emName) => (
                     <View key={emName} style={styles.tagSmall}>
                       <Text style={styles.tagSmallText}>{emName}</Text>
@@ -338,6 +345,13 @@ export function TherapyReportPDF({ data }: { data: TherapyReportData }) {
                   ))}
                 </View>
               )}
+              <Text style={styles.eventText}>{ev.text}</Text>
+              {ev.beliefs.length > 0 &&
+                ev.beliefs.map((b, bi) => (
+                  <Text key={bi} style={styles.beliefText}>
+                    • {b}
+                  </Text>
+                ))}
             </View>
           ))
         )}

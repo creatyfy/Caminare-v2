@@ -287,6 +287,12 @@ export const en = {
     pdfNativeDone: 'Done! Use the menu to save to Files or share.',
     pdfDialogTitle: 'Therapy Summary',
   },
+  nameGate: {
+    title: 'What should we call you?',
+    subtitle: 'Enter your name to personalize your Caminare experience.',
+    placeholder: 'Your name',
+    error: 'Please enter a valid name.',
+  },
   profile: {
     title: 'Profile',
     subtitle: 'Your information and settings',

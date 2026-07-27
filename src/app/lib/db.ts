@@ -29,8 +29,15 @@ export interface EntryWithEmotions {
   emotions: EmotionRow[];
 }
 
+export interface SummaryBelief {
+  id: string;
+  content: string;
+}
+
 export interface EntryDetail extends EntryWithEmotions {
   parsed_thoughts: string[];
+  // Crenças validadas (confirmed/edited) do registro — preenchido só no resumo.
+  beliefs?: SummaryBelief[];
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -78,8 +85,12 @@ export async function updateFullName(
       console.error('[db.updateFullName] profiles', profErr);
       return { error: profErr.message };
     }
-    // Mantém os metadados do auth em sincronia (o fallback do getProfile usa isso).
-    const { error: authErr } = await supabase.auth.updateUser({ data: { full_name: name } });
+    // Mantém os metadados do auth em sincronia (o fallback do getProfile usa isso)
+    // e marca que o nome foi definido pelo usuário (o NameGate usa essa flag para
+    // não pedir o nome de novo).
+    const { error: authErr } = await supabase.auth.updateUser({
+      data: { full_name: name, name_set_by_user: true },
+    });
     if (authErr) console.error('[db.updateFullName] auth', authErr);
     return { error: null };
   } catch (err) {
@@ -1028,7 +1039,7 @@ export async function getEntriesForSummary(
         | null;
     };
 
-    return (data as SummaryRow[]).map((row) => {
+    const entries: EntryDetail[] = (data as SummaryRow[]).map((row) => {
       const logs = row.entry_analysis_logs ?? [];
       const latestLog = logs.length
         ? [...logs].sort((a, b) =>
@@ -1038,8 +1049,38 @@ export async function getEntriesForSummary(
       return {
         ...mapEntryRow(row),
         parsed_thoughts: parseThoughts(latestLog?.parsed_thoughts),
+        beliefs: [] as SummaryBelief[],
       };
     });
+
+    // Crenças VALIDADAS (confirmed/edited) de cada registro — buscadas à parte
+    // (por source_entry_id) para não depender de inferência de relação no join.
+    // Degrada em silêncio: se falhar, o resumo continua funcionando sem crenças.
+    const entryIds = entries.map((e) => e.id);
+    if (entryIds.length) {
+      const { data: bData, error: bErr } = await supabase
+        .from('beliefs')
+        .select('id, content, source_entry_id')
+        .eq('user_id', userId)
+        .in('source_entry_id', entryIds)
+        .is('deleted_at', null)
+        .in('validation', ['confirmed', 'edited']);
+      if (bErr) {
+        console.error('[db.getEntriesForSummary] beliefs', bErr);
+      } else {
+        const byEntry: Record<string, SummaryBelief[]> = {};
+        for (const b of (bData ?? []) as Array<{
+          id: string;
+          content: string;
+          source_entry_id: string;
+        }>) {
+          (byEntry[b.source_entry_id] ??= []).push({ id: b.id, content: b.content });
+        }
+        for (const e of entries) e.beliefs = byEntry[e.id] ?? [];
+      }
+    }
+
+    return entries;
   } catch (err) {
     console.error('[db.getEntriesForSummary]', err);
     return null;
