@@ -62,6 +62,32 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   }
 }
 
+/** Atualiza o nome de exibição do usuário (tabela profiles + metadados do auth). */
+export async function updateFullName(
+  userId: string,
+  fullName: string
+): Promise<{ error: string | null }> {
+  const name = fullName.trim();
+  if (!name) return { error: 'empty' };
+  try {
+    const { error: profErr } = await supabase
+      .from('profiles')
+      .update({ full_name: name })
+      .eq('id', userId);
+    if (profErr) {
+      console.error('[db.updateFullName] profiles', profErr);
+      return { error: profErr.message };
+    }
+    // Mantém os metadados do auth em sincronia (o fallback do getProfile usa isso).
+    const { error: authErr } = await supabase.auth.updateUser({ data: { full_name: name } });
+    if (authErr) console.error('[db.updateFullName] auth', authErr);
+    return { error: null };
+  } catch (err) {
+    console.error('[db.updateFullName]', err);
+    return { error: String(err) };
+  }
+}
+
 export async function deleteAccount(): Promise<{ error: string | null }> {
   try {
     const { error } = await supabase.rpc('delete_my_account');
