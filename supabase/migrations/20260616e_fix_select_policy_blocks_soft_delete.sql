@@ -1,3 +1,4 @@
+
 -- =============================================================================
 -- Caminare — Migration: policy de SELECT com `deleted_at IS NULL` bloqueava o
 --                       soft delete (UPDATE deleted_at) → 403 / 42501

@@ -142,7 +142,8 @@ export async function getHomeStats(userId: string): Promise<HomeStats | null> {
         .from('emotions')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .neq('validation', 'rejected'),
+        // Só emoções VALIDADAS pelo usuário (confirmadas), não as sugeridas pela IA.
+        .eq('validation', 'confirmed'),
       supabase
         .from('patterns')
         .select('id', { count: 'exact', head: true })
