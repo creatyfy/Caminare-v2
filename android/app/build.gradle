@@ -18,8 +18,13 @@ android {
         applicationId "com.caminare.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // versionCode: o Play exige um número MAIOR a cada upload. O Capacitor gera
+        // versionCode=1 fixo, então todo AAB saía como "1" e o Play recusava
+        // ("código de versão 1 já foi usado"). Lemos o BUILD_NUMBER do Codemagic
+        // (sempre incrementa) para garantir um número único e crescente; em build
+        // local sem a variável, cai em 1.
+        versionCode (System.getenv("BUILD_NUMBER") ?: "1").toInteger()
+        versionName "2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
