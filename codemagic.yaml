@@ -25,34 +25,47 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm ci
-      - name: Corrigir e regenerar ícone do Android (fundo roxo, coruja branca)
+      - name: Gerar ícone do Android a partir de assets/icon.png
         script: |
-          # A fonte assets/icon.png (fundo roxo + coruja branca) é a CORRETA. Os layers
-          # assets/icon-foreground.png / icon-background.png estavam invertidos (coruja
-          # roxa + fundo branco), então o ícone instalado saía errado. Aqui recriamos os
-          # dois layers a partir do icon.png e regeneramos os mipmaps do Android.
-          cat > /tmp/fix-icon.cjs <<'EOF'
+          # Deriva as 2 camadas do ícone adaptativo (coruja branca transparente +
+          # fundo roxo) a partir do MESMO assets/icon.png que o iOS usa, e regenera
+          # os mipmaps. O script fica na RAIZ do projeto p/ o require('sharp') achar
+          # o pacote (sharp vem junto do @capacitor/assets, instalado no npm ci).
+          cat > _gen-icon.cjs <<'EOF'
           const sharp = require('sharp');
           (async () => {
-            // Cor de fundo da marca = pixel do canto do icon.png (o roxo).
-            const { data } = await sharp('assets/icon.png').raw().toBuffer({ resolveWithObject: true });
-            const r = data[0], g = data[1], b = data[2];
-            const bg = { r, g, b, alpha: 1 };
-            // Foreground: recorta a margem roxa (trim) p/ a coruja preencher o quadro,
-            // depois centraliza num canvas 1024 com respiro (zona de segurança adaptativa).
-            const fg = await sharp('assets/icon.png')
-              .trim()
-              .resize(760, 760, { fit: 'contain', background: bg })
-              .extend({ top: 132, bottom: 132, left: 132, right: 132, background: bg })
-              .png().toBuffer();
-            await sharp(fg).toFile('assets/icon-foreground.png');
-            // Background: roxo sólido igual ao do icon.png.
-            await sharp({ create: { width: 1024, height: 1024, channels: 4, background: bg } })
+            const { data, info } = await sharp('assets/icon.png').ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+            const w = info.width, h = info.height, ch = info.channels;
+            // Fundo = cor mais frequente entre os pixels escuros (o roxo da marca).
+            const counts = {}; let bg = [76, 60, 108]; let bestN = 0;
+            for (let i = 0; i < data.length; i += ch) {
+              const R = data[i], G = data[i + 1], B = data[i + 2];
+              const L = 0.299 * R + 0.587 * G + 0.114 * B;
+              if (L < 170) {
+                const key = (R >> 3) + ',' + (G >> 3) + ',' + (B >> 3);
+                const c = (counts[key] || 0) + 1; counts[key] = c;
+                if (c > bestN) { bestN = c; bg = [((R >> 3) << 3) | 4, ((G >> 3) << 3) | 4, ((B >> 3) << 3) | 4]; }
+              }
+            }
+            // Coruja BRANCA sobre transparente (alpha vem de quão escuro é o pixel).
+            const fg = Buffer.alloc(w * h * 4);
+            for (let i = 0, p = 0; i < data.length; i += ch, p += 4) {
+              const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+              let cov = (240 - L) / 150; cov = cov < 0 ? 0 : cov > 1 ? 1 : cov;
+              fg[p] = 255; fg[p + 1] = 255; fg[p + 2] = 255; fg[p + 3] = Math.round(cov * 255);
+            }
+            const owl = await sharp(fg, { raw: { width: w, height: h, channels: 4 } }).png().trim().toBuffer();
+            const m = await sharp(owl).metadata();
+            const F = 1024, target = Math.round(F * 0.66), scale = target / Math.max(m.width, m.height);
+            const owlR = await sharp(owl).resize(Math.round(m.width * scale), Math.round(m.height * scale)).toBuffer();
+            await sharp({ create: { width: F, height: F, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+              .composite([{ input: owlR, gravity: 'center' }]).png().toFile('assets/icon-foreground.png');
+            await sharp({ create: { width: F, height: F, channels: 4, background: { r: bg[0], g: bg[1], b: bg[2], alpha: 1 } } })
               .png().toFile('assets/icon-background.png');
-            console.log('Fundo roxo detectado (r,g,b):', r, g, b);
+            console.log('icone gerado — fundo roxo', bg);
           })();
           EOF
-          node /tmp/fix-icon.cjs
+          node _gen-icon.cjs
           npx @capacitor/assets generate --android
       - name: Gerar .env de produção
         script: |
