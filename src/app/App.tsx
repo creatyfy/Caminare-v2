@@ -9,6 +9,7 @@ import { BottomNav } from './components/BottomNav';
 import { NativeAuthBridge } from './components/NativeAuthBridge';
 import { NameGate } from './components/NameGate';
 import { SplashScreen } from './screens/SplashScreen';
+import { LandingScreen } from './screens/LandingScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { SignUpScreen } from './screens/SignUpScreen';
 import { ForgotPasswordScreen } from './screens/ForgotPasswordScreen';
@@ -157,6 +158,32 @@ function AppRoutes() {
   );
 }
 
+// Casca raiz: decide o que renderizar em "/". No app WEB, "/" é a landing de
+// marketing (página inicial exclusiva do web) — em tela cheia, fora do container
+// de 375px do app. No nativo (ou em qualquer outra rota), renderiza o app normal
+// dentro do container.
+function RootShell() {
+  const location = useLocation();
+  const showLanding = !isNative && location.pathname === '/';
+  if (showLanding) return <LandingScreen />;
+  return (
+    <div
+      className={`w-full ${isNative ? '' : 'max-w-[375px]'} mx-auto relative overflow-hidden`}
+      style={{
+        backgroundColor: 'var(--cam-bg-page)',
+        height: '100dvh',
+        boxSizing: 'border-box',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
+      <AppRoutes />
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -166,27 +193,10 @@ export default function App() {
             <PendingPatternProvider>
               <NativeAuthBridge />
               <NameGate />
-              {/* Container raiz do app. No nativo (edge-to-edge, Android 15/iOS):
-                  - 100dvh em vez de 100vh: a altura acompanha a viewport real do
-                    webview (não estoura com as barras/toolbar dinâmica).
-                  - padding de safe area nas 4 bordas (box-border): o conteúdo
-                    nunca fica embaixo da status bar (topo) nem da barra de
-                    navegação/notch (base e laterais). A BottomNav, por ser fixed,
-                    trata o inset da base por conta própria. */}
-              <div
-                className={`w-full ${isNative ? '' : 'max-w-[375px]'} mx-auto relative overflow-hidden`}
-                style={{
-                  backgroundColor: 'var(--cam-bg-page)',
-                  height: '100dvh',
-                  boxSizing: 'border-box',
-                  paddingTop: 'env(safe-area-inset-top)',
-                  paddingBottom: 'env(safe-area-inset-bottom)',
-                  paddingLeft: 'env(safe-area-inset-left)',
-                  paddingRight: 'env(safe-area-inset-right)',
-                }}
-              >
-                <AppRoutes />
-              </div>
+              {/* Container raiz do app (375px no web, edge-to-edge no nativo) fica
+                  encapsulado no RootShell — que também decide mostrar a landing de
+                  marketing em "/" quando é web. */}
+              <RootShell />
             </PendingPatternProvider>
           </BrowserRouter>
         </EntitlementProvider>
