@@ -321,6 +321,10 @@ export const en = {
     cancelSubscription: 'Cancel subscription',
     editName: 'Edit name',
     namePlaceholder: 'Your name',
+    editEmail: 'Edit email',
+    emailPlaceholder: 'Your email',
+    emailChangeSent:
+      'We sent a confirmation link to the new email. The change will only take effect after you open that link. Check your current inbox as well.',
     accountTypeSection: 'Account type',
     accountTrial: 'Free trial',
     accountTrialDaysLeft_one: '{{count}} day left',
@@ -355,6 +359,9 @@ export const en = {
       shortPassword: 'New password must be at least 6 characters.',
       wrongCurrent: 'Current password is incorrect.',
       invalidSession: 'Invalid session. Sign in again.',
+      emailInvalid: 'Enter a valid email.',
+      emailSame: 'The new email must be different from the current one.',
+      emailUpdateFailed: 'Could not change the email. Please try again.',
     },
     deleteModal: {
       title: 'Delete your account?',

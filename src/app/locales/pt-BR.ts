@@ -321,6 +321,10 @@ export const ptBR = {
     cancelSubscription: 'Cancelar assinatura',
     editName: 'Editar nome',
     namePlaceholder: 'Seu nome',
+    editEmail: 'Editar email',
+    emailPlaceholder: 'Seu email',
+    emailChangeSent:
+      'Enviamos um link de confirmação para o novo email. A troca só será concluída depois que você abrir esse link. Verifique também a caixa de entrada do email atual.',
     accountTypeSection: 'Tipo de conta',
     accountTrial: 'Período de teste',
     accountTrialDaysLeft_one: '{{count}} dia restante',
@@ -355,6 +359,9 @@ export const ptBR = {
       shortPassword: 'A nova senha deve ter ao menos 6 caracteres.',
       wrongCurrent: 'Senha atual incorreta.',
       invalidSession: 'Sessão inválida. Faça login novamente.',
+      emailInvalid: 'Digite um email válido.',
+      emailSame: 'O novo email deve ser diferente do atual.',
+      emailUpdateFailed: 'Não foi possível alterar o email. Tente novamente.',
     },
     deleteModal: {
       title: 'Excluir sua conta?',

@@ -29,7 +29,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
 import { useEntitlement } from '../contexts/EntitlementContext';
-import { getProfile, deleteAccount, submitFeedback, updateFullName, type Profile } from '../lib/db';
+import { getProfile, deleteAccount, submitFeedback, updateFullName, updateEmail, type Profile } from '../lib/db';
 import { setLanguage, type Lang } from '../lib/i18n';
 import { DevSubscriptionPanel } from '../components/DevSubscriptionPanel';
 import { showDevTools } from '../lib/native';
@@ -47,6 +47,8 @@ export function ProfileScreen() {
   const [showAccountInfo, setShowAccountInfo] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showEditName, setShowEditName] = useState(false);
+  const [showEditEmail, setShowEditEmail] = useState(false);
+  const [emailChangeSent, setEmailChangeSent] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -262,6 +264,55 @@ export function ProfileScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
               <InfoRow label={t('profile.name')} value={fullName} icon={<UserIcon size={16} color="var(--cam-text-secondary)" />} />
               <InfoRow label={t('profile.email')} value={user?.email ?? '—'} icon={<Mail size={16} color="var(--cam-text-secondary)" />} />
+              {!isOAuthUser && (
+                emailChangeSent ? (
+                  <div
+                    role="status"
+                    style={{
+                      backgroundColor: 'var(--cam-bg-brand-soft, rgba(83,74,183,0.08))',
+                      color: 'var(--cam-text-secondary)',
+                      borderRadius: '12px',
+                      padding: '10px 14px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {t('profile.emailChangeSent')}
+                  </div>
+                ) : showEditEmail ? (
+                  <EditEmailForm
+                    currentEmail={user?.email ?? ''}
+                    onSent={() => {
+                      setEmailChangeSent(true);
+                      setShowEditEmail(false);
+                    }}
+                    onClose={() => setShowEditEmail(false)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowEditEmail(true)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      alignSelf: 'flex-start',
+                      background: 'none',
+                      border: 'none',
+                      padding: '4px 0',
+                      cursor: 'pointer',
+                      color: 'var(--cam-text-brand)',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <Pencil size={14} strokeWidth={2.2} />
+                    {t('profile.editEmail')}
+                  </button>
+                )
+              )}
               <InfoRow
                 label={t('profile.memberSince')}
                 value={memberSince}
@@ -1294,6 +1345,133 @@ function EditNameForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t('profile.namePlaceholder')}
+        autoFocus
+        style={{
+          width: '100%',
+          height: '48px',
+          padding: '0 14px',
+          borderRadius: '12px',
+          border: `1.5px solid var(--cam-border)`,
+          backgroundColor: 'var(--cam-bg-input)',
+          fontSize: '14px',
+          color: 'var(--cam-text-primary)',
+          outline: 'none',
+          boxSizing: 'border-box',
+          fontFamily: 'inherit',
+          fontWeight: 500,
+        }}
+      />
+      {error && (
+        <div
+          role="alert"
+          style={{
+            backgroundColor: 'var(--cam-bg-error-soft)',
+            color: 'var(--cam-text-error)',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+        >
+          {error}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={submitting}
+          style={{
+            flex: 1,
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'transparent',
+            color: 'var(--cam-text-secondary)',
+            border: `1.5px solid var(--cam-border)`,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {t('common.cancel')}
+        </button>
+        <button
+          type="submit"
+          disabled={submitting}
+          style={{
+            flex: 1,
+            height: '44px',
+            borderRadius: '9999px',
+            backgroundColor: 'var(--cam-color-brand)',
+            color: 'var(--cam-text-on-brand)',
+            border: 'none',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            opacity: submitting ? 0.85 : 1,
+            fontFamily: 'inherit',
+          }}
+        >
+          {submitting && <Loader2 size={14} className="animate-spin" />}
+          {submitting ? t('common.saving') : t('common.save')}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function EditEmailForm({
+  currentEmail,
+  onSent,
+  onClose,
+}: {
+  currentEmail: string;
+  onSent: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState(currentEmail);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) {
+      setError(t('profile.errors.missingFields'));
+      return;
+    }
+    if (trimmed === currentEmail.trim().toLowerCase()) {
+      setError(t('profile.errors.emailSame'));
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    const { error: err } = await updateEmail(trimmed);
+    setSubmitting(false);
+    if (err) {
+      setError(err === 'invalid' ? t('profile.errors.emailInvalid') : t('profile.errors.emailUpdateFailed'));
+      return;
+    }
+    onSent();
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+      <input
+        type="email"
+        inputMode="email"
+        autoCapitalize="none"
+        autoCorrect="off"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder={t('profile.emailPlaceholder')}
         autoFocus
         style={{
           width: '100%',
