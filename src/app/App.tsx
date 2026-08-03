@@ -168,6 +168,19 @@ function RootShell() {
   const location = useLocation();
   const path = location.pathname;
   if (!isNative && path === '/') return <LandingScreen />;
+  // Página pública de planos/preços (link estável p/ citar nos Termos): abre a
+  // landing já na seção de Planos.
+  if (!isNative && path === '/planos') {
+    return (
+      <div style={{ position: 'fixed', inset: 0, backgroundColor: '#F8F7FF' }}>
+        <iframe
+          src="/landing.html#planos"
+          title="Planos Caminare"
+          style={{ width: '100%', height: '100%', border: 0, display: 'block' }}
+        />
+      </div>
+    );
+  }
   // Páginas públicas (jurídicas/informativas) abrem em largura cheia no web,
   // como páginas de site normais — não na coluna de 375px do app. No nativo
   // seguem no layout do app.
