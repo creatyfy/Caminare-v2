@@ -34,14 +34,14 @@ export function LegalView({ doc }: { doc: LegalDoc }) {
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
+          justifyContent: 'center',
           padding: '48px 20px 16px 20px',
           backgroundColor: 'var(--cam-bg-card)',
           borderBottom: `1px solid var(--cam-border-subtle)`,
           flexShrink: 0,
         }}
       >
+       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', maxWidth: '760px' }}>
         <button
           type="button"
           onClick={goBack}
@@ -69,9 +69,11 @@ export function LegalView({ doc }: { doc: LegalDoc }) {
         >
           {doc.title}
         </h1>
+       </div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 48px 24px' }}>
+       <div style={{ maxWidth: '760px', margin: '0 auto' }}>
         {doc.updated && (
           <p
             style={{
@@ -87,6 +89,7 @@ export function LegalView({ doc }: { doc: LegalDoc }) {
         {doc.blocks.map((block, i) => (
           <Block key={i} block={block} />
         ))}
+       </div>
       </div>
     </div>
   );

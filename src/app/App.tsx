@@ -162,10 +162,30 @@ function AppRoutes() {
 // marketing (página inicial exclusiva do web) — em tela cheia, fora do container
 // de 375px do app. No nativo (ou em qualquer outra rota), renderiza o app normal
 // dentro do container.
+const FULL_WIDTH_WEB_ROUTES = ['/termos', '/privacidade', '/excluir-conta'];
+
 function RootShell() {
   const location = useLocation();
-  const showLanding = !isNative && location.pathname === '/';
-  if (showLanding) return <LandingScreen />;
+  const path = location.pathname;
+  if (!isNative && path === '/') return <LandingScreen />;
+  // Páginas públicas (jurídicas/informativas) abrem em largura cheia no web,
+  // como páginas de site normais — não na coluna de 375px do app. No nativo
+  // seguem no layout do app.
+  if (!isNative && FULL_WIDTH_WEB_ROUTES.includes(path)) {
+    return (
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100dvh',
+          overflow: 'hidden',
+          backgroundColor: 'var(--cam-bg-page)',
+        }}
+      >
+        <AppRoutes />
+      </div>
+    );
+  }
   return (
     <div
       className={`w-full ${isNative ? '' : 'max-w-[375px]'} mx-auto relative overflow-hidden`}
