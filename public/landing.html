@@ -390,7 +390,12 @@
 </div></footer>
 <script>
 var html=document.documentElement, btn=document.getElementById('langToggle');
-btn.addEventListener('click',function(){var n=html.getAttribute('data-lang')==='pt'?'en':'pt';html.setAttribute('data-lang',n);html.setAttribute('lang',n==='pt'?'pt-BR':'en');});
+// Idioma sincronizado com o app (mesmo domínio → mesmo localStorage, chave 'caminare.lang').
+// Assim, ao clicar em Entrar/Termos/Privacidade, o app abre no mesmo idioma da landing.
+var LANG_KEY='caminare.lang';
+function pickLang(){try{var s=localStorage.getItem(LANG_KEY);if(s==='en'||s==='pt-BR')return s;}catch(e){}return (navigator.language||'pt').toLowerCase().indexOf('pt')===0?'pt-BR':'en';}
+(function(){var l=pickLang();html.setAttribute('data-lang',l==='pt-BR'?'pt':'en');html.setAttribute('lang',l);})();
+btn.addEventListener('click',function(){var n=html.getAttribute('data-lang')==='pt'?'en':'pt';var l=n==='pt'?'pt-BR':'en';html.setAttribute('data-lang',n);html.setAttribute('lang',l);try{localStorage.setItem(LANG_KEY,l);}catch(e){}});
 var hdr=document.getElementById('hdr'),prog=document.getElementById('prog');
 addEventListener('scroll',function(){hdr.classList.toggle('scrolled',scrollY>20);var d=document.documentElement,m=d.scrollHeight-d.clientHeight;prog.style.width=(m>0?scrollY/m*100:0)+'%';},{passive:true});
 document.querySelectorAll('.card').forEach(function(c){c.addEventListener('mousemove',function(e){var b=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-b.left)+'px');c.style.setProperty('--my',(e.clientY-b.top)+'px');});});
