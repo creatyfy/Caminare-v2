@@ -99,6 +99,29 @@ export async function updateFullName(
   }
 }
 
+/**
+ * Atualiza o e-mail da conta (auth). Por segurança, o Supabase envia um link de
+ * confirmação para o novo endereço (e, se configurado, também para o antigo); a
+ * troca só se efetiva quando o usuário confirma pelo link. Por isso não
+ * atualizamos nada localmente aqui — apenas disparamos o fluxo.
+ */
+export async function updateEmail(newEmail: string): Promise<{ error: string | null }> {
+  const email = newEmail.trim().toLowerCase();
+  // Validação simples de formato (o backend valida de verdade).
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: 'invalid' };
+  try {
+    const { error } = await supabase.auth.updateUser({ email });
+    if (error) {
+      console.error('[db.updateEmail]', error);
+      return { error: error.message };
+    }
+    return { error: null };
+  } catch (err) {
+    console.error('[db.updateEmail]', err);
+    return { error: String(err) };
+  }
+}
+
 export async function deleteAccount(): Promise<{ error: string | null }> {
   try {
     const { error } = await supabase.rpc('delete_my_account');
@@ -142,8 +165,9 @@ export async function getHomeStats(userId: string): Promise<HomeStats | null> {
         .from('emotions')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
-        // Só emoções VALIDADAS pelo usuário (confirmadas), não as sugeridas pela IA.
-        .eq('validation', 'confirmed'),
+        // Só emoções VALIDADAS pelo usuário (confirmadas ou editadas), não as
+        // sugeridas pela IA (pending) nem descartadas (rejected/ignored).
+        .in('validation', ['confirmed', 'edited']),
       supabase
         .from('patterns')
         .select('id', { count: 'exact', head: true })

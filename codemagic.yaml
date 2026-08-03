@@ -25,6 +25,35 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm ci
+      - name: Corrigir e regenerar ícone do Android (fundo roxo, coruja branca)
+        script: |
+          # A fonte assets/icon.png (fundo roxo + coruja branca) é a CORRETA. Os layers
+          # assets/icon-foreground.png / icon-background.png estavam invertidos (coruja
+          # roxa + fundo branco), então o ícone instalado saía errado. Aqui recriamos os
+          # dois layers a partir do icon.png e regeneramos os mipmaps do Android.
+          cat > /tmp/fix-icon.cjs <<'EOF'
+          const sharp = require('sharp');
+          (async () => {
+            // Cor de fundo da marca = pixel do canto do icon.png (o roxo).
+            const { data } = await sharp('assets/icon.png').raw().toBuffer({ resolveWithObject: true });
+            const r = data[0], g = data[1], b = data[2];
+            const bg = { r, g, b, alpha: 1 };
+            // Foreground: recorta a margem roxa (trim) p/ a coruja preencher o quadro,
+            // depois centraliza num canvas 1024 com respiro (zona de segurança adaptativa).
+            const fg = await sharp('assets/icon.png')
+              .trim()
+              .resize(760, 760, { fit: 'contain', background: bg })
+              .extend({ top: 132, bottom: 132, left: 132, right: 132, background: bg })
+              .png().toBuffer();
+            await sharp(fg).toFile('assets/icon-foreground.png');
+            // Background: roxo sólido igual ao do icon.png.
+            await sharp({ create: { width: 1024, height: 1024, channels: 4, background: bg } })
+              .png().toFile('assets/icon-background.png');
+            console.log('Fundo roxo detectado (r,g,b):', r, g, b);
+          })();
+          EOF
+          node /tmp/fix-icon.cjs
+          npx @capacitor/assets generate --android
       - name: Gerar .env de produção
         script: |
           printf "VITE_SUPABASE_URL=%s\n" "$VITE_SUPABASE_URL" > .env.production
