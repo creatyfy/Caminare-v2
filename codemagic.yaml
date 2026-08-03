@@ -34,35 +34,21 @@ workflows:
           cat > _gen-icon.cjs <<'EOF'
           const sharp = require('sharp');
           (async () => {
-            const { data, info } = await sharp('assets/icon.png').ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-            const w = info.width, h = info.height, ch = info.channels;
-            // Fundo = cor mais frequente entre os pixels escuros (o roxo da marca).
-            const counts = {}; let bg = [76, 60, 108]; let bestN = 0;
-            for (let i = 0; i < data.length; i += ch) {
-              const R = data[i], G = data[i + 1], B = data[i + 2];
-              const L = 0.299 * R + 0.587 * G + 0.114 * B;
-              if (L < 170) {
-                const key = (R >> 3) + ',' + (G >> 3) + ',' + (B >> 3);
-                const c = (counts[key] || 0) + 1; counts[key] = c;
-                if (c > bestN) { bestN = c; bg = [((R >> 3) << 3) | 4, ((G >> 3) << 3) | 4, ((B >> 3) << 3) | 4]; }
-              }
-            }
-            // Coruja BRANCA sobre transparente (alpha vem de quão escuro é o pixel).
-            const fg = Buffer.alloc(w * h * 4);
-            for (let i = 0, p = 0; i < data.length; i += ch, p += 4) {
-              const L = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-              let cov = (240 - L) / 150; cov = cov < 0 ? 0 : cov > 1 ? 1 : cov;
-              fg[p] = 255; fg[p + 1] = 255; fg[p + 2] = 255; fg[p + 3] = Math.round(cov * 255);
-            }
-            const owl = await sharp(fg, { raw: { width: w, height: h, channels: 4 } }).png().trim().toBuffer();
+            const src = 'assets/icon.png';
+            const { data } = await sharp(src).raw().toBuffer({ resolveWithObject: true });
+            const bg = { r: data[0], g: data[1], b: data[2], alpha: 1 };
+            // Recorta a margem roxa do icon.png (sobra só a coruja, com o traço EXATO)
+            // e amplia p/ ~84% do quadro — compensando a folga que o ícone adaptativo
+            // do Android obriga, pra a coruja ficar grande igual à imagem de referência.
+            const owl = await sharp(src).trim().toBuffer();
             const m = await sharp(owl).metadata();
-            const F = 1024, target = Math.round(F * 0.66), scale = target / Math.max(m.width, m.height);
+            const F = 1024, target = Math.round(F * 0.84), scale = target / Math.max(m.width, m.height);
             const owlR = await sharp(owl).resize(Math.round(m.width * scale), Math.round(m.height * scale)).toBuffer();
-            await sharp({ create: { width: F, height: F, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+            await sharp({ create: { width: F, height: F, channels: 4, background: bg } })
               .composite([{ input: owlR, gravity: 'center' }]).png().toFile('assets/icon-foreground.png');
-            await sharp({ create: { width: F, height: F, channels: 4, background: { r: bg[0], g: bg[1], b: bg[2], alpha: 1 } } })
+            await sharp({ create: { width: F, height: F, channels: 4, background: bg } })
               .png().toFile('assets/icon-background.png');
-            console.log('icone gerado — fundo roxo', bg);
+            console.log('icone: coruja recortada ~84%; fundo', bg);
           })();
           EOF
           node _gen-icon.cjs
