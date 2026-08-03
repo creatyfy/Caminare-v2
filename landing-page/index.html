@@ -1,26 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-lang="pt">
+<html lang~E~"pt-BR" data-lang~E~"pt">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset~E~"UTF-8">
+<meta name~E~"viewport" content~E~"width~E~device-width, initial-scale~E~1, viewport-fit~E~cover">
 <title>Caminare · Autoconhecimento / Self-discovery</title>
-<meta name="description" content="Um diário inteligente que te ajuda a entender suas emoções, crenças e padrões a partir do que você vive no dia a dia.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Caveat:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name~E~"description" content~E~"Um diário inteligente que te ajuda a entender suas emoções, crenças e padrões a partir do que você vive no dia a dia.">
+<link rel~E~"preconnect" href~E~"https://fonts.googleapis.com">
+<link rel~E~"preconnect" href~E~"https://fonts.gstatic.com" crossorigin>
+<link href~E~"https://fonts.googleapis.com/css2~Q~family~E~Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500~A~family~E~Fredoka:wght@500;600;700~A~family~E~Plus+Jakarta+Sans:wght@400;500;600;700~A~display~E~swap" rel~E~"stylesheet">
 <style>
-  :root{
-    --bg:#F4EEE1;--muted-bg:#ECE3D2;--card:#FBF6EC;--ink:#26212E;--sub:#847A6B;
-    --brand:#534AB7;--brand-2:#6558D3;--violet-soft:#A99FE0;--chip:#E7E2D2;
-    --green:#1D9E75;--green-deep:#0F6E56;--green-soft:#E2EFE1;
-    --plum:#2A2340;--amber:#F59E0B;--ochre:#C4703A;--paper:#F4EEE1;--line:rgba(38,33,46,.14);
-    --radius:18px;--shadow:0 22px 50px rgba(60,50,35,.16);--shadow-sm:0 10px 26px rgba(60,50,35,.10);--maxw:1160px;
-  }
+  :root{--bg:#F8F7FF;--muted-bg:#F0EFFF;--card:#FFFFFF;--ink:#2D2A45;--sub:#8B87A8;--brand:#534AB7;--brand-2:#6558D3;--violet-soft:#A99FE0;--chip:#E8E6F7;--green:#1D9E75;--green-deep:#0F6E56;--green-soft:#E1F5EE;--plum:#2C2147;--amber:#F59E0B;--line:rgba(83,74,183,.13);--radius:22px;--shadow:0 24px 60px rgba(83,74,183,.16);--shadow-sm:0 10px 30px rgba(83,74,183,.10);--maxw:1160px}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  html[data-lang="pt"] .en{display:none}
-  html[data-lang="en"] .pt{display:none}
+  html[data-lang~E~"pt"] .en{display:none}
+  html[data-lang~E~"en"] .pt{display:none}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
   h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:500;line-height:1.1;letter-spacing:-.015em;color:var(--ink)}
   a{color:inherit;text-decoration:none}
@@ -32,32 +26,27 @@
   .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .btn-ghost:hover{border-color:var(--brand);color:var(--brand);transform:translateY(-3px)}
   header{position:sticky;top:0;z-index:50;transition:background .3s,box-shadow .3s}
-  header.scrolled{background:rgba(244,238,225,.9);backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--line)}
-  nav{display:flex;align-items:center;justify-content:space-between;height:74px}
-  .brand{display:flex;align-items:center;gap:11px;font-family:'Fredoka','Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:600;letter-spacing:-.01em;color:var(--brand)}
+  header.scrolled{background:rgba(248,247,255,.85);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
+  nav{display:flex;align-items:center;justify-content:space-between;height:74px;gap:24px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Fredoka','Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:600;letter-spacing:-.01em;color:var(--brand);flex:none}
   .owl-badge{width:42px;height:42px;border-radius:13px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 8px 18px rgba(83,74,183,.18);overflow:hidden}
   .owl-badge img{width:100%;height:100%;object-fit:cover}
-  .nav-links{display:flex;gap:28px;font-size:14.5px;color:var(--sub);font-weight:500}
+  .nav-links{display:flex;gap:28px;font-size:14.5px;color:var(--sub);font-weight:500;flex:1;justify-content:center}
   .nav-links a{position:relative}
   .nav-links a::after{content:"";position:absolute;left:0;bottom:-5px;width:0;height:2px;background:var(--green);border-radius:2px;transition:width .3s}
   .nav-links a:hover{color:var(--ink)}.nav-links a:hover::after{width:100%}
-  .nav-right{display:flex;align-items:center;gap:18px}
+  .nav-right{display:flex;align-items:center;gap:18px;flex:none}
   .lang{border:1px solid var(--line);background:transparent;color:var(--sub);font-family:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer;letter-spacing:.04em}
   .lang:hover{color:var(--brand);border-color:var(--brand)}
   .nav-cta{padding:10px 20px}
   @media(max-width:880px){.nav-links{display:none}}
-
-  .hero{position:relative;padding:56px 0 30px;overflow:hidden}
+  .hero{position:relative;padding:56px 0 60px;overflow:hidden}
   .blob{display:none}
-  .blob.b1{width:520px;height:520px;background:rgba(106,79,160,.16);top:-140px;right:-100px;animation:drift 24s ease-in-out infinite}
-  .blob.b2{width:420px;height:420px;background:rgba(29,158,117,.12);bottom:-160px;left:-120px;animation:drift 28s ease-in-out infinite reverse}
-  @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(34px,26px)}}
   .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center}
-  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:'Caveat',cursive;font-size:22px;font-weight:600;color:var(--ochre);margin-bottom:14px;transform:rotate(-1.5deg)}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);background:rgba(83,74,183,.08);border:1px solid rgba(83,74,183,.16);padding:7px 15px;border-radius:999px;margin-bottom:24px}
   .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
   h1{font-size:clamp(40px,5.4vw,64px)}
-  .u-mark{position:relative;display:inline-block}
-  .u-mark::after{content:"";position:absolute;left:-4px;right:-4px;bottom:2px;height:.4em;background:var(--ochre);opacity:.3;border-radius:45% 55% 52% 60%/62% 50% 60% 45%;transform:rotate(-1deg);z-index:-1}
+  .u-mark{background:none}
   .hero p.lead{color:var(--sub);font-size:clamp(17px,2vw,20px);margin:24px 0 4px;max-width:480px}
   .trial-note{display:inline-flex;align-items:center;gap:8px;color:var(--ink);font-size:14.5px;font-weight:600;margin:20px 0 24px}
   .trial-note svg{color:var(--green)}
@@ -69,145 +58,116 @@
   .store strong{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em}
   .soon{position:absolute;top:-9px;right:-9px;background:var(--green);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px}
   .hero-visual{position:relative}
-  .hero-photo{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:3px;box-shadow:var(--shadow);display:block;border:11px solid #FBF6EC;background:#FBF6EC;transform:rotate(1.6deg)}
-  .float-card{position:absolute;left:-26px;bottom:40px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:15px 18px;box-shadow:var(--shadow-sm);width:242px;transform:rotate(-2.5deg);animation:bob 6s ease-in-out infinite}
+  .hero-photo{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:30px;box-shadow:var(--shadow);display:block}
+  .phone{width:270px;background:#2D2A45;border-radius:40px;padding:10px;box-shadow:0 26px 58px rgba(83,74,183,.3);position:relative}
+  .phone::before{content:"";position:absolute;top:11px;left:50%;transform:translateX(-50%);width:104px;height:22px;background:#2D2A45;border-radius:0 0 14px 14px;z-index:3}
+  .phone-screen{border-radius:30px;overflow:hidden;background:#F8F7FF;line-height:0}
+  .demo-phone{max-width:270px;margin:0 auto}
+  .demo-phone .phone{width:100%}
+  .app-nav{position:relative;aspect-ratio:9/16.5;background:#F8F7FF;overflow:hidden;font-size:13px;line-height:1.5;text-align:left}
+  .scr{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;transform:translateX(38px);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
+  .scr.on{opacity:1;transform:none;pointer-events:auto}
+  .scr.past{opacity:0;transform:translateX(-38px)}
+  .sc-head{padding:30px 15px 11px;background:#fff;border-bottom:1px solid var(--line)}
+  .sc-back{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--brand);font-weight:600;margin-bottom:7px}
+  .sc-back svg{width:13px;height:13px}
+  .sc-title{font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-.2px}
+  .sc-sub{font-size:10.5px;color:var(--sub);margin-top:3px;line-height:1.4}
+  .sc-body{flex:1;overflow-y:auto;padding:13px 15px;scrollbar-width:none}
+  .sc-body::-webkit-scrollbar{display:none}
+  .sc-lbl{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);font-weight:700;margin-bottom:9px}
+  .sc-cta{padding:10px 15px 14px}
+  .sc-btn{width:100%;border:none;border-radius:999px;padding:11px;font-family:inherit;font-weight:700;font-size:13px;color:#fff;transition:transform .15s ease,filter .15s ease}
+  .sc-btn.brand{background:var(--brand)}
+  .sc-btn.green{background:var(--green)}
+  .sc-btn.press{transform:scale(.96);filter:brightness(.93)}
+  .reg-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-height:108px;font-size:12.5px;color:var(--ink);line-height:1.5}
+  .cursor{display:inline-block;width:2px;height:14px;background:var(--brand);vertical-align:-2px;margin-left:1px;animation:cur 1s steps(1) infinite}
+  @keyframes cur{50%{opacity:0}}
+  .reg-count{text-align:right;font-size:10px;color:var(--sub);margin-top:8px}
+  .emo-row{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:7px 9px;margin-bottom:8px;box-shadow:0 4px 12px rgba(83,74,183,.05)}
+  .emo-x,.emo-ck{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:none;font-weight:700;transition:all .3s}
+  .emo-x{background:#FBEEEE;color:#D98A8A}
+  .emo-ck{background:#E7F4EE;color:#7FC3A6}
+  .emo-pill{flex:1;text-align:center;background:var(--muted-bg);border-radius:999px;padding:6px 8px;font-size:12px;color:var(--brand)}
+  .emo-ck.on{background:var(--green);color:#fff}
+  .emo-x.on{background:#E24B4B;color:#fff}
+  .emo-row.rej .emo-pill{text-decoration:line-through;color:var(--sub);background:#EFEDF6}
+  .emo-cap{margin-top:10px;font-size:11px;color:var(--sub);display:inline-flex;align-items:center;gap:6px;opacity:0;transition:opacity .4s}
+  .emo-cap.in{opacity:1}
+  .emo-cap svg{width:13px;height:13px;color:var(--green)}
+  .bel-card{background:#fff;border-radius:14px;padding:11px 11px 9px;margin-bottom:10px;box-shadow:0 4px 12px rgba(83,74,183,.06)}
+  .bel-txt{font-weight:700;font-size:12.5px;color:var(--ink);margin-bottom:10px;line-height:1.35}
+  .bel-acts{display:flex;gap:6px}
+  .bel-b{flex:1;border-radius:10px;padding:7px 3px;text-align:center;font-size:9px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .3s}
+  .bel-b .bi{font-size:12px;line-height:1}
+  .bel-b.x{background:#FBEEEE;color:#C24B4B}
+  .bel-b.aj{background:#EFEDFA;color:var(--brand)}
+  .bel-b.ok{background:#E7F4EE;color:var(--green-deep)}
+  .bel-b.ok.on{background:var(--green);color:#fff}
+  .sc-done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:34px 24px 24px;gap:14px}
+  .done-check{width:74px;height:74px;border-radius:50%;background:var(--brand-2);display:grid;place-items:center;color:#fff;font-size:34px;box-shadow:0 14px 30px rgba(83,74,183,.35);transform:scale(.4);opacity:0;transition:transform .5s cubic-bezier(.2,1.5,.4,1),opacity .3s}
+  .done-check.pop{transform:scale(1);opacity:1}
+  .done-title{font-weight:700;font-size:17px;color:var(--ink)}
+  .done-msg{font-size:12.5px;color:var(--sub);line-height:1.5;max-width:200px}
+  .float-card{position:absolute;left:-28px;bottom:36px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.85);border-radius:20px;padding:16px 18px;box-shadow:0 20px 44px rgba(83,74,183,.22);width:248px;animation:bob 6s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-  .float-card .fc-label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin-bottom:7px}
-  .fc-chips{display:flex;flex-wrap:wrap;gap:6px}
-  .fc-chips span{font-size:11.5px;padding:5px 11px;border-radius:999px;background:var(--chip);color:var(--brand);font-weight:600}
+  .float-card .fc-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .float-card .fc-label svg{width:13px;height:13px;color:var(--green);flex:none}
+  .fc-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .fc-chips span{font-size:12px;padding:6px 12px;border-radius:999px;background:var(--chip);color:var(--brand);font-weight:600}
   .fc-chips span.g{background:var(--green-soft);color:var(--green-deep)}
-  .float-badge{position:absolute;right:-16px;top:30px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:11px 15px;box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:10px;transform:rotate(2.5deg);animation:bob 6s ease-in-out infinite;animation-delay:1s}
-  .float-badge .fb-owl{width:34px;height:34px;border-radius:10px;overflow:hidden;flex:none}
+  .float-badge{position:absolute;right:-18px;top:26px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 16px;box-shadow:0 16px 38px rgba(83,74,183,.2);display:flex;align-items:center;gap:11px;animation:bob 6s ease-in-out infinite;animation-delay:1s}
+  .float-badge .fb-owl{width:36px;height:36px;border-radius:11px;overflow:hidden;flex:none;background:var(--muted-bg)}
   .float-badge .fb-owl img{width:100%;height:100%;object-fit:cover}
   .float-badge small{font-size:11px;color:var(--sub);display:block;line-height:1.2}
   .float-badge strong{font-size:13px;display:block}
   @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:44px}.hero-left{text-align:center;display:flex;flex-direction:column;align-items:center}.hero p.lead{margin-inline:auto}.stores{justify-content:center}.hero-visual{max-width:400px;margin:0 auto}}
-
-  .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--muted-bg);overflow:hidden;padding:16px 0;margin-top:44px}
-  .marquee-track{display:flex;gap:16px;width:max-content;animation:scroll 40s linear infinite}
-  .marquee:hover .marquee-track{animation-play-state:paused}
-  @keyframes scroll{to{transform:translateX(-50%)}}
-  .m-word{font-family:'Fraunces',serif;font-style:italic;font-size:21px;color:var(--brand);white-space:nowrap;display:inline-flex;align-items:center;gap:16px}
-  .m-word::after{content:"◦";font-style:normal;color:var(--green)}
-
   section{position:relative}
   .band{padding:100px 0}
   .sec-head{max-width:640px;margin-bottom:24px}
   .sec-head.center{margin-inline:auto;text-align:center}
-  .kicker{font-family:'Caveat',cursive;font-size:23px;font-weight:600;color:var(--ochre);margin-bottom:10px;display:inline-block;transform:rotate(-1deg)}
+  .sec-head.center .kicker{width:fit-content;margin-left:auto;margin-right:auto}
+  .kicker{font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green-deep);margin-bottom:16px}
   .kicker.brand{color:var(--brand)}
   .sec-head h2{font-size:clamp(30px,4.2vw,46px)}
   .sec-head p{color:var(--sub);font-size:17.5px;margin-top:16px}
-
-  /* interactive demo (own section) */
-  .demo{position:relative;background:var(--card);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);padding:26px 26px 28px;max-width:560px;margin:0 auto}
-  .demo-head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-  .demo-owl{width:36px;height:36px;border-radius:11px;overflow:hidden;flex:none}
-  .demo-owl img{width:100%;height:100%;object-fit:cover}
-  .demo-head .dh-name{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:var(--brand)}
-  .demo-head .dh-tag{margin-left:auto;font-size:11.5px;color:var(--sub)}
-  .demo label,.demo-label{display:block;font-family:'Fraunces',serif;font-size:20px;margin-bottom:9px}
-  .demo-entry{min-height:78px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15px;color:var(--ink);background:var(--bg);line-height:1.55}
-  .cursor{display:inline-block;width:2px;height:18px;background:var(--brand);vertical-align:-3px;margin-left:1px;animation:cur 1s steps(1) infinite}
-  @keyframes cur{50%{opacity:0}}
-  .d-ck{margin-left:6px;color:var(--green);font-weight:700;opacity:0;transform:scale(.5);display:inline-block;transition:opacity .3s,transform .3s}
-  .d-ck.on{opacity:1;transform:none}
-  .d-cap{font-size:12.5px;color:var(--sub);margin-top:12px;display:flex;align-items:center;gap:7px;opacity:0;transition:opacity .4s}
-  .d-cap.in{opacity:1}
-  .d-cap svg{color:var(--green)}
-  .demo textarea{width:100%;resize:none;border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-family:inherit;font-size:14.5px;color:var(--ink);background:var(--bg);outline:none;transition:border-color .2s}
-  .demo textarea:focus{border-color:var(--brand)}
-  .ex-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 2px}
-  .ex{cursor:pointer;font-size:12.5px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--sub);transition:all .2s;font-family:inherit}
-  .ex:hover{border-color:var(--brand);color:var(--brand)}
-  .demo .go{width:100%;justify-content:center;margin-top:14px}
-  .d-out{margin-top:4px}
-  .d-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:16px 0 10px}
-  .d-chip{display:inline-block;font-size:13.5px;padding:6px 13px;border-radius:999px;opacity:0;transform:translateY(6px) scale(.96);transition:opacity .45s,transform .45s}
-  .d-chip.in{opacity:1;transform:none}
-  .d-belief{opacity:0;transform:translateY(10px);transition:opacity .55s,transform .55s;background:var(--green-soft);border-radius:0 14px 14px 0;border-left:3px solid var(--green);padding:13px 15px}
-  .d-belief.in{opacity:1;transform:none}
-  .d-belief .bl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--green-deep);margin-bottom:5px}
-  .d-belief .bt{font-family:'Fraunces',serif;font-size:17px;color:var(--ink)}
-  .d-bconf{display:flex;align-items:center;gap:8px;margin-top:11px}
-  .d-bcap{font-size:12px;color:var(--green-deep);opacity:0;transition:opacity .4s}
-  .d-bcap.in{opacity:1}
-  .d-fade{opacity:0;transform:translateY(6px);transition:opacity .4s,transform .4s}
-  .d-fade.in{opacity:1;transform:none}
-  .d-saved{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:13.5px;color:var(--green-deep);font-weight:600;opacity:0;transition:opacity .4s}
-  .d-saved.in{opacity:1}
-  .d-pat{opacity:0;transition:opacity .5s;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);margin-top:13px}
-  .d-pat.in{opacity:1}
-  .d-analyzing{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:14px;padding:16px 2px}
-  .d-dots span{animation:bl 1.2s infinite}.d-dots span:nth-child(2){animation-delay:.2s}.d-dots span:nth-child(3){animation-delay:.4s}
-  @keyframes bl{0%,100%{opacity:.2}50%{opacity:1}}
-
-  /* story timeline */
-  .story{position:relative;margin-top:40px;padding-left:34px}
-  .story .trail{position:absolute;left:8px;top:8px;bottom:8px;width:2px;border-radius:2px;background:repeating-linear-gradient(var(--line) 0 5px,transparent 5px 11px)}
-  .story .trail-fill{position:absolute;left:8px;top:8px;width:2px;height:0;border-radius:2px;background:linear-gradient(var(--brand),var(--green));transition:height .3s cubic-bezier(.2,.8,.2,1)}
-  .step{position:relative;margin-bottom:34px}
-  .step:last-child{margin-bottom:0}
-  .story .step:nth-child(2){transition-delay:.14s}.story .step:nth-child(3){transition-delay:.28s}.story .step:nth-child(4){transition-delay:.42s}
-  .step .node{position:absolute;left:-34px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;transition:all .45s cubic-bezier(.2,.8,.2,1);z-index:2}
-  .step .node::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .45s}
-  .step.in .node{border-color:var(--brand);box-shadow:0 0 0 5px rgba(83,74,183,.12);transform:scale(1.12)}
-  .step.in .node::after{background:var(--brand)}
-  .step:nth-child(4).in .node{border-color:var(--green);box-shadow:0 0 0 5px rgba(29,158,117,.12)}
-  .step:nth-child(4).in .node::after{background:var(--green)}
-  .step-card{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 24px;box-shadow:var(--shadow-sm)}
-  .step-n{font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--green);display:block;margin-bottom:6px}
+  .story{margin:36px auto 0;max-width:600px;display:flex;flex-direction:column;gap:22px}
+  .story .trail,.story .trail-fill{display:none}
+  .step{position:relative;margin:0}
+  .step:last-child{margin:0}
+  .story .step:nth-child(3){transition-delay:.14s}.story .step:nth-child(4){transition-delay:.28s}.story .step:nth-child(5){transition-delay:.42s}
+  .step .node{display:none}
+  .step:not(:last-child)::after{content:"";position:absolute;left:50%;bottom:-22px;width:2px;height:22px;background:repeating-linear-gradient(var(--line) 0 4px,transparent 4px 8px);transform:translateX(-50%)}
+  .step-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px 28px;box-shadow:var(--shadow-sm);text-align:center}
+  .step-n{font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--green);display:block;margin-bottom:6px}
   .step h3{font-size:clamp(19px,2.2vw,23px);margin-bottom:8px}
-  .step p{color:var(--sub);font-size:14.5px}
-  .step-vis{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-height:118px;display:flex;flex-direction:column;justify-content:center;gap:8px}
-  @media(max-width:760px){.step-card{grid-template-columns:1fr;gap:18px}}
-  .vq{font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--ink);line-height:1.5}
-  .vbelief .vbl{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--green-deep);margin-bottom:5px}
-  .val-list{display:flex;flex-direction:column}
-  .val-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 2px;border-bottom:1px solid var(--line)}
-  .val-row:last-child{border-bottom:none}
-  .val-row.rej .vname{text-decoration:line-through;color:var(--sub)}
-  .vname{font-size:14px;color:var(--ink)}
-  .val-actions{display:flex;gap:8px}
-  .va{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:11px;border:1px solid var(--line);color:var(--sub);transition:all .3s;font-weight:700}
-  .va-ck.on{background:var(--green);border-color:var(--green);color:#fff}
-  .va-x.on{background:#F6E9EA;border-color:#E8C4C6;color:#C24B4B}
-  .val-cap{margin-top:11px;font-size:12.5px;color:var(--sub);display:inline-flex;align-items:center;gap:7px;opacity:0;transition:opacity .4s}
-  .val-cap.in{opacity:1}
-  .val-cap svg{color:var(--green)}
-  .val-belief-actions{display:flex;align-items:center;gap:8px;margin-top:14px}
-  .vb-cap{font-size:12.5px;color:var(--sub);opacity:0;transition:opacity .4s;margin-left:4px}
-  .vb-cap.in{opacity:1}
-
-  /* photo band (manifesto) */
+  .step p{color:var(--sub);font-size:14.5px;max-width:440px;margin:0 auto}
   .photo-band{border-radius:36px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
   .pb-text{background:var(--plum);color:#F1ECFB;padding:60px}
   .pb-text .q{font-family:'Fraunces',serif;font-size:clamp(23px,2.8vw,32px);line-height:1.32;font-weight:400}
   .pb-text .q b{color:#7CE0C0;font-weight:500;font-style:italic}
-  .pb-stats{display:flex;gap:38px;margin-top:34px;flex-wrap:wrap}
-  .pb-stats .n{font-family:'Fraunces',serif;font-size:36px;color:#fff}
+  .pb-stats{display:grid;grid-template-columns:auto auto;gap:16px 44px;margin-top:26px;justify-content:start}
+  .pb-stats .n{font-family:'Fraunces',serif;font-size:34px;color:#fff}
   .pb-stats .l{font-size:12.5px;color:#B9AEDD;margin-top:4px}
   .pb-photo{position:relative;min-height:340px}
   .pb-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .pb-photo::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,var(--plum),rgba(44,33,71,.55) 14%,rgba(44,33,71,0) 42%)}
-  @media(max-width:820px){.photo-band{grid-template-columns:1fr}.pb-text{padding:40px 28px}.pb-photo{min-height:260px}}
-
+  @media(max-width:820px){.photo-band{grid-template-columns:1fr}.pb-text{padding:40px 28px}.pb-photo{min-height:260px}.pb-photo::before{background:linear-gradient(0deg,transparent,rgba(44,33,71,.35))}}
   .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:30px;transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s;position:relative;overflow:hidden}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s;position:relative;overflow:hidden}
   .card::after{content:"";position:absolute;inset:0;background:radial-gradient(300px circle at var(--mx,50%) var(--my,-20%),rgba(29,158,117,.1),transparent 62%);opacity:0;transition:opacity .35s;pointer-events:none}
   .card:hover{transform:translateY(-6px);box-shadow:var(--shadow-sm)}
   .card:hover::after{opacity:1}
-  .card .ico{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:18px;background:rgba(83,74,183,.1);color:var(--brand);position:relative;z-index:1}
+  .card .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;background:rgba(83,74,183,.1);color:var(--brand);position:relative;z-index:1}
   .card:nth-child(2) .ico{background:var(--green-soft);color:var(--green-deep)}
-  .card:nth-child(3) .ico{background:rgba(169,159,224,.22);color:var(--brand-2)}
-  .card:nth-child(5) .ico{background:var(--green-soft);color:var(--green-deep)}
-  .card .ico svg{width:24px;height:24px}
-  .card h3{font-size:20px;margin-bottom:8px;position:relative;z-index:1}
-  .card p{color:var(--sub);font-size:14.5px;position:relative;z-index:1}
-  .card.wide{grid-column:span 2}
-  @media(max-width:820px){.bento{grid-template-columns:1fr 1fr}.card.wide{grid-column:span 2}}
-  @media(max-width:540px){.bento{grid-template-columns:1fr}.card.wide{grid-column:span 1}}
-
+  .card:nth-child(4) .ico{background:rgba(169,159,224,.22);color:var(--brand-2)}
+  .card:nth-child(6) .ico{background:var(--green-soft);color:var(--green-deep)}
+  .card .ico svg{width:23px;height:23px}
+  .card h3{font-size:19px;margin-bottom:8px;position:relative;z-index:1}
+  .card p{color:var(--sub);font-size:14px;position:relative;z-index:1}
+  @media(max-width:820px){.bento{grid-template-columns:1fr 1fr}}
+  @media(max-width:540px){.bento{grid-template-columns:1fr}}
   .lang-feat{background:var(--muted-bg);border:1px solid var(--line);border-radius:30px;padding:58px;display:grid;grid-template-columns:1.2fr 1fr;gap:44px;align-items:center}
   .lang-feat h2{font-size:clamp(26px,3.4vw,38px)}
   .lang-feat p{color:var(--sub);font-size:16.5px;margin-top:16px}
@@ -215,9 +175,8 @@
   .globe-tags span{font-size:14px;padding:10px 17px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:500;transition:transform .2s}
   .globe-tags span:hover{transform:translateY(-3px) rotate(-2deg);color:var(--brand)}
   @media(max-width:820px){.lang-feat{grid-template-columns:1fr;padding:38px 26px;text-align:center}}
-
-  .plans{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:840px;margin:0 auto}
-  .plan{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:36px 32px;position:relative;box-shadow:var(--shadow-sm);transition:transform .3s}
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:840px;margin:0 auto;align-items:stretch}
+  .plan{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:36px 32px;position:relative;box-shadow:var(--shadow-sm);transition:transform .3s;display:flex;flex-direction:column}
   .plan:hover{transform:translateY(-4px)}
   .plan.feat{border:2px solid var(--brand)}
   .plan .tag{position:absolute;top:-13px;left:32px;background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:5px 14px;border-radius:999px}
@@ -229,16 +188,16 @@
   .plan-price{font-size:15px;color:var(--ink);font-weight:600;margin:2px 0 24px}
   .plan-price small{display:block;color:var(--sub);font-weight:500;font-size:12.5px;margin-top:3px}
   .plan .btn{width:100%;justify-content:center;margin-top:auto}
-  .plans-all{max-width:840px;margin:0 auto 22px;background:var(--muted-bg);border:1px solid var(--line);border-radius:18px;padding:22px 24px;text-align:center}
+  .plans-all{max-width:900px;margin:0 auto 22px;background:var(--muted-bg);border:1px solid var(--line);border-radius:18px;padding:22px 24px;text-align:center}
   .plans-all .pa-h{font-family:'Fraunces',serif;font-size:17px;color:var(--ink);margin-bottom:14px}
   .plans-all .pa-h b{color:var(--brand);font-weight:500;font-style:italic}
-  .pa-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  .pa-chips span{font-size:12.5px;padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--brand);font-weight:600;display:inline-flex;align-items:center;gap:6px}
-  .pa-chips span svg{width:13px;height:13px;color:var(--green)}
+  .pa-chips{display:flex;flex-wrap:nowrap;gap:7px;justify-content:center}
+  .pa-chips span{font-size:12px;padding:6px 11px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--brand);font-weight:600;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .pa-chips span svg{width:12px;height:12px;color:var(--green);flex:none}
+  @media(max-width:820px){.pa-chips{flex-wrap:wrap}}
   .trial-banner{text-align:center;margin-bottom:40px}
   .trial-banner .big{display:inline-flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-size:20px;color:var(--green-deep);border:1px solid rgba(29,158,117,.25);background:var(--green-soft);padding:12px 24px;border-radius:999px}
   @media(max-width:640px){.plans{grid-template-columns:1fr}}
-
   .faq{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
   .faq-item{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:box-shadow .3s}
   .faq-item.open{box-shadow:var(--shadow-sm)}
@@ -250,7 +209,6 @@
   .faq-q .pl::after{top:11px;left:2px;height:2px;width:20px}
   .faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease}
   .faq-a p{padding:0 24px 22px;color:var(--sub);font-size:15.5px}
-
   .cta-band{position:relative;border-radius:36px;overflow:hidden;text-align:center;padding:120px 30px;color:#fff}
   .cta-band>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
   .cta-band::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(44,33,71,.62),rgba(30,22,48,.82));z-index:1}
@@ -259,7 +217,6 @@
   .cta-inner h2{color:#fff;font-size:clamp(28px,4vw,46px);max-width:640px;margin:0 auto 16px}
   .cta-inner p{color:rgba(255,255,255,.85);font-size:18px;max-width:480px;margin:0 auto 30px}
   .cta-inner .stores{justify-content:center}
-
   footer{padding:56px 0 40px;background:var(--muted-bg)}
   .foot-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-start}
   .foot-brand{max-width:330px}
@@ -274,18 +231,15 @@
   .copy{margin-top:14px;color:var(--sub);font-size:12.5px}
   @media(max-width:600px){
     .band{padding:66px 0}
-    .hero{padding:36px 0 20px}
+    .hero{padding:36px 0 40px}
     h1{font-size:clamp(32px,8.8vw,44px)}
     .hero p.lead{font-size:16.5px}
-    .float-card{left:8px;bottom:12px;width:188px;padding:11px 13px}
-    .float-card .fc-label{margin-bottom:5px}
-    .float-badge{right:8px;top:12px;padding:8px 11px}
-    .float-badge .fb-owl{width:28px;height:28px}
-    .marquee{margin-top:32px}
-    .demo{padding:20px 18px 22px}
-    .step-card{padding:18px}
+    .float-card{left:8px;bottom:12px;width:188px;padding:12px 14px}
+    .float-card .fc-label{margin-bottom:7px}
+    .float-badge{right:8px;top:12px;padding:9px 12px}
+    .float-badge .fb-owl{width:30px;height:30px}
     .pb-text{padding:34px 24px}
-    .pb-stats{gap:24px;margin-top:26px}
+    .pb-stats{gap:16px 34px;margin-top:24px}
     .lang-feat{padding:32px 22px}
     .cta-band{padding:80px 22px}
     .plan{padding:30px 24px}
@@ -297,211 +251,6 @@
 </style>
 </head>
 <body>
-<div class="progress" id="prog"></div>
-<header id="hdr"><nav class="wrap">
-  <a href="#top" class="brand"><span class="owl-badge"><img src="https://caminare-v2.vercel.app/store/icon-512.png" alt="Caminare"></span>Caminare</a>
-  <div class="nav-right"><div class="nav-links"><a href="#experimente"><span class="pt">Experimente</span><span class="en">Try it</span></a><a href="#como"><span class="pt">Como funciona</span><span class="en">How it works</span></a><a href="#recursos"><span class="pt">Recursos</span><span class="en">Features</span></a><a href="#planos"><span class="pt">Planos</span><span class="en">Plans</span></a></div><button class="lang" id="langToggle">EN</button><a href="#baixar" class="btn btn-brand nav-cta"><span class="pt">Baixar</span><span class="en">Download</span></a></div>
-</nav></header>
-
-<main id="top">
-  <section class="hero"><span class="blob b1"></span><span class="blob b2"></span>
-    <div class="wrap hero-grid">
-      <div class="hero-left">
-        <span class="eyebrow"><span class="dot"></span><span class="pt">Diário de autoconhecimento</span><span class="en">Self-discovery journal</span></span>
-        <h1><span class="pt">Transforme o que você <span class="serif-i">sente</span> em <span class="u-mark">autoconhecimento</span>.</span><span class="en">Turn what you <span class="serif-i">feel</span> into <span class="u-mark">self-knowledge</span>.</span></h1>
-        <p class="lead"><span class="pt">Um diário inteligente que te ajuda a entender suas emoções, crenças e padrões a partir do que você vive no dia a dia.</span><span class="en">A smart journal that helps you understand your emotions, beliefs and patterns from what you live every day.</span></p>
-        <div class="trial-note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">15 dias grátis, com acesso completo</span><span class="en">15 days free, with full access</span></div>
-        <div class="stores" id="baixar">
-          <a class="store" href="https://apps.apple.com/app/caminare/" target="_blank" rel="noopener"><span class="soon"><span class="pt">Em breve</span><span class="en">Soon</span></span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.417 2.2-1.11 2.98-.84.94-2.2 1.66-3.34 1.57-.14-1.1.42-2.28 1.06-3 .72-.82 2.02-1.44 3.09-1.55.13.34.3.68.3 1zM20.5 17.2c-.55 1.27-.81 1.83-1.52 2.95-.99 1.56-2.38 3.5-4.11 3.51-1.53.02-1.93-.99-4.01-.98-2.08.01-2.52.99-4.06.98-1.73-.01-3.05-1.76-4.04-3.32C-.02 16.02-.35 10.6 1.62 7.72 3.02 5.68 5.23 4.5 7.3 4.5c2.11 0 3.44 1.15 5.18 1.15 1.69 0 2.72-1.16 5.16-1.16 1.84 0 3.79 1 5.18 2.73-4.55 2.49-3.82 8.99.68 10.99z"/></svg><span><small>Baixe na</small><strong>App Store</strong></span></a>
-          <a class="store" href="https://play.google.com/store/apps/details?id=com.caminare.app" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 20.5 13 12 3.6 3.5c-.36.28-.6.7-.6 1.28v14.44c0 .58.24 1 .6 1.28z"/><path fill="#FBBC04" d="M17 8.6 13 12l4 3.4 3.6-2.05c.9-.5.9-1.7 0-2.2z"/><path fill="#EA4335" d="M3.6 3.5 13 12l4-3.4L6.3 2.4C5.7 2.05 4.9 2 4.3 2.5c-.3.25-.5.6-.7 1z"/><path fill="#4285F4" d="M3.6 20.5 13 12l4 3.4L6.3 21.6c-.6.35-1.4.4-2 .1-.3-.35-.5-.7-.7-1.2z"/></svg><span><small>Disponível no</small><strong>Google Play</strong></span></a>
-        </div>
-      </div>
-      <div class="hero-visual reveal">
-        <img class="hero-photo" alt="" src="https://images.unsplash.com/uploads/1413395496082cbc91228/43e39040?q=80&w=1100&auto=format&fit=crop">
-        <div class="float-card"><div class="fc-label"><span class="pt">Emoções deste registro</span><span class="en">Emotions in this entry</span></div><div class="fc-chips"><span class="g">gratidão</span><span>calma</span><span>saudade</span></div></div>
-        <div class="float-badge"><span class="fb-owl"><img src="https://caminare-v2.vercel.app/store/icon-512.png" alt=""></span><span><small><span class="pt">Padrão percebido</span><span class="en">Pattern noticed</span></small><strong><span class="pt">3 semanas seguidas</span><span class="en">3 weeks in a row</span></strong></span></div>
-      </div>
-    </div>
-    <div class="wrap"><div class="marquee"><div class="marquee-track" id="mq"></div></div></div>
-  </section>
-
-  <!-- EXPERIMENTE (demo) -->
-  <section class="band" id="experimente" style="padding-bottom:70px"><div class="wrap">
-    <div class="sec-head center reveal"><div class="kicker brand"><span class="pt">Experimente</span><span class="en">Try it</span></div><h2><span class="pt">Veja o Caminare em ação, aqui mesmo.</span><span class="en">See Caminare in action, right here.</span></h2><p><span class="pt">Veja, passo a passo, o que acontece com um registro no Caminare.</span><span class="en">Watch, step by step, what happens to an entry inside Caminare.</span></p></div>
-    <div class="demo reveal">
-      <div class="demo-head"><span class="demo-owl"><img src="https://caminare-v2.vercel.app/store/icon-512.png" alt=""></span><span class="dh-name">Caminare</span><span class="dh-tag"><span class="pt">demonstração</span><span class="en">demo</span></span></div>
-      <div class="demo-label"><span class="pt">Como foi o seu dia?</span><span class="en">How was your day?</span></div>
-      <div class="demo-entry"><span id="d-typed"></span><span class="cursor" id="d-cursor"></span></div>
-      <div class="d-out" id="d-out"></div>
-    </div>
-  </div></section>
-
-  <!-- SCROLL STORY -->
-  <section class="band" id="como" style="padding-top:0;padding-bottom:60px"><div class="wrap">
-    <div class="sec-head reveal"><div class="kicker"><span class="pt">Como funciona</span><span class="en">How it works</span></div><h2><span class="pt">Um registro simples vira uma jornada.</span><span class="en">One simple entry becomes a journey.</span></h2></div>
-    <div class="story">
-      <div class="trail"></div><div class="trail-fill" id="trailFill"></div>
-      <div class="step reveal"><span class="node"></span><div class="step-card"><div><span class="step-n">01</span><h3><span class="pt">Você registra</span><span class="en">You record</span></h3><p><span class="pt">Escreva ou fale sobre um acontecimento do seu dia, do jeito que for mais leve pra você.</span><span class="en">Write or speak about a moment from your day, whichever feels lightest to you.</span></p></div><div class="step-vis"><div class="vq">“<span class="pt">Briguei com meu chefe hoje e fiquei remoendo isso o dia todo.</span><span class="en">I clashed with my boss today and kept replaying it.</span>”</div></div></div></div>
-      <div class="step reveal"><span class="node"></span><div class="step-card"><div><span class="step-n">02</span><h3><span class="pt">As emoções aparecem</span><span class="en">Emotions surface</span></h3><p><span class="pt">O Caminare sugere as emoções do relato, e você confirma ou descarta cada uma.</span><span class="en">Caminare suggests the emotions in your entry, and you confirm or dismiss each one.</span></p></div><div class="step-vis"><div class="val-list" data-val="emo"><div class="val-row"><span class="vname">raiva</span><span class="val-actions"><span class="va va-x">✕</span><span class="va va-ck">✓</span></span></div><div class="val-row"><span class="vname">frustração</span><span class="val-actions"><span class="va va-x">✕</span><span class="va va-ck">✓</span></span></div><div class="val-row"><span class="vname">injustiça</span><span class="val-actions"><span class="va va-x">✕</span><span class="va va-ck">✓</span></span></div></div><div class="val-cap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">você confirma o que faz sentido</span><span class="en">you confirm what fits</span></div></div></div></div>
-      <div class="step reveal"><span class="node"></span><div class="step-card"><div><span class="step-n">03</span><h3><span class="pt">A crença se revela</span><span class="en">A belief is revealed</span></h3><p><span class="pt">Ele sugere uma crença por trás da reação, e você valida se ela ressoa com você.</span><span class="en">It suggests a belief behind the reaction, and you validate whether it resonates.</span></p></div><div class="step-vis vbelief"><div class="vbl"><span class="pt">Crença sugerida</span><span class="en">Suggested belief</span></div><div class="vq">“<span class="pt">Preciso provar o meu valor o tempo todo.</span><span class="en">I have to prove my worth all the time.</span>”</div><div class="val-belief-actions" data-val="belief"><span class="va va-x">✕</span><span class="va va-ck">✓</span><span class="vb-cap"><span class="pt">você valida a crença</span><span class="en">you validate the belief</span></span></div></div></div></div>
-      <div class="step reveal"><span class="node"></span><div class="step-card"><div><span class="step-n">04</span><h3><span class="pt">O padrão emerge</span><span class="en">The pattern emerges</span></h3><p><span class="pt">Com o tempo, registros parecidos se conectam e mostram os seus padrões, com um resumo pronto pra terapia.</span><span class="en">Over time, similar entries connect and reveal your patterns, with a summary ready for therapy.</span></p></div><div class="step-vis"><svg width="130" height="96" viewBox="0 0 130 96" aria-hidden="true"><line x1="22" y1="22" x2="65" y2="50" stroke="#A99FE0" stroke-width="1.5"/><line x1="65" y1="50" x2="108" y2="26" stroke="#A99FE0" stroke-width="1.5"/><line x1="65" y1="50" x2="50" y2="84" stroke="#A99FE0" stroke-width="1.5"/><line x1="65" y1="50" x2="106" y2="78" stroke="#A99FE0" stroke-width="1.5"/><circle cx="22" cy="22" r="6" fill="#534AB7"/><circle cx="108" cy="26" r="5" fill="#1D9E75"/><circle cx="65" cy="50" r="8" fill="#534AB7"/><circle cx="50" cy="84" r="5" fill="#534AB7"/><circle cx="106" cy="78" r="5" fill="#1D9E75"/></svg></div></div></div>
-    </div>
-  </div></section>
-
-  <!-- PHOTO BAND (manifesto) -->
-  <section class="band" style="padding-top:0"><div class="wrap reveal"><div class="photo-band">
-    <div class="pb-text"><p class="q"><span class="pt">Enquanto um diário guarda o que você viveu, o Caminare ajuda a compreender o que isso <b>revela sobre você</b>.</span><span class="en">While a journal keeps what you lived, Caminare helps you understand what it <b>reveals about you</b>.</span></p><div class="pb-stats"><div><div class="n" data-count="15">0</div><div class="l"><span class="pt">dias grátis</span><span class="en">days free</span></div></div><div><div class="n"><span class="pt">Texto + voz</span><span class="en">Text + voice</span></div><div class="l"><span class="pt">para registrar</span><span class="en">to journal</span></div></div><div><div class="n">∞</div><div class="l"><span class="pt">idiomas entendidos</span><span class="en">languages understood</span></div></div></div></div>
-    <div class="pb-photo"><img alt="" loading="lazy" src="https://images.unsplash.com/photo-1579017308347-e53e0d2fc5e9?q=80&w=1100&auto=format&fit=crop"></div>
-  </div></div></section>
-
-  <!-- FEATURES -->
-  <section class="band" id="recursos" style="padding-top:0"><div class="wrap">
-    <div class="sec-head center reveal"><div class="kicker brand"><span class="pt">Recursos</span><span class="en">Features</span></div><h2><span class="pt">Mais que um diário. Um espelho.</span><span class="en">More than a journal. A mirror.</span></h2></div>
-    <div class="bento">
-      <div class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg></div><h3><span class="pt">Registro por texto ou voz</span><span class="en">Text or voice entries</span></h3><p><span class="pt">Escreva quando quiser ou só fale. O Caminare transcreve e cuida do resto.</span><span class="en">Type when you want or just speak. Caminare transcribes and handles the rest.</span></p></div>
-      <div class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.65 12 21 12 21Z"/></svg></div><h3><span class="pt">Emoções e crenças</span><span class="en">Emotions & beliefs</span></h3><p><span class="pt">Identifica o que você sente e as crenças por trás das suas reações.</span><span class="en">Identifies what you feel and the beliefs behind your reactions.</span></p></div>
-      <div class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="7" r="2"/><circle cx="7" cy="19" r="2"/><path d="m9.5 10.5-3-3M14.5 11l3-3M10.5 14l-2 3"/></svg></div><h3><span class="pt">Descoberta de padrões</span><span class="en">Pattern discovery</span></h3><p><span class="pt">Conecta seus registros e mostra os padrões que se repetem.</span><span class="en">Connects your entries and shows the patterns that repeat.</span></p></div>
-      <div class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div><h3><span class="pt">Resumo para a terapia</span><span class="en">Therapy summary</span></h3><p><span class="pt">Leve os acontecimentos mais importantes para a sua próxima sessão.</span><span class="en">Bring your most important moments to your next session.</span></p></div>
-      <div class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg></div><h3><span class="pt">Painel e histórico completo</span><span class="en">Dashboard & full history</span></h3><p><span class="pt">Acompanhe sua evolução num painel com seus registros, emoções, crenças e padrões, sempre à mão.</span><span class="en">Track your growth in a dashboard with your entries, emotions, beliefs and patterns, always at hand.</span></p></div>
-      <div class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></div><h3><span class="pt">Privado e seguro</span><span class="en">Private & secure</span></h3><p><span class="pt">Seus registros são só seus. Edite, exclua ou apague tudo quando quiser.</span><span class="en">Your entries are yours alone. Edit, delete or remove everything whenever you want.</span></p></div>
-    </div>
-  </div></section>
-
-  <!-- LANGUAGE -->
-  <section class="band" style="padding-top:0"><div class="wrap reveal"><div class="lang-feat">
-    <div><div class="kicker"><span class="pt">Sem barreiras</span><span class="en">No barriers</span></div><h2><span class="pt">Escreva no seu idioma. O Caminare entende.</span><span class="en">Write in your language. Caminare understands.</span></h2><p><span class="pt">Ele detecta sozinho o idioma dos seus registros e responde com emoções, crenças, padrões e resumos no mesmo idioma em que você escreve ou fala.</span><span class="en">It detects the language of your entries on its own and responds with emotions, beliefs, patterns and summaries in the same language you write or speak.</span></p></div>
-    <div class="globe-tags"><span>Português</span><span>English</span><span>Español</span><span>Français</span><span>Italiano</span><span>Deutsch</span><span>日本語</span></div>
-  </div></div></section>
-
-  <!-- PLANS -->
-  <section class="band" id="planos" style="padding-top:0"><div class="wrap">
-    <div class="sec-head center reveal"><div class="kicker brand"><span class="pt">Planos</span><span class="en">Plans</span></div><h2><span class="pt">Comece grátis. Continue quando fizer sentido.</span><span class="en">Start free. Continue when it feels right.</span></h2></div>
-    <div class="sec-head center reveal" style="margin-top:-8px;margin-bottom:34px"><p style="margin-top:0"><span class="pt">Os dois planos têm todos os recursos do Caminare. A diferença é quantos registros você faz por mês.</span><span class="en">Both plans include every Caminare feature. The difference is how many entries you make each month.</span></p></div>
-    <div class="trial-banner reveal"><span class="big"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg><span class="pt">15 dias grátis, com acesso a tudo</span><span class="en">15 days free, with full access</span></span></div>
-    <div class="plans-all reveal">
-      <div class="pa-h"><span class="pt">Incluído em <b>todos os planos</b></span><span class="en">Included in <b>every plan</b></span></div>
-      <div class="pa-chips">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">Texto e voz</span><span class="en">Text & voice</span></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">Emoções</span><span class="en">Emotions</span></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">Crenças</span><span class="en">Beliefs</span></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">Padrões</span><span class="en">Patterns</span></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">Resumo pra terapia</span><span class="en">Therapy summary</span></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span class="pt">Painel e histórico</span><span class="en">Dashboard & history</span></span>
-      </div>
-    </div>
-    <div class="plans">
-      <div class="plan reveal"><h3><span class="pt">Básico</span><span class="en">Basic</span></h3><div class="plan-sub"><span class="pt">Para manter o hábito de se observar.</span><span class="en">To keep the habit of observing yourself.</span></div><div class="plan-reg"><span class="rn">150</span><span class="ru"><span class="pt">registros<br>por mês</span><span class="en">entries<br>per month</span></span></div><div class="plan-price">R$ 8,90<span class="pt">/mês</span><span class="en">/mo</span><small><span class="pt">ou R$ 87,58/ano · economize 18%</span><span class="en">or R$ 87.58/year · save 18%</span></small></div><a href="#baixar" class="btn btn-ghost"><span class="pt">Começar grátis</span><span class="en">Start free</span></a></div>
-      <div class="plan feat reveal"><span class="tag"><span class="pt">Mais registros</span><span class="en">More entries</span></span><h3><span class="pt">Avançado</span><span class="en">Advanced</span></h3><div class="plan-sub"><span class="pt">Para quem registra todos os dias.</span><span class="en">For those who journal every day.</span></div><div class="plan-reg"><span class="rn">250</span><span class="ru"><span class="pt">registros<br>por mês</span><span class="en">entries<br>per month</span></span></div><div class="plan-price">R$ 13,35<span class="pt">/mês</span><span class="en">/mo</span><small><span class="pt">ou R$ 131,40/ano · economize 18%</span><span class="en">or R$ 131.40/year · save 18%</span></small></div><a href="#baixar" class="btn btn-brand"><span class="pt">Experimentar grátis</span><span class="en">Try it free</span></a></div>
-    </div>
-    <p style="text-align:center;color:var(--sub);font-size:13.5px;margin-top:26px"><span class="pt">Assinatura mensal ou anual, cancele quando quiser. Valores finais exibidos no app.</span><span class="en">Monthly or yearly subscription, cancel anytime. Final prices shown in the app.</span></p>
-  </div></section>
-
-  <!-- FAQ -->
-  <section class="band" id="faq" style="padding-top:0"><div class="wrap">
-    <div class="sec-head center reveal"><div class="kicker"><span class="pt">Dúvidas</span><span class="en">FAQ</span></div><h2><span class="pt">Perguntas frequentes</span><span class="en">Frequently asked</span></h2></div>
-    <div class="faq reveal">
-      <div class="faq-item"><button class="faq-q"><span><span class="pt">Preciso saber escrever bem?</span><span class="en">Do I need to be a good writer?</span></span><span class="pl"></span></button><div class="faq-a"><p><span class="pt">Não precisa. Escreva do seu jeito ou apenas fale, que o Caminare cuida do resto. Não existe forma certa de registrar.</span><span class="en">You don't. Write in your own way or just speak, and Caminare takes care of the rest. There's no right way to journal.</span></p></div></div>
-      <div class="faq-item"><button class="faq-q"><span><span class="pt">O Caminare substitui a terapia?</span><span class="en">Does Caminare replace therapy?</span></span><span class="pl"></span></button><div class="faq-a"><p><span class="pt">Não. Ele é uma ferramenta de autoconhecimento que apoia e complementa a terapia, inclusive com um resumo para levar às sessões. Não substitui acompanhamento profissional.</span><span class="en">No. It's a self-discovery tool that supports and complements therapy, including a summary to bring to sessions. It doesn't replace professional care.</span></p></div></div>
-      <div class="faq-item"><button class="faq-q"><span><span class="pt">Meus registros ficam seguros?</span><span class="en">Are my entries safe?</span></span><span class="pl"></span></button><div class="faq-a"><p><span class="pt">Sim. Eles são pessoais e privados. Você pode editar ou excluir qualquer conteúdo e apagar sua conta e seus dados quando quiser.</span><span class="en">Yes. They're personal and private. You can edit or delete any content and remove your account and data whenever you want.</span></p></div></div>
-      <div class="faq-item"><button class="faq-q"><span><span class="pt">Funciona no meu idioma?</span><span class="en">Does it work in my language?</span></span><span class="pl"></span></button><div class="faq-a"><p><span class="pt">Sim. O Caminare detecta sozinho o idioma dos seus registros e responde no mesmo idioma em que você escreve ou fala. A interface está em português e inglês.</span><span class="en">Yes. Caminare detects the language of your entries on its own and responds in the same language you write or speak. The interface is available in Portuguese and English.</span></p></div></div>
-      <div class="faq-item"><button class="faq-q"><span><span class="pt">Como funciona o período grátis?</span><span class="en">How does the free trial work?</span></span><span class="pl"></span></button><div class="faq-a"><p><span class="pt">São 15 dias com acesso completo a tudo. Depois, você escolhe entre os planos Básico e Avançado, no mensal ou no anual.</span><span class="en">15 days with full access to everything. After that, you choose between the Basic and Advanced plans, monthly or yearly.</span></p></div></div>
-    </div>
-  </div></section>
-
-  <!-- CTA -->
-  <section class="band" style="padding-top:0"><div class="wrap"><div class="cta-band reveal">
-    <img alt="" loading="lazy" src="https://images.unsplash.com/photo-1590183903228-4908fb219514?q=80&w=1600&auto=format&fit=crop">
-    <div class="cta-inner">
-      <span class="owl-badge"><img src="https://caminare-v2.vercel.app/store/icon-512.png" alt="Caminare"></span>
-      <h2><span class="pt">Comece sua jornada de autoconhecimento.</span><span class="en">Begin your journey of self-discovery.</span></h2>
-      <p><span class="pt">Baixe o Caminare e transforme cada dia numa oportunidade de se entender melhor.</span><span class="en">Download Caminare and turn each day into a chance to understand yourself better.</span></p>
-      <div class="stores">
-        <a class="store" href="https://apps.apple.com/app/caminare/" target="_blank" rel="noopener"><span class="soon"><span class="pt">Em breve</span><span class="en">Soon</span></span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.417 2.2-1.11 2.98-.84.94-2.2 1.66-3.34 1.57-.14-1.1.42-2.28 1.06-3 .72-.82 2.02-1.44 3.09-1.55.13.34.3.68.3 1zM20.5 17.2c-.55 1.27-.81 1.83-1.52 2.95-.99 1.56-2.38 3.5-4.11 3.51-1.53.02-1.93-.99-4.01-.98-2.08.01-2.52.99-4.06.98-1.73-.01-3.05-1.76-4.04-3.32C-.02 16.02-.35 10.6 1.62 7.72 3.02 5.68 5.23 4.5 7.3 4.5c2.11 0 3.44 1.15 5.18 1.15 1.69 0 2.72-1.16 5.16-1.16 1.84 0 3.79 1 5.18 2.73-4.55 2.49-3.82 8.99.68 10.99z"/></svg><span><small>Baixe na</small><strong>App Store</strong></span></a>
-        <a class="store" href="https://play.google.com/store/apps/details?id=com.caminare.app" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 20.5 13 12 3.6 3.5c-.36.28-.6.7-.6 1.28v14.44c0 .58.24 1 .6 1.28z"/><path fill="#FBBC04" d="M17 8.6 13 12l4 3.4 3.6-2.05c.9-.5.9-1.7 0-2.2z"/><path fill="#EA4335" d="M3.6 3.5 13 12l4-3.4L6.3 2.4C5.7 2.05 4.9 2 4.3 2.5c-.3.25-.5.6-.7 1z"/><path fill="#4285F4" d="M3.6 20.5 13 12l4 3.4L6.3 21.6c-.6.35-1.4.4-2 .1-.3-.35-.5-.7-.7-1.2z"/></svg><span><small>Disponível no</small><strong>Google Play</strong></span></a>
-      </div>
-    </div>
-  </div></div></section>
-</main>
-
-<footer><div class="wrap">
-  <div class="foot-grid">
-    <div class="foot-brand"><a href="#top" class="brand"><span class="owl-badge"><img src="https://caminare-v2.vercel.app/store/icon-512.png" alt="Caminare"></span>Caminare</a><p><span class="pt">Um diário de autoconhecimento que transforma acontecimentos do cotidiano em oportunidades de reflexão.</span><span class="en">A self-discovery journal that turns everyday moments into opportunities for reflection.</span></p></div>
-    <div class="foot-links"><div class="foot-col"><h4><span class="pt">Produto</span><span class="en">Product</span></h4><a href="#experimente"><span class="pt">Experimente</span><span class="en">Try it</span></a><a href="#como"><span class="pt">Como funciona</span><span class="en">How it works</span></a><a href="#recursos"><span class="pt">Recursos</span><span class="en">Features</span></a><a href="#planos"><span class="pt">Planos</span><span class="en">Plans</span></a></div><div class="foot-col"><h4>Legal</h4><a href="https://caminare-v2.vercel.app/privacidade" target="_blank" rel="noopener"><span class="pt">Política de Privacidade</span><span class="en">Privacy Policy</span></a><a href="https://caminare-v2.vercel.app/termos" target="_blank" rel="noopener"><span class="pt">Termos de Uso</span><span class="en">Terms of Use</span></a></div></div>
-  </div>
-  <p class="disclaimer"><span class="pt">O Caminare não substitui acompanhamento psicológico, psiquiátrico ou qualquer tratamento em saúde mental. É uma ferramenta de autoconhecimento desenvolvida para apoiar sua jornada de reflexão e desenvolvimento pessoal.</span><span class="en">Caminare is not a substitute for psychological, psychiatric or any mental health treatment. It is a self-discovery tool designed to support your journey of reflection and personal growth.</span></p>
-  <p class="credits">Fotos: Unsplash · Christopher Sardegna, Marcos Paulo Prado, Mitchell Hartley.</p>
-  <p class="copy">© 2026 Caminare · Calíope Sociedade Unipessoal Ltda.</p>
-</div></footer>
-
-<script>
-var html=document.documentElement, btn=document.getElementById('langToggle');
-btn.addEventListener('click',function(){var n=html.getAttribute('data-lang')==='pt'?'en':'pt';html.setAttribute('data-lang',n);html.setAttribute('lang',n==='pt'?'pt-BR':'en');btn.textContent=n==='pt'?'EN':'PT';});
-var hdr=document.getElementById('hdr'),prog=document.getElementById('prog');
-addEventListener('scroll',function(){hdr.classList.toggle('scrolled',scrollY>20);var d=document.documentElement,m=d.scrollHeight-d.clientHeight;prog.style.width=(m>0?scrollY/m*100:0)+'%';},{passive:true});
-var words=['gratidão','ansiedade','esperança','saudade','calma','raiva','alívio','medo','alegria','culpa','orgulho','ternura','frustração','paz'];
-var mq=document.getElementById('mq'),mh='';for(var r=0;r<2;r++){mh+='<div class="m-word">'+words.join('</div><div class="m-word">')+'</div>';}mq.innerHTML=mh;
-document.querySelectorAll('.card').forEach(function(c){c.addEventListener('mousemove',function(e){var b=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-b.left)+'px');c.style.setProperty('--my',(e.clientY-b.top)+'px');});});
-document.querySelectorAll('.faq-item').forEach(function(it){it.querySelector('.faq-q').addEventListener('click',function(){var open=it.classList.contains('open');document.querySelectorAll('.faq-item').forEach(function(o){o.classList.remove('open');o.querySelector('.faq-a').style.maxHeight=null;});if(!open){it.classList.add('open');var a=it.querySelector('.faq-a');a.style.maxHeight=a.scrollHeight+'px';}});});
-function countUp(el){var t=+el.getAttribute('data-count'),s=0,st=Math.max(1,Math.floor(t/40));var iv=setInterval(function(){s+=st;if(s>=t){s=t;clearInterval(iv);}el.textContent=s;},22);}
-var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');if(e.target.querySelectorAll){e.target.querySelectorAll('[data-count]').forEach(countUp);}io.unobserve(e.target);}});},{threshold:.12});
-document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
-document.querySelectorAll('[data-count]').forEach(function(el){io.observe(el);});
-var vio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){playVal(e.target);vio.unobserve(e.target);}});},{threshold:.5});
-function playVal(el){
-  if(el.getAttribute('data-val')==='belief'){setTimeout(function(){el.querySelector('.va-ck').classList.add('on');var c=el.querySelector('.vb-cap');if(c)c.classList.add('in');},500);return;}
-  var rows=el.querySelectorAll('.val-row');
-  rows.forEach(function(r,i){setTimeout(function(){if(i===rows.length-1){r.classList.add('rej');r.querySelector('.va-x').classList.add('on');}else{r.querySelector('.va-ck').classList.add('on');}},350+i*500);});
-  var cap=el.parentElement.querySelector('.val-cap');if(cap){setTimeout(function(){cap.classList.add('in');},350+rows.length*500);}
-}
-document.querySelectorAll('[data-val]').forEach(function(el){vio.observe(el);});
-(function(){var story=document.querySelector('.story'),fill=document.getElementById('trailFill');if(!story||!fill)return;function upd(){var r=story.getBoundingClientRect(),track=story.clientHeight-16;var p=(innerHeight*0.55-r.top)/(r.height*0.72);p=Math.max(0,Math.min(1,p));fill.style.height=(p*track)+'px';}addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();})();
-(function(){
-  var typed=document.getElementById('d-typed'),cursor=document.getElementById('d-cursor'),out=document.getElementById('d-out');
-  if(!typed)return;
-  var ex=[
-    {t:{pt:'Briguei com meu chefe hoje e fiquei remoendo isso o dia todo.',en:'I clashed with my boss today and kept replaying it.'},emo:[['raiva','v'],['frustração','g'],['injustiça','v']],b:{pt:'Preciso provar o meu valor o tempo todo.',en:'I have to prove my worth all the time.'}},
-    {t:{pt:'Tive uma tarde tranquila no parque, só olhando o tempo passar.',en:'I had a calm afternoon at the park, just watching time pass.'},emo:[['calma','g'],['gratidão','g'],['presença','v']],b:{pt:'Momentos simples também merecem o meu tempo.',en:'Simple moments deserve my time too.'}},
-    {t:{pt:'Me senti sozinho à noite, com uma saudade que não passava.',en:'I felt alone at night, with a longing that would not fade.'},emo:[['solidão','v'],['saudade','g'],['ternura','v']],b:{pt:'Preciso dar conta de tudo sozinho.',en:'I have to handle everything on my own.'}}
-  ];
-  function en(){return document.documentElement.getAttribute('data-lang')==='en';}
-  function L(o){return en()?o.en:o.pt;}
-  function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-  function chipHtml(m){var isG=m[1]==='g',c=isG?['#E1F5EE','#0F6E56']:['#E8E6F7','#3C3489'];return '<span class="d-chip" style="background:'+c[0]+';color:'+c[1]+'"><span>'+m[0]+'</span><span class="d-ck">✓</span></span>';}
-  async function typeText(txt){typed.textContent='';cursor.style.display='inline-block';for(var i=0;i<txt.length;i++){typed.textContent+=txt[i];await sleep(30);}}
-  async function run(){
-    var idx=0;
-    while(true){
-      var e=ex[idx%ex.length];idx++;
-      out.style.transition='';out.style.opacity=1;out.innerHTML='';typed.style.opacity=1;
-      await typeText(L(e.t));
-      await sleep(650);cursor.style.display='none';
-      out.innerHTML='<div class="d-analyzing"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>'+(en()?'reading the entry':'lendo o relato')+'<span class="d-dots"><span>.</span><span>.</span><span>.</span></span></div>';
-      await sleep(1250);
-      var h='<div class="d-lbl">'+(en()?'Suggested emotions':'Emoções sugeridas')+'</div><div class="val-list" id="d-erows">';
-      e.emo.forEach(function(m){h+='<div class="val-row d-fade"><span class="vname">'+m[0]+'</span><span class="val-actions"><span class="va va-x">✕</span><span class="va va-ck">✓</span></span></div>';});
-      h+='</div><div class="val-cap" id="d-ecap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg><span>'+(en()?'you confirm what fits':'você confirma o que faz sentido')+'</span></div>';
-      out.innerHTML=h;
-      var rows=out.querySelectorAll('#d-erows .val-row');
-      for(var i=0;i<rows.length;i++){rows[i].classList.add('in');await sleep(200);}
-      await sleep(550);
-      for(var i=0;i<rows.length;i++){if(i===rows.length-1){rows[i].classList.add('rej');rows[i].querySelector('.va-x').classList.add('on');}else{rows[i].querySelector('.va-ck').classList.add('on');}await sleep(380);}
-      document.getElementById('d-ecap').classList.add('in');
-      await sleep(950);
-      out.insertAdjacentHTML('beforeend','<div class="d-analyzing" id="d-ba"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>'+(en()?'looking for beliefs':'analisando crenças')+'<span class="d-dots"><span>.</span><span>.</span><span>.</span></span></div>');
-      await sleep(1350);var ba=document.getElementById('d-ba');if(ba)ba.remove();
-      out.insertAdjacentHTML('beforeend','<div class="d-belief" id="d-bel" style="margin-top:6px"><div class="bl">'+(en()?'Suggested belief':'Crença sugerida')+'</div><div class="bt">“'+L(e.b)+'”</div><div class="d-bconf"><span class="va va-x">✕</span><span class="va va-ck" id="d-bck">✓</span><span class="d-bcap" id="d-bcap">'+(en()?'you validate the belief':'você valida a crença')+'</span></div></div>');
-      await sleep(60);document.getElementById('d-bel').classList.add('in');
-      await sleep(800);document.getElementById('d-bck').classList.add('on');document.getElementById('d-bcap').classList.add('in');
-      await sleep(800);
-      out.insertAdjacentHTML('beforeend','<div class="d-saved" id="d-saved"><span class="va va-ck on">✓</span><span>'+(en()?'Entry saved':'Registro salvo')+'</span></div>');
-      await sleep(60);document.getElementById('d-saved').classList.add('in');
-      await sleep(4400);
-      out.style.transition='opacity .5s';typed.style.transition='opacity .5s';out.style.opacity=0;typed.style.opacity=0;
-      await sleep(560);
-    }
-  }
-  run();
-})();
-</script>
-</body>
-</html>
+<div class~E~"progress" id~E~"prog"></div>
+<header id~E~"hdr"><nav class~E~"wrap">
+  <a href~E~"#top" class~E~"brand"><span class~E~"owl-bad~END~
