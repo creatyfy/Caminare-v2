@@ -153,8 +153,9 @@
   .pb-text .q{font-family:'Fraunces',serif;font-size:clamp(23px,2.8vw,32px);line-height:1.32;font-weight:400}
   .pb-text .q b{color:#7CE0C0;font-weight:500;font-style:italic}
   .pb-stats{display:grid;grid-template-columns:auto auto;gap:16px 44px;margin-top:26px;justify-content:start}
-  .pb-stats .n{font-family:'Fraunces',serif;font-size:34px;color:#fff}
+  .pb-stats .n{font-family:'Fraunces',serif;font-size:34px;color:#fff;white-space:nowrap}
   .pb-stats .l{font-size:12.5px;color:#B9AEDD;margin-top:4px}
+  .pb-stats .pb-lang{grid-column:1 / -1}
   .pb-photo{position:relative;min-height:340px}
   .pb-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .pb-photo::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,var(--plum),rgba(44,33,71,.55) 14%,rgba(44,33,71,0) 42%)}
@@ -244,7 +245,7 @@
     .float-badge{right:8px;top:12px;padding:9px 12px}
     .float-badge .fb-owl{width:30px;height:30px}
     .pb-text{padding:34px 24px}
-    .pb-stats{gap:16px 34px;margin-top:24px}
+    .pb-stats{grid-template-columns:1fr;gap:14px;margin-top:24px}
     .lang-feat{padding:32px 22px}
     .cta-band{padding:80px 22px}
     .plan{padding:30px 24px}
@@ -326,7 +327,7 @@
     </div>
   </div></section>
   <section class="band" style="padding-top:0"><div class="wrap reveal"><div class="photo-band">
-    <div class="pb-text"><p class="q"><span class="pt">Enquanto um diário guarda o que você viveu, o Caminare ajuda a compreender o que isso <b>revela sobre você</b>.</span><span class="en">While a journal keeps what you lived, Caminare helps you understand what it <b>reveals about you</b>.</span></p><div class="pb-stats"><div><div class="n" data-count="15">0</div><div class="l"><span class="pt">dias grátis</span><span class="en">days free</span></div></div><div><div class="n"><span class="pt">Texto ou voz</span><span class="en">Text or voice</span></div><div class="l"><span class="pt">para registrar</span><span class="en">to journal</span></div></div><div><div class="n"><span class="pt">Sem barreira</span><span class="en">No barriers</span></div><div class="l"><span class="pt">de idiomas. Use no seu idioma.</span><span class="en">of language. Use it in yours.</span></div></div></div></div>
+    <div class="pb-text"><p class="q"><span class="pt">Enquanto um diário guarda o que você viveu, o Caminare ajuda a compreender o que isso <b>revela sobre você</b>.</span><span class="en">While a journal keeps what you lived, Caminare helps you understand what it <b>reveals about you</b>.</span></p><div class="pb-stats"><div><div class="n" data-count="15">0</div><div class="l"><span class="pt">dias grátis</span><span class="en">days free</span></div></div><div><div class="n"><span class="pt">Texto ou voz</span><span class="en">Text or voice</span></div><div class="l"><span class="pt">para registrar</span><span class="en">to journal</span></div></div><div class="pb-lang"><div class="n"><span class="pt">Sem barreira</span><span class="en">No barriers</span></div><div class="l"><span class="pt">de idiomas. Use no seu idioma.</span><span class="en">of language. Use it in yours.</span></div></div></div></div>
     <div class="pb-photo"><img alt="" loading="lazy" src="https://images.unsplash.com/photo-1579017308347-e53e0d2fc5e9?q=80&w=1100&auto=format&fit=crop"></div>
   </div></div></section>
   <section class="band" id="recursos" style="padding-top:0"><div class="wrap">
