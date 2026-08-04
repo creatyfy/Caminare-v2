@@ -160,8 +160,8 @@ workflows:
           # O CFBundleShortVersionString (versão de marketing) fica em 1.0.
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST" 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.0" "$PLIST" 2>/dev/null \
-            || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 2.0" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 3.0" "$PLIST" 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 3.0" "$PLIST"
           # Entitlements: só Sign in with Apple. O associated-domains (Universal Links)
           # está desativado em native/ios/App.entitlements enquanto o domínio de produção
           # não existe (o placeholder quebrava a assinatura). Restaurar lá quando houver domínio.
