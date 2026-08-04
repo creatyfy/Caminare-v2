@@ -15,7 +15,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
   "terms": {
     "pt-BR": {
       "title": "Termos de Uso",
-      "updated": "Última atualização: 21/05/2026",
+      "updated": "Última atualização: 03/08/2026",
       "blocks": [
         {
           "t": "p",
@@ -375,7 +375,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "O Caminare poderá disponibilizar planos pagos recorrentes, incluindo, exemplificativamente:"
+          "s": "O Caminare poderá disponibilizar diferentes modalidades de planos, gratuitos e pagos, com características, funcionalidades, limites de utilização, quantidade máxima de registros, preços e demais condições comerciais distintas, conforme apresentadas na plataforma, na página oficial de planos do Caminare e durante o processo de contratação da assinatura. Os planos disponíveis poderão incluir, exemplificativamente:"
         },
         {
           "t": "li",
@@ -472,6 +472,50 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         {
           "t": "p",
           "s": "Nos casos aplicáveis de direito de arrependimento ou obrigação legal equivalente, a Empresa observará a legislação obrigatória incidente."
+        },
+        {
+          "t": "h2",
+          "s": "8.4 Limites de Uso"
+        },
+        {
+          "t": "p",
+          "s": "Cada plano poderá estabelecer limites operacionais, incluindo, entre outros, quantidade máxima de registros que poderão ser criados durante cada ciclo de cobrança."
+        },
+        {
+          "t": "p",
+          "s": "Esses limites serão informados na Plataforma no momento da contratação e poderão variar conforme o plano escolhido."
+        },
+        {
+          "t": "p",
+          "s": "Após atingir o limite aplicável, o Usuário poderá continuar acessando seu conteúdo já existente, mas poderá ficar impedido de criar novos registros até:"
+        },
+        {
+          "t": "li",
+          "s": "o início de novo ciclo"
+        },
+        {
+          "t": "li",
+          "s": "a contratação de plano compatível"
+        },
+        {
+          "t": "li",
+          "s": "ou outra forma de ampliação de capacidade eventualmente disponibilizada pela Empresa"
+        },
+        {
+          "t": "h2",
+          "s": "8.5 Alterações dos planos e condições comerciais"
+        },
+        {
+          "t": "p",
+          "s": "A Empresa poderá criar, alterar, substituir ou descontinuar planos, funcionalidades, limites de utilização, preços e demais condições comerciais a qualquer momento, observada a legislação aplicável."
+        },
+        {
+          "t": "p",
+          "s": "Tais alterações não afetarão assinaturas já contratadas durante o respectivo ciclo de cobrança, salvo quando permitido pela legislação aplicável ou mediante comunicação prévia ao usuário, quando exigida."
+        },
+        {
+          "t": "p",
+          "s": "Os planos disponíveis, respectivos preços, limites de utilização, funcionalidades e demais condições comerciais encontram-se disponíveis na Plataforma, na página oficial de planos do Caminare (https://caminare.com.br/planos) e/ou no fluxo de contratação da loja de aplicativos correspondente. Em caso de divergência, prevalecerão as informações apresentadas ao Usuário no momento da contratação da assinatura."
         },
         {
           "t": "h",
@@ -1561,7 +1605,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
     },
     "en": {
       "title": "Terms of Use",
-      "updated": "Last updated: May 21, 2026",
+      "updated": "Last updated: Aug 03, 2026",
       "blocks": [
         {
           "t": "p",
@@ -1921,7 +1965,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Caminare may offer recurring paid subscription plans, including, by way of example:"
+          "s": "Caminare may offer different subscription plans, including free and paid options, with different features, functionalities, usage limits, maximum number of records, pricing, and commercial terms, as presented on the Platform, on Caminare's official pricing page, and during the subscription process. Available plans may include, by way of example:"
         },
         {
           "t": "li",
@@ -2018,6 +2062,50 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         {
           "t": "p",
           "s": "Where legally applicable withdrawal rights or equivalent mandatory consumer rights exist, the Company will comply with the applicable law."
+        },
+        {
+          "t": "h2",
+          "s": "8.4 Usage Limits"
+        },
+        {
+          "t": "p",
+          "s": "Each subscription plan may establish operational limits, including, without limitation, the maximum number of records that may be created during a billing cycle."
+        },
+        {
+          "t": "p",
+          "s": "Such limits are described in the Platform at the time of subscription and may vary according to the selected plan."
+        },
+        {
+          "t": "p",
+          "s": "Once the applicable limit is reached, the User may continue to access previously created content but may be prevented from creating additional records until:"
+        },
+        {
+          "t": "li",
+          "s": "a new billing cycle begins"
+        },
+        {
+          "t": "li",
+          "s": "the User upgrades to another available plan; or"
+        },
+        {
+          "t": "li",
+          "s": "additional capacity is otherwise made available by the Company"
+        },
+        {
+          "t": "h2",
+          "s": "8.5 Changes to Plans and Commercial Terms"
+        },
+        {
+          "t": "p",
+          "s": "The Company may create, modify, replace, or discontinue subscription plans, features, usage limits, pricing, and other commercial terms at any time, subject to applicable law."
+        },
+        {
+          "t": "p",
+          "s": "Any such changes will apply prospectively and will not affect subscriptions already purchased during the current billing cycle, except where permitted by applicable law or where prior notice to the User is provided, if required."
+        },
+        {
+          "t": "p",
+          "s": "Current subscription plans, prices, usage limits, features, and applicable commercial conditions are available on the Company's official pricing page at https://caminare.com.br/planos, or within the applicable app store at the time of subscription. In the event of any discrepancy, the information presented during the subscription flow shall prevail."
         },
         {
           "t": "h",
