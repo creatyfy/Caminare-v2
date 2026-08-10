@@ -424,5 +424,43 @@ async function run(){while(true){reset();await sleep(750);await typeEntry();curs
 run();
 })();
 </script>
+<!-- ===== Analytics (GA4) =====================================================
+  Quando o acesso ao GA chegar, descomente o bloco gtag abaixo e troque G-XXXXXXX
+  pelo ID de medição real. O tagueamento de cliques (mais abaixo) já está pronto e
+  fica inerte até o gtag carregar. Scroll, tempo de página e page_view o GA4 coleta
+  sozinho com a Medição Avançada ligada. -->
+<!--
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXX');
+</script>
+-->
+<script>
+// Tagueamento de cliques da landing: store_click e nav_click.
+// Inerte enquanto window.gtag não existir (bloco acima comentado).
+(function () {
+  function send(name, params) {
+    if (typeof window.gtag === 'function') window.gtag('event', name, params);
+  }
+  document.querySelectorAll('a.store').forEach(function (a) {
+    a.addEventListener('click', function () {
+      var href = a.getAttribute('href') || '';
+      var store = href.indexOf('apps.apple.com') > -1 ? 'apple'
+                : href.indexOf('play.google.com') > -1 ? 'google' : 'outro';
+      var location = a.closest('#baixar') ? 'hero' : 'cta';
+      send('store_click', { store: store, location: location });
+    });
+  });
+  document.querySelectorAll('.nav-links a, .foot-col a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      var item = (a.getAttribute('href') || a.textContent || '').replace('#', '').trim();
+      send('nav_click', { item: item });
+    });
+  });
+})();
+</script>
 </body>
 </html>

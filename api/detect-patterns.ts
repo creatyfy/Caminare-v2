@@ -18,6 +18,7 @@ import {
 import { applyCors } from './_lib/cors.js';
 import { runStructured } from './_lib/claude.js';
 import { SYSTEM_DETECT_PATTERNS, buildDetectPatternsUser } from './_lib/prompts.js';
+import { trackServer } from './_lib/analytics.js';
 
 export const config = { maxDuration: 30 };
 
@@ -129,6 +130,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const padroesExistentes = (pats ?? []).map((p) => p.description).filter(Boolean);
   const crencasMapeadas = (bels ?? []).map((b) => b.content).filter(Boolean);
 
+  const promptStart = Date.now();
   try {
     const { data: ai } = await runStructured<AiResult>(
       SYSTEM_DETECT_PATTERNS,
@@ -141,6 +143,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
       2000
     );
+    void trackServer(user.id, {
+      name: 'analysis_prompt_run',
+      params: { prompt_id: 'prompt03', status: 'completed', duration_ms: Date.now() - promptStart },
+    });
 
     const padroes = (ai.padroes ?? []).filter((p) => p?.nome?.trim() || p?.descricao?.trim()).slice(0, 3);
 
@@ -174,6 +180,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendJson(res, 200, { status: 'ok', padroes });
   } catch (err) {
     console.error('[detect-patterns] falha na análise:', err);
+    void trackServer(user.id, {
+      name: 'analysis_prompt_run',
+      params: { prompt_id: 'prompt03', status: 'failed', duration_ms: Date.now() - promptStart },
+    });
     return sendError(res, 502, 'Não foi possível detectar padrões agora. Tente novamente.');
   }
 }

@@ -17,6 +17,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { isNative } from './native';
+import { track } from './analytics';
 
 export type SpeechErrorKind =
   | 'permission' // microfone/fala negado pelo usuário
@@ -250,6 +251,9 @@ export function useSpeechToText(): SpeechToText {
       let perm = await SpeechRecognition.checkPermissions();
       if (perm.speechRecognition !== 'granted') {
         perm = await SpeechRecognition.requestPermissions();
+        // Só medimos quando o diálogo de permissão de fato aparece (não em toda
+        // gravação), pra o resultado refletir a decisão do usuário.
+        track('microphone_permission', { granted: perm.speechRecognition === 'granted' });
       }
       if (perm.speechRecognition !== 'granted') {
         activeRef.current = false;

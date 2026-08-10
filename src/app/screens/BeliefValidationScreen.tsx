@@ -15,6 +15,7 @@ import {
   type BeliefFull,
 } from '../lib/db';
 import { detectPatterns } from '../lib/ai';
+import { track } from '../lib/analytics';
 
 // Padrões só são detectados a cada N registros do usuário (não a cada registro).
 const PATTERN_EVERY = 30;
@@ -55,6 +56,7 @@ export function BeliefValidationScreen() {
       if (total > 0 && total % PATTERN_EVERY === 0) {
         const res = await detectPatterns(user.id, i18n.language);
         if (res.padroes && res.padroes.length > 0) {
+          track('pattern_detected', { count: res.padroes.length });
           await refreshPendingPattern();
         }
       }
@@ -85,6 +87,7 @@ export function BeliefValidationScreen() {
     if (ok) await setBeliefValidation(id, 'confirmed');
     setSavingEdit(false);
     if (ok) {
+      track('belief_validated', { edited: true });
       setBeliefs((prev) =>
         prev.map((b) =>
           b.id === id ? { ...b, content: trimmed, validation: 'confirmed' } : b
@@ -125,6 +128,8 @@ export function BeliefValidationScreen() {
       setBeliefs((prev) =>
         prev.map((b) => (b.id === id ? { ...b, validation: 'pending' } : b))
       );
+    } else if (validation === 'confirmed') {
+      track('belief_validated', { edited: false });
     } else if (validation === 'rejected') {
       // Remove from list after a beat
       setTimeout(() => {

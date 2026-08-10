@@ -8,6 +8,7 @@ import { EntitlementProvider, useEntitlement } from './contexts/EntitlementConte
 import { BottomNav } from './components/BottomNav';
 import { NativeAuthBridge } from './components/NativeAuthBridge';
 import { NameGate } from './components/NameGate';
+import { AttGate } from './components/AttGate';
 import { SplashScreen } from './screens/SplashScreen';
 import { LandingScreen } from './screens/LandingScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -28,6 +29,7 @@ import { ProfileScreen } from './screens/ProfileScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 import { getProfile } from './lib/db';
 import { isNative } from './lib/native';
+import { setScreen, screenNameFromPath } from './lib/analytics';
 
 // Telas pesadas carregadas sob demanda (code splitting):
 // - LegalScreen tem o conteúdo completo dos Termos e Política em PT e EN
@@ -167,6 +169,13 @@ const FULL_WIDTH_WEB_ROUTES = ['/termos', '/privacidade', '/excluir-conta'];
 function RootShell() {
   const location = useLocation();
   const path = location.pathname;
+
+  // screen_view automático: dispara a cada mudança de rota. NO-OP até o SDK de
+  // analytics estar conectado (ver src/app/lib/analytics.ts).
+  useEffect(() => {
+    setScreen(screenNameFromPath(path));
+  }, [path]);
+
   if (!isNative && path === '/') return <LandingScreen />;
   // Página pública de planos/preços (link estável p/ citar nos Termos): abre a
   // landing já na seção de Planos.
@@ -226,6 +235,7 @@ export default function App() {
             <PendingPatternProvider>
               <NativeAuthBridge />
               <NameGate />
+              <AttGate />
               {/* Container raiz do app (375px no web, edge-to-edge no nativo) fica
                   encapsulado no RootShell — que também decide mostrar a landing de
                   marketing em "/" quando é web. */}

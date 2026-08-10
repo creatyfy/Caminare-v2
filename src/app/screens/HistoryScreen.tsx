@@ -14,6 +14,7 @@ import {
 } from '../lib/db';
 import { formatDate } from '../lib/format';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { track } from '../lib/analytics';
 
 type FilterValue = '7days' | '15days' | '30days' | 'all';
 
@@ -28,6 +29,10 @@ export function HistoryScreen() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterValue>('all');
   const [selectedEntry, setSelectedEntry] = useState<EntryWithEmotions | null>(null);
+
+  useEffect(() => {
+    track('view_history');
+  }, []);
 
   // Edição do registro no modal (texto + emoções). Nenhuma ação chama /api/*.
   const [editing, setEditing] = useState(false);

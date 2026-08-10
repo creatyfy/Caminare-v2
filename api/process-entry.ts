@@ -18,6 +18,7 @@ import {
 import { applyCors } from './_lib/cors.js';
 import { runStructured, CLAUDE_MODEL } from './_lib/claude.js';
 import { SYSTEM_PROCESS_ENTRY, buildProcessEntryUser } from './_lib/prompts.js';
+import { trackServer } from './_lib/analytics.js';
 
 export const config = { maxDuration: 30 };
 
@@ -137,6 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendJson(res, 202, { status: 'processing' });
   }
 
+  const promptStart = Date.now();
   try {
     // 3) Monta histórico resumido (contexto) a partir dos últimos registros.
     const historicoResumido = body.historico_resumido ?? (await buildHistorico(db, user.id, entryId));
@@ -153,6 +155,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
       1500
     );
+    void trackServer(user.id, {
+      name: 'analysis_prompt_run',
+      params: { prompt_id: 'prompt01', status: 'completed', duration_ms: Date.now() - promptStart },
+    });
 
     const emocoes = (ai.emocoes ?? []).slice(0, 6).filter((e) => e?.nome?.trim());
 
@@ -190,6 +196,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err) {
     console.error('[process-entry] falha na análise:', err);
+    void trackServer(user.id, {
+      name: 'analysis_prompt_run',
+      params: { prompt_id: 'prompt01', status: 'failed', duration_ms: Date.now() - promptStart },
+    });
     await db.from('entries').update({ processing_status: 'failed' }).eq('id', entryId);
     return sendError(res, 502, 'Não foi possível analisar o relato agora. Tente novamente.');
   }

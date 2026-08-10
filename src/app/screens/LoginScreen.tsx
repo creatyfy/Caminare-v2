@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 import { AppleSignInButton } from '../components/AppleSignInButton';
 import { getProfile } from '../lib/db';
+import { track } from '../lib/analytics';
 
 export function LoginScreen() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export function LoginScreen() {
       setError(translateLoginError(err, t));
       return;
     }
+    track('login', { method: 'email' });
     // Admin vai direto pro painel; usuário comum, pro home
     let target = '/home';
     if (userId) {

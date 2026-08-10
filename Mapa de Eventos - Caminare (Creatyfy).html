@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mapa de Eventos — Caminare · Creaty.fy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0A0F; --ink:#F4F1F5; --soft:#9B96A3; --pink:#E90167;
+  --pink-lt:#FF3A8C; --card:#15131C; --card-line:#2C2735; --on-pink:#120209;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);}
+body{font-family:'Archivo',sans-serif;color:var(--ink);font-size:15px;line-height:1.5;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.page{max-width:820px;margin:0 auto;padding:44px 46px 40px;position:relative;
+  background:
+    radial-gradient(58% 42% at 100% -2%, rgba(233,1,103,0.20), transparent 60%),
+    radial-gradient(48% 38% at -8% 102%, rgba(233,1,103,0.10), transparent 60%),
+    var(--bg);
+  min-height:100vh;overflow:hidden;}
+.rings{position:fixed;right:-360px;bottom:-360px;width:860px;height:860px;z-index:0;pointer-events:none;}
+.rings span{position:absolute;border:1px solid rgba(233,1,103,0.11);border-radius:50%;
+  left:50%;top:50%;width:100%;height:100%;margin-left:-50%;margin-top:-50%;}
+.rings span:nth-child(2){width:74%;height:74%;margin-left:-37%;margin-top:-37%;border-color:rgba(233,1,103,0.08);}
+.rings span:nth-child(3){width:48%;height:48%;margin-left:-24%;margin-top:-24%;border-color:rgba(233,1,103,0.06);}
+.page>*{position:relative;z-index:1;}
+
+.brand-row{display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--card-line);padding-bottom:16px;margin-bottom:22px;}
+.wordmark{font-family:'Sora';font-weight:800;font-size:23px;letter-spacing:-.6px;color:var(--ink);}
+.wordmark .pk{color:var(--pink);}
+.doc-meta{text-align:right;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--soft);font-weight:600;line-height:1.9;}
+.doc-meta b{color:var(--pink);}
+
+.eyebrow{font-size:10px;letter-spacing:3.6px;text-transform:uppercase;color:var(--pink);font-weight:700;margin-bottom:12px;}
+h1{font-family:'Sora';font-weight:800;font-size:42px;line-height:1.03;letter-spacing:-1.4px;margin-bottom:15px;}
+h1 .pk{color:var(--pink);}
+.lede{font-size:15px;color:var(--soft);max-width:660px;line-height:1.62;}
+.lede b{color:var(--ink);font-weight:600;}
+.lede .hl{color:var(--pink);font-weight:600;}
+
+.section-rule{display:flex;align-items:center;gap:12px;margin:26px 0 13px;}
+.section-rule .dot{width:6px;height:6px;border-radius:50%;background:var(--pink);flex-shrink:0;}
+.section-rule .lbl{font-family:'Sora';font-size:12px;letter-spacing:2.2px;text-transform:uppercase;font-weight:700;color:var(--ink);}
+.section-rule .ln{height:1px;background:var(--card-line);flex:1;}
+
+.body-text{font-size:14px;color:var(--soft);line-height:1.58;margin-bottom:9px;}
+.body-text b{font-weight:600;color:var(--ink);}
+.body-text .hl{color:var(--pink);font-weight:600;}
+.k{font-family:'Sora';font-weight:600;color:var(--ink);font-size:.94em;}
+
+.evt{width:100%;border-collapse:collapse;margin:4px 0 6px;}
+.evt th{font-family:'Sora';text-align:left;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--pink);font-weight:700;padding:9px 12px 10px;border-bottom:1px solid var(--card-line);}
+.evt td{padding:10px 12px;border-bottom:1px solid var(--card-line);color:var(--ink);vertical-align:top;
+  font-size:12.5px;line-height:1.42;}
+.evt td.ev{font-family:'Sora';font-weight:600;color:var(--pink-lt);font-size:12.5px;white-space:nowrap;}
+.evt td.pr{color:var(--soft);font-size:12px;}
+.evt td.pr b{color:var(--ink);font-weight:600;}
+.evt .dst{font-family:'Sora';font-weight:700;font-size:11px;color:var(--ink);white-space:nowrap;}
+tr{break-inside:avoid;}
+
+.callout{border:1.3px dashed var(--pink);border-radius:12px;padding:13px 17px;background:rgba(233,1,103,0.06);
+  font-size:12.5px;color:var(--soft);line-height:1.52;margin-top:8px;break-inside:avoid;}
+.callout b{color:var(--ink);font-weight:600;}
+.callout .hl{color:var(--pink);font-weight:600;}
+
+.cond{display:grid;grid-template-columns:1fr 1fr;gap:12px 30px;margin-top:6px;}
+.cond .c{display:flex;gap:11px;align-items:flex-start;break-inside:avoid;}
+.cond .c .ic{font-family:'Sora';font-weight:800;font-size:15px;color:var(--pink);line-height:1.2;width:20px;flex-shrink:0;}
+.cond .c .ct{font-size:12.5px;line-height:1.42;color:var(--soft);}
+.cond .c .ct b{color:var(--ink);font-weight:700;}
+
+ul.brand-list{list-style:none;margin-top:4px;}
+ul.brand-list li{position:relative;padding-left:22px;margin-bottom:9px;font-size:13px;line-height:1.42;color:var(--soft);}
+ul.brand-list li b{color:var(--ink);font-weight:600;}
+ul.brand-list li::before{content:"";position:absolute;left:0;top:5px;width:9px;height:9px;border-radius:50%;border:1.8px solid var(--pink);}
+
+.foot{margin-top:24px;border-top:1px solid var(--card-line);padding-top:15px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;}
+.foot .note{font-size:10.5px;color:var(--soft);max-width:520px;line-height:1.5;}
+.foot .sign{text-align:right;}
+.foot .sign .nm{font-family:'Sora';font-weight:700;font-size:15px;}
+.foot .sign .nm .pk{color:var(--pink);}
+.foot .sign .rl{font-size:9.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--soft);font-weight:600;margin-top:3px;}
+
+@media print{
+  @page{margin:12mm;}
+  body,html{background:var(--bg);}
+  .page{max-width:none;margin:0;padding:0;min-height:0;}
+  .rings{position:absolute;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="rings"><span></span><span></span><span></span></div>
+
+  <div class="brand-row">
+    <div class="wordmark">Creaty<span class="pk">.fy</span></div>
+    <div class="doc-meta">Mapa de Eventos<br><b>05/08/2026</b></div>
+  </div>
+
+  <div class="eyebrow">Mensuração · Caminare</div>
+  <h1>Mapa de <span class="pk">Eventos</span></h1>
+  <p class="lede">Plano de tagueamento para <b>validação antes da implementação</b>. Depois de aprovado, esta lista vira a especificação de implementação, sem retrabalho após o build. <b>App:</b> 3.x, iOS e Android. <b>Medidor:</b> Google Analytics for Firebase (GA4).</p>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">Como ler</span><span class="ln"></span></div>
+  <p class="body-text"><b>Destino</b> indica pra onde cada evento é enviado: <span class="hl">FB</span> = só Firebase (análise de produto interno); <span class="hl">FB + Ads</span> = Firebase e conversão no Google Ads; <span class="hl">FB + Ads + Meta</span> = também no Meta (Events Manager). Nomes em <span class="k">snake_case</span>, padrão GA4. Parâmetros no formato <span class="k">nome = exemplo</span>.</p>
+  <p class="body-text"><b>Privacidade:</b> só trafegam metadados (que houve um registro, se foi voz ou texto, qual o número). <b>Nenhum conteúdo escrito pelo usuário sai do app.</b></p>
+  <p class="body-text"><b>Arquitetura:</b> eventos de produto vão só pro Firebase. Só as conversões de marketing vão pro Meta/Google Ads, porque o Meta tem limite de 8 eventos priorizados no iOS e mandar os eventos de uso pra lá atrapalharia a otimização das campanhas.</p>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">1. Conversões de marketing — FB + Ads + Meta</span><span class="ln"></span></div>
+  <p class="body-text">Os eventos do funil que as campanhas otimizam. <span class="k">subscribe</span> é a conversão principal.</p>
+  <table class="evt">
+    <thead><tr><th style="width:18%">Evento</th><th style="width:29%">Quando dispara</th><th style="width:38%">Parâmetros</th><th style="width:15%">Nome no Meta</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">sign_up</td><td>Conta criada com sucesso</td><td class="pr"><b>method</b> = email | google | apple</td><td class="pr">CompleteRegistration</td></tr>
+      <tr><td class="ev">login</td><td>Usuário faz login</td><td class="pr"><b>method</b> = email | google | apple</td><td class="pr">—</td></tr>
+      <tr><td class="ev">trial_started</td><td>Início do teste grátis (na criação da conta)</td><td class="pr"><b>trial_days</b> = 15</td><td class="pr">StartTrial</td></tr>
+      <tr><td class="ev">view_plans</td><td>Abriu a tela de planos / paywall</td><td class="pr"><b>source</b> = onboarding | limite | perfil</td><td class="pr">ViewContent</td></tr>
+      <tr><td class="ev">subscribe</td><td>Assinatura confirmada (compra concluída)</td><td class="pr"><b>plan</b> = basico | avancado; <b>billing_period</b> = monthly | annual; <b>value</b> = 89.90; <b>currency</b> = BRL; <b>transaction_id</b></td><td class="pr">Subscribe / Purchase</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><span class="hl">value</span> + <span class="hl">currency</span> no <b>subscribe</b> são o que permite calcular retorno por campanha (ROAS) depois.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">2. Eventos de produto — só FB</span><span class="ln"></span></div>
+  <p class="body-text">Para construir o histórico do usuário e guiar as próximas versões do app.</p>
+  <table class="evt">
+    <thead><tr><th style="width:22%">Evento</th><th style="width:34%">Quando dispara</th><th style="width:44%">Parâmetros</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">record_created</td><td>Usuário cria um registro</td><td class="pr"><b>record_number</b> = 1, 2, 3...; <b>input_type</b> = voice | text</td></tr>
+      <tr><td class="ev">milestone_reached</td><td>Usuário atinge um marco de uso</td><td class="pr"><b>milestone_type</b> = record | pattern_detected | pattern_validated; <b>count</b> = 1, 2, 3, 5, 10, 50, 100</td></tr>
+      <tr><td class="ev">belief_validated</td><td>Usuário valida uma crença</td><td class="pr"><b>belief_number</b> = 1, 2, 3...</td></tr>
+      <tr><td class="ev">pattern_detected</td><td>Um padrão é detectado pelo app</td><td class="pr"><b>pattern_number</b> = 1, 2, 3...</td></tr>
+      <tr><td class="ev">pattern_validated</td><td>Usuário valida um padrão</td><td class="pr"><b>pattern_number</b> = 1, 2, 3...</td></tr>
+      <tr><td class="ev">view_history</td><td>Abre o histórico</td><td class="pr">tela nomeada: Historico</td></tr>
+      <tr><td class="ev">view_insights</td><td>Abre os insights</td><td class="pr">tela nomeada: Insights</td></tr>
+      <tr><td class="ev">view_summary</td><td>Abre o resumo</td><td class="pr">tela nomeada: Resumo</td></tr>
+      <tr><td class="ev">share_summary</td><td>Compartilha o resumo</td><td class="pr"><b>method</b> = whatsapp | email | outro</td></tr>
+      <tr><td class="ev">download_summary</td><td>Baixa o resumo (PDF)</td><td class="pr">—</td></tr>
+      <tr><td class="ev">microphone_permission</td><td>Resultado da permissão de microfone</td><td class="pr"><b>granted</b> = true | false</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Consolidação dos marcos:</b> "1º, 2º, 3º, 5º, 10º, 50º, 100º registro" (e o mesmo para padrões) vira <span class="hl">um</span> <b>record_created</b> (que carrega o número no parâmetro) mais um <b>milestone_reached</b> que dispara só nos números de marco. Mesmas análises, relatórios sem fragmentar em 20 linhas, e um marco novo (ex.: 200) não exige nova versão do app.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">3. Erros e falhas — só FB</span><span class="ln"></span></div>
+  <p class="body-text">Para monitorar a qualidade do app e achar problema rápido. Vão <b>só pro Firebase</b> (não são conversão de campanha). Cada um carrega o motivo da falha, pra separar bug de ação do usuário.</p>
+  <table class="evt">
+    <thead><tr><th style="width:25%">Evento</th><th style="width:29%">Quando dispara</th><th style="width:46%">Parâmetros</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">record_creation_failed</td><td>Falha ao salvar um registro</td><td class="pr"><b>input_type</b> = voice | text; <b>reason</b> = rede | servidor | validacao</td></tr>
+      <tr><td class="ev">voice_transcription_failed</td><td>A transcrição de voz falha</td><td class="pr"><b>reason</b> = permissao | sem_fala | rede | timeout</td></tr>
+      <tr><td class="ev">subscription_failed</td><td>Compra/assinatura não conclui</td><td class="pr"><b>plan</b> = basico | avancado; <b>store</b> = apple | google; <b>error_type</b> = pagamento_recusado | cancelado_usuario | erro_loja</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">Falhas na análise da IA ficam no evento de prompt (seção 4), no <b>status = failed</b>, pra não duplicar. Novos eventos de falha seguem o mesmo padrão <span class="hl">&lt;acao&gt;_failed</span>.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">4. Prompts de análise (IA) — só FB</span><span class="ln"></span></div>
+  <p class="body-text">Cada execução dos prompts que geram a análise do usuário. <b>Um único evento</b> cobre todos os prompts, medindo sucesso, erro e tempo de resposta da IA.</p>
+  <table class="evt">
+    <thead><tr><th style="width:25%">Evento</th><th style="width:29%">Quando dispara</th><th style="width:46%">Parâmetros</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">analysis_prompt_run</td><td>Um prompt de análise termina de rodar</td><td class="pr"><b>prompt_id</b> = prompt01 | prompt02 | ...; <b>status</b> = completed | failed; <b>duration_ms</b>; <b>error_type</b> (quando falha)</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Por que um evento só:</b> em vez de analysis_prompt01_completed, _failed, prompt02_completed... (2 eventos por prompt, que multiplicam a lista), o <span class="hl">prompt_id</span> e o <span class="hl">status</span> viram parâmetros. Mesma análise, mede também a latência da IA (duration_ms), e um prompt novo não exige nova versão do app.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">5. Automáticos — o Firebase coleta sozinho</span><span class="ln"></span></div>
+  <p class="body-text">Não precisam de tagueamento; basta <b>nomear as telas corretamente</b>.</p>
+  <table class="evt">
+    <thead><tr><th style="width:22%">Evento</th><th style="width:34%">O que mede</th><th style="width:44%">Observação</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">first_open</td><td>Primeira abertura após instalar</td><td class="pr">Automático</td></tr>
+      <tr><td class="ev">session_start</td><td>Abertura do app / nova sessão</td><td class="pr">Automático (= abertura do app)</td></tr>
+      <tr><td class="ev">user_engagement</td><td>Tempo de uso e tempo por tela</td><td class="pr">Automático; depende dos screen_view bem nomeados</td></tr>
+      <tr><td class="ev">screen_view</td><td>Cada tela vista</td><td class="pr">Automático quando as telas têm nome. Daqui sai o tempo por tela</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">6. iOS — App Tracking Transparency (ATT)</span><span class="ln"></span></div>
+  <p class="body-text">Necessário para o Meta atribuir por anúncio no iPhone. Vale medir a taxa de aceite.</p>
+  <table class="evt">
+    <thead><tr><th style="width:22%">Evento</th><th style="width:44%">Quando dispara</th><th style="width:34%">Parâmetros</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">att_context_shown</td><td>Mostra a tela de contexto (antes do pop-up nativo)</td><td class="pr">—</td></tr>
+      <tr><td class="ev">att_result</td><td>Resultado do pop-up nativo do iOS</td><td class="pr"><b>status</b> = authorized | denied | restricted</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">A tela de contexto dispara <b>quando o usuário já entendeu o valor do app</b>, nunca na primeira abertura. Costuma dobrar a taxa de aceite.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">7. Assinatura — server-side (entra agora)</span><span class="ln"></span></div>
+  <p class="body-text">Estes acontecem <b>fora do app</b>, no servidor da Apple/Google, com o aplicativo fechado. Chegam pelas notificações das lojas (App Store Server Notifications / Google RTDN) e o Caminare <b>já tem o webhook que recebe e processa tudo isso</b> (atualiza o status da assinatura de cada usuário no banco). A inclusão na análise consiste em, quando cada notificação é processada, também enviar o evento pro GA4 (via Measurement Protocol), amarrado ao mesmo usuário.</p>
+  <table class="evt">
+    <thead><tr><th style="width:20%">Evento</th><th style="width:27%">Quando dispara</th><th style="width:38%">Parâmetros</th><th style="width:15%">Destino</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">trial_converted</td><td>Trial vira pago (1ª cobrança confirmada pela loja)</td><td class="pr"><b>plan</b>; <b>billing_period</b>; <b>value</b> = 89.90; <b>currency</b> = BRL; <b>transaction_id</b></td><td><span class="dst">FB + Ads + Meta</span></td></tr>
+      <tr><td class="ev">subscription_renewed</td><td>Renovação cobrada pela loja</td><td class="pr"><b>plan</b>; <b>billing_period</b>; <b>value</b>; <b>currency</b>; <b>renewal_count</b>; <b>transaction_id</b></td><td><span class="dst">FB + Ads</span></td></tr>
+      <tr><td class="ev">subscription_cancelled</td><td>Usuário cancela a renovação (nos ajustes da loja)</td><td class="pr"><b>plan</b>; <b>billing_period</b>; <b>active_until</b> = data</td><td><span class="dst">FB</span></td></tr>
+      <tr><td class="ev">subscription_refunded</td><td>Reembolso/estorno processado pela loja</td><td class="pr"><b>plan</b>; <b>value</b>; <b>currency</b>; <b>transaction_id</b></td><td><span class="dst">FB + Ads</span></td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>trial_converted</b> é a conversão de receita de verdade (1ª cobrança), por isso vai também pro Meta/Ads. <b>subscription_renewed</b> e <b>subscription_refunded</b> alimentam LTV e receita líquida no Ads sem entrar no Meta (preserva o limite de 8 eventos do iOS). <b>subscription_cancelled</b> fica só no Firebase, pra análise de churn.<br><br><span class="hl">Pré-requisito de configuração:</span> ligar as URLs de notificação nas duas lojas (App Store Connect e Play Console / Pub/Sub) apontando pro webhook. Isso precisa ser feito de qualquer forma pra a assinatura atualizar corretamente, independente da análise.<br><br><span class="hl">Timing:</span> enquanto a base é nova (app recém-lançado, trial de 15 dias), esses relatórios têm pouco volume nos primeiros meses. A instrumentação entra pronta desde já pra não haver retrabalho quando o volume chegar.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">8. Landing page (web) — GA4 web</span><span class="ln"></span></div>
+  <p class="body-text">Tagueamento da página de marketing. É um <b>data stream web</b> no mesmo GA4 (a LP hoje faz parte do app web). <b>Scroll e tempo de tela o GA4 já coleta sozinho</b> com a Medição Avançada ligada; só os cliques precisam de evento custom.</p>
+  <table class="evt">
+    <thead><tr><th style="width:20%">Evento</th><th style="width:34%">Quando dispara</th><th style="width:31%">Parâmetros</th><th style="width:15%">Origem</th></tr></thead>
+    <tbody>
+      <tr><td class="ev">store_click</td><td>Clique num botão de baixar o app</td><td class="pr"><b>store</b> = apple | google; <b>location</b> = nav | hero | footer</td><td class="pr">Custom</td></tr>
+      <tr><td class="ev">nav_click</td><td>Clique num item da barra de menu</td><td class="pr"><b>item</b> = seção</td><td class="pr">Custom</td></tr>
+      <tr><td class="ev">scroll</td><td>Rolagem de 90% da página</td><td class="pr">—</td><td class="pr">Automático</td></tr>
+      <tr><td class="ev">user_engagement</td><td>Tempo de permanência na página</td><td class="pr">—</td><td class="pr">Automático</td></tr>
+      <tr><td class="ev">page_view</td><td>Visita à página</td><td class="pr">—</td><td class="pr">Automático</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">Precisa do <b>acesso ao GA</b> e de colar o <b>gtag/GTM</b> na landing. Os cliques de loja (<b>store_click</b>) podem virar conversão no Google Ads pra medir o funil da LP até a loja. A atribuição do install em si é feita pela própria loja, não pelo site.</div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">9. Notas importantes</span><span class="ln"></span></div>
+  <div class="cond">
+    <div class="c"><div class="ic">01</div><div class="ct"><b>Limite do Meta.</b> 8 eventos priorizados no iOS. Por isso só as conversões de marketing vão pra lá; os eventos de produto ficam só no Firebase.</div></div>
+    <div class="c"><div class="ic">02</div><div class="ct"><b>Privacidade.</b> Só metadados trafegam. O conteúdo do registro nunca sai do app. As declarações das lojas serão atualizadas conforme a coleta.</div></div>
+    <div class="c"><div class="ic">03</div><div class="ct"><b>BigQuery.</b> Exportação do GA4 ligada pra guardar o dado bruto indefinidamente (GA4 descarta o detalhado em até 14 meses). Sem custo. Só vale daqui pra frente.</div></div>
+    <div class="c"><div class="ic">04</div><div class="ct"><b>Retenção do GA4.</b> Ajustar para 14 meses (o máximo) no painel.</div></div>
+    <div class="c"><div class="ic">05</div><div class="ct"><b>Não é retroativo.</b> O histórico começa a existir a partir da instalação desta versão. O ideal é a mensuração entrar antes da primeira verba de mídia.</div></div>
+  </div>
+
+  <div class="section-rule"><span class="dot"></span><span class="lbl">O que falta pra fechar</span><span class="ln"></span></div>
+  <ul class="brand-list">
+    <li>Validação desta lista pelo Ricardo (nomes, gatilhos, parâmetros).</li>
+    <li>Acessos: <b>Google Ads, Firebase, Meta Business Manager + Events Manager</b>, e acesso ao GA para a landing (seção 8).</li>
+    <li>Ligar as URLs de notificação das lojas no webhook (App Store Connect + Play Console / Pub/Sub), pré-requisito dos eventos da seção 7.</li>
+  </ul>
+
+  <div class="foot">
+    <div class="note">Documento de trabalho para validação. Nomes e parâmetros podem ser ajustados antes da implementação. Nenhum conteúdo escrito pelo usuário é coletado, apenas metadados de uso.</div>
+    <div class="sign">
+      <div class="nm">Creaty<span class="pk">.fy</span></div>
+      <div class="rl">Mensuração · Caminare</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -56,6 +56,7 @@ export const ptBR = {
     apple: 'Cadastrar com Apple',
     acceptTerms:
       'Li e concordo com os <terms>Termos de Uso</terms> e a <privacy>Política de Privacidade</privacy>.',
+    confirmAge: 'Confirmo que tenho 18 anos ou mais.',
     successTitle: 'Conta criada!',
     successMessage: 'Enviamos um link de confirmação para <strong>{{email}}</strong>. Verifique sua caixa de entrada para continuar.',
     goLogin: 'Ir para o login',
@@ -63,11 +64,19 @@ export const ptBR = {
       missingFields: 'Preencha todos os campos.',
       shortPassword: 'A senha deve ter ao menos 6 caracteres.',
       underage: 'É necessário ter 18 anos ou mais para criar uma conta.',
+      mustConfirmAge: 'Você precisa confirmar que tem 18 anos ou mais.',
       alreadyRegistered: 'Este email já está cadastrado.',
       invalidEmail: 'Email inválido.',
       passwordInvalid: 'Senha inválida — mínimo 6 caracteres.',
       rateLimit: 'Muitas tentativas. Tente novamente em instantes.',
     },
+  },
+  att: {
+    title: 'Ajude o Caminare a crescer',
+    body: 'Isso nos ajuda a entender por quais caminhos as pessoas chegam ao Caminare e a melhorar o app para quem precisa dele. Você decide na próxima tela.',
+    privacy: 'Seus registros nunca são compartilhados. Apenas dados anônimos de uso do app.',
+    continue: 'Continuar',
+    notNow: 'Agora não',
   },
   forgotPassword: {
     title: 'Esqueceu sua senha?',

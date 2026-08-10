@@ -6,6 +6,7 @@ import { getEntriesForSummary, getProfile, type EntryDetail, type Profile } from
 import { formatDate } from '../lib/format';
 import { isNative } from '../lib/native';
 import { sharePdfNative } from '../lib/pdfShare';
+import { track } from '../lib/analytics';
 import type { TherapyReportData } from '../lib/pdf/TherapyReportPDF';
 
 type SummaryPeriod = '7days' | '15days' | '30days';
@@ -25,6 +26,10 @@ export function SummaryScreen() {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [pdfSuccess, setPdfSuccess] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<EntryDetail | null>(null);
+
+  useEffect(() => {
+    track('view_summary');
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -178,6 +183,7 @@ export function SummaryScreen() {
       } else {
         triggerDownload(blob, filename);
       }
+      track('download_summary');
     } catch (err) {
       console.error('[pdf.download]', err);
       setPdfError(t('summary.pdfError'));
@@ -203,6 +209,7 @@ export function SummaryScreen() {
           text: t('summary.shareText'),
           dialogTitle: t('summary.pdfDialogTitle'),
         });
+        track('share_summary', { method: 'outro' });
         setPdfSuccess(t('summary.pdfNativeDone'));
         return;
       }
@@ -222,6 +229,7 @@ export function SummaryScreen() {
             text: t('summary.shareText'),
             files: [file],
           });
+          track('share_summary', { method: 'outro' });
         } catch (shareErr) {
           // Usuário cancelou: ignore. Outros erros: cai pro download.
           const name = (shareErr as Error).name;

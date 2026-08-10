@@ -14,6 +14,7 @@ import {
   type InsightsFilter,
 } from '../lib/db';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { track } from '../lib/analytics';
 
 export function PatternsScreen() {
   const { t } = useTranslation();
@@ -27,6 +28,10 @@ export function PatternsScreen() {
   const [editBeliefText, setEditBeliefText] = useState('');
   const [savingBelief, setSavingBelief] = useState(false);
   const [pendingDeleteBeliefId, setPendingDeleteBeliefId] = useState<string | null>(null);
+
+  useEffect(() => {
+    track('view_insights');
+  }, []);
 
   function startEditBelief(belief: BeliefInsight) {
     setEditingBeliefId(belief.id);
