@@ -5,6 +5,7 @@ import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Check, Loader2, Ch
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 import { AppleSignInButton } from '../components/AppleSignInButton';
+import { track } from '../lib/analytics';
 
 export function SignUpScreen() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export function SignUpScreen() {
   const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,10 @@ export function SignUpScreen() {
       setError(t('signup.errors.underage'));
       return;
     }
+    if (!confirmedAge) {
+      setError(t('signup.errors.mustConfirmAge'));
+      return;
+    }
 
     setSubmitting(true);
     const { error: err } = await signUp(name.trim(), email.trim(), password, birthDate);
@@ -46,6 +52,10 @@ export function SignUpScreen() {
       setError(translateSignupError(err, t));
       return;
     }
+    // Cadastro por email concluído. O trial é criado por trigger no servidor;
+    // usamos este mesmo ponto como proxy de trial_started.
+    track('sign_up', { method: 'email' });
+    track('trial_started', { trial_days: 15 });
     setSuccess(true);
   }
 
@@ -325,9 +335,51 @@ export function SignUpScreen() {
           </span>
         </label>
 
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            cursor: 'pointer',
+          }}
+        >
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={confirmedAge}
+            onClick={() => setConfirmedAge((v) => !v)}
+            style={{
+              flexShrink: 0,
+              width: '22px',
+              height: '22px',
+              marginTop: '1px',
+              borderRadius: '6px',
+              border: confirmedAge ? 'none' : `1.5px solid var(--cam-border)`,
+              backgroundColor: confirmedAge ? 'var(--cam-color-brand)' : 'var(--cam-bg-input)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            {confirmedAge && <Check size={15} color="#FFFFFF" strokeWidth={3} />}
+          </button>
+          <span
+            style={{
+              fontSize: '13px',
+              color: 'var(--cam-text-secondary)',
+              lineHeight: 1.5,
+              fontWeight: 500,
+            }}
+          >
+            {t('signup.confirmAge')}
+          </span>
+        </label>
+
         <button
           type="submit"
-          disabled={submitting || !acceptedTerms}
+          disabled={submitting || !acceptedTerms || !confirmedAge}
           style={{
             marginTop: '8px',
             height: '56px',
@@ -337,13 +389,13 @@ export function SignUpScreen() {
             border: 'none',
             fontSize: '16px',
             fontWeight: 600,
-            cursor: submitting || !acceptedTerms ? 'not-allowed' : 'pointer',
+            cursor: submitting || !acceptedTerms || !confirmedAge ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '10px',
             boxShadow: 'var(--cam-shadow-brand)',
-            opacity: !acceptedTerms ? 0.55 : submitting ? 0.85 : 1,
+            opacity: !acceptedTerms || !confirmedAge ? 0.55 : submitting ? 0.85 : 1,
             transition: 'transform 0.15s ease, opacity 0.15s ease',
           }}
           onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.98)')}
@@ -364,13 +416,13 @@ export function SignUpScreen() {
 
         <GoogleSignInButton
           label={t('signup.google')}
-          disabled={!acceptedTerms}
+          disabled={!acceptedTerms || !confirmedAge}
           onError={(msg) => setError(translateSignupError(msg, t))}
         />
 
         <AppleSignInButton
           label={t('signup.apple')}
-          disabled={!acceptedTerms}
+          disabled={!acceptedTerms || !confirmedAge}
           onError={(msg) => setError(translateSignupError(msg, t))}
           onSuccess={() => navigate('/home', { replace: true })}
         />

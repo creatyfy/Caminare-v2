@@ -31,6 +31,34 @@ import {
   recordWebhookEvent,
   type EntitlementUpdate,
 } from './_lib/iap-subscriptions.js';
+import { trackServer } from './_lib/analytics.js';
+
+// Mapeia o resultado de uma notificação da loja para o evento do GA4.
+// NO-OP até GA4 configurado (ver _lib/analytics.ts).
+// clientId: usamos o external_id como id estável de fallback — conta, mas não
+// junta com as sessões do app. TODO: usar o client_id/app_instance_id do GA4 do
+// usuário (resolvível via external_id -> subscriptions.user_id).
+function forwardSubscriptionEvent(
+  source: 'apple' | 'google',
+  type: string,
+  status: string | undefined,
+  externalId: string,
+  refund = false,
+  previousStatus?: string | null
+): void {
+  let name: string;
+  if (refund) {
+    name = 'subscription_refunded';
+  } else if (status === 'canceled' || status === 'expired') {
+    name = 'subscription_cancelled';
+  } else if (previousStatus === 'trial' && status === 'active') {
+    // Era trial e virou pago = conversão do teste (1ª cobrança).
+    name = 'trial_converted';
+  } else {
+    name = 'subscription_renewed';
+  }
+  void trackServer(externalId, { name, params: { source, type, status: status ?? '' } });
+}
 
 export const config = { maxDuration: 30 };
 
@@ -84,6 +112,7 @@ async function handleApple(db: Db, signedPayload: string, res: VercelResponse) {
     source: 'apple',
   };
   const r = await applyEntitlementByExternalId(db, update);
+  forwardSubscriptionEvent('apple', n.type, n.status, n.externalId, false, r.previousStatus);
   return sendJson(res, 200, { status: 'ok', type: n.type, matched: r.matched, applied: r.applied });
 }
 
@@ -112,6 +141,7 @@ async function handleGoogle(
       externalId: data.purchaseToken,
       source: 'google',
     });
+    forwardSubscriptionEvent('google', 'voided', 'canceled', data.purchaseToken, true);
     return sendJson(res, 200, { status: 'ok', kind: 'voided', matched: r.matched, applied: r.applied });
   }
 
@@ -128,5 +158,6 @@ async function handleGoogle(
     externalId: data.purchaseToken,
     source: 'google',
   });
+  forwardSubscriptionEvent('google', data.kind, state.status, data.purchaseToken, false, r.previousStatus);
   return sendJson(res, 200, { status: 'ok', matched: r.matched, applied: r.applied });
 }

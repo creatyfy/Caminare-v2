@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Check, Lock, Sparkles, RotateCcw, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,10 @@ import {
   type Cadence,
   type TierPricing,
 } from '../lib/pricing';
+import { track } from '../lib/analytics';
+
+const storeName = (): 'apple' | 'google' | 'web' =>
+  isIOS ? 'apple' : isAndroid ? 'google' : 'web';
 
 // Tela de planos / paywall (Fase B — IAP ligado).
 // Servida em /assinatura. Atende dois cenários:
@@ -41,6 +45,13 @@ export function PaywallScreen() {
   const restrictedTrial = access === 'restricted' && status === 'trial';
   const restrictedOther = access === 'restricted' && status !== 'trial';
 
+  // view_plans no mount. Origem aproximada: restrito = veio do limite/gating;
+  // caso contrário, chegou pela vitrine (perfil).
+  useEffect(() => {
+    track('view_plans', { source: access === 'restricted' ? 'limite' : 'perfil' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   let title = t('plans.salesTitle');
   let subtitle = t('plans.salesSubtitle');
   if (restrictedTrial) {
@@ -63,9 +74,20 @@ export function PaywallScreen() {
     try {
       const r = await iap.purchase(tier, cadence);
       if (r === 'cancelled') return; // usuário fechou o pagamento — sem aviso
+      // Conversão principal. value em BRL (referência da vitrine); no nativo a
+      // loja cobra localizado. transaction_id: TODO — disponível no iap.ts
+      // (handleApproved), não exposto até aqui.
+      track('subscribe', {
+        plan: tier,
+        billing_period: cadence,
+        value: PLANS[tier][cadence].priceBRL,
+        currency: 'BRL',
+        store: storeName(),
+      });
       await refresh();
       navigate('/home', { replace: true });
     } catch {
+      track('subscription_failed', { plan: tier, store: storeName(), error_type: 'erro_loja' });
       setFeedback({ kind: 'error', msg: t('plans.purchaseError') });
     } finally {
       setBusyProduct(null);

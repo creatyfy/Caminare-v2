@@ -4,12 +4,17 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useEntitlement } from '../contexts/EntitlementContext';
-import { createTextEntry } from '../lib/db';
+import { createTextEntry, getHomeStats } from '../lib/db';
 import { useSpeechToText, type SpeechErrorKind } from '../lib/speech';
+import { track } from '../lib/analytics';
 
 // Equivalente a aproximadamente 2 min de fala (150 wpm × ~6 chars por palavra)
 const MAX_CHARS = 1800;
 const MAX_SECONDS = 120;
+
+// Marcos de uso (nº total de registros) que disparam milestone_reached. Adicionar
+// um número aqui NÃO exige nova versão da análise — é só estender a lista.
+const RECORD_MILESTONES = [1, 3, 5, 10, 50, 100];
 
 export function TextRecordingScreen() {
   const navigate = useNavigate();
@@ -61,6 +66,7 @@ export function TextRecordingScreen() {
 
   // ----- Gravação por voz ----------------------------------------------------
   function handleVoiceError(kind: SpeechErrorKind) {
+    track('voice_transcription_failed', { reason: kind });
     const map: Record<SpeechErrorKind, string> = {
       permission: t('recording.errorPermission'),
       unsupported: t('recording.notSupported'),
@@ -149,14 +155,32 @@ export function TextRecordingScreen() {
       setError(t('entitlement.limitReached', { limit: entitlement.limit }));
       return;
     }
+    // Voz de verdade só quando estamos em modo voz e não caímos pro texto.
+    const inputType = voiceMode && !fellBackToText ? 'voice' : 'text';
     setSubmitting(true);
     setError(null);
     try {
       const entryId = await createTextEntry(user.id, text.trim());
       if (!entryId) {
+        track('record_creation_failed', { input_type: inputType, reason: 'servidor' });
         setError(t('textRecording.errorSave'));
         return;
       }
+      // record_created + milestone_reached. Não bloqueia a navegação: busca a
+      // contagem total (já inclui este registro) em background e dispara os
+      // eventos. Se a contagem falhar, ainda registra o record_created sem número.
+      void (async () => {
+        try {
+          const stats = await getHomeStats(user.id);
+          const total = stats?.totalEntries ?? 0;
+          track('record_created', { input_type: inputType, record_number: total });
+          if (RECORD_MILESTONES.includes(total)) {
+            track('milestone_reached', { milestone_type: 'record', count: total });
+          }
+        } catch {
+          track('record_created', { input_type: inputType });
+        }
+      })();
       void entitlement.refresh();
       // NÃO disparamos a análise aqui em background. Antes era um fire-and-forget
       // (`void processEntry().catch(console.error)`) que ENGOLIA qualquer falha da
@@ -167,6 +191,7 @@ export function TextRecordingScreen() {
       navigate(`/validacao-emocoes?entryId=${entryId}`);
     } catch (err) {
       console.error('Erro ao salvar registro:', err);
+      track('record_creation_failed', { input_type: inputType, reason: 'rede' });
       setError(t('textRecording.errorGeneric'));
     } finally {
       setSubmitting(false);

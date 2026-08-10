@@ -16,6 +16,7 @@ import {
 import { applyCors } from './_lib/cors.js';
 import { runStructured, CLAUDE_MODEL } from './_lib/claude.js';
 import { SYSTEM_ANALYZE_BELIEFS, buildAnalyzeBeliefsUser } from './_lib/prompts.js';
+import { trackServer } from './_lib/analytics.js';
 
 export const config = { maxDuration: 30 };
 
@@ -100,6 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .eq('validation', 'rejected');
   const crencasRejeitadas = (rejected ?? []).map((b) => b.content).filter(Boolean);
 
+  const promptStart = Date.now();
   try {
     const { data: ai, raw } = await runStructured<AiResult>(
       SYSTEM_ANALYZE_BELIEFS,
@@ -114,6 +116,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
       1500
     );
+    void trackServer(user.id, {
+      name: 'analysis_prompt_run',
+      params: { prompt_id: 'prompt02', status: 'completed', duration_ms: Date.now() - promptStart },
+    });
 
     const crencas = (ai.crencas ?? []).filter((c) => c?.formulacao?.trim()).slice(0, 5);
 
@@ -163,6 +169,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendJson(res, 200, { status: 'ok', crencas });
   } catch (err) {
     console.error('[analyze-beliefs] falha na análise:', err);
+    void trackServer(user.id, {
+      name: 'analysis_prompt_run',
+      params: { prompt_id: 'prompt02', status: 'failed', duration_ms: Date.now() - promptStart },
+    });
     return sendError(res, 502, 'Não foi possível analisar as crenças agora. Tente novamente.');
   }
 }

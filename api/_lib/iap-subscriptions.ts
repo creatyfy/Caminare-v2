@@ -65,6 +65,7 @@ export interface ByExternalIdResult {
   matched: boolean; // havia uma assinatura com esse external_id
   applied: boolean; // a atualização foi aplicada (false se evento obsoleto)
   error: string | null;
+  previousStatus?: SubStatus | null; // status antes desta atualização (p/ analytics)
 }
 
 /** Atualiza o entitlement pela transação (webhook). Idempotente e à prova de fora-de-ordem. */
@@ -76,11 +77,13 @@ export async function applyEntitlementByExternalId(
 
   const { data: existing, error: selErr } = await db
     .from('subscriptions')
-    .select('id, current_period_end')
+    .select('id, status, current_period_end')
     .eq('external_id', u.externalId)
     .maybeSingle();
   if (selErr) return { matched: false, applied: false, error: selErr.message };
   if (!existing) return { matched: false, applied: false, error: null };
+
+  const previousStatus = (existing.status ?? null) as SubStatus | null;
 
   // Fora de ordem: se o evento traz um fim de período ANTERIOR ao já gravado,
   // é uma notificação atrasada — ignora pra não regredir o estado.
@@ -89,7 +92,7 @@ export async function applyEntitlementByExternalId(
     existing.current_period_end &&
     new Date(u.currentPeriodEnd).getTime() < new Date(existing.current_period_end).getTime()
   ) {
-    return { matched: true, applied: false, error: null };
+    return { matched: true, applied: false, error: null, previousStatus };
   }
 
   const patch: Record<string, unknown> = {
@@ -105,7 +108,7 @@ export async function applyEntitlementByExternalId(
   if (error?.code === '42703') {
     ({ error } = await db.from('subscriptions').update(withoutSource(patch)).eq('external_id', u.externalId));
   }
-  return { matched: true, applied: !error, error: error ? error.message : null };
+  return { matched: true, applied: !error, error: error ? error.message : null, previousStatus };
 }
 
 /**

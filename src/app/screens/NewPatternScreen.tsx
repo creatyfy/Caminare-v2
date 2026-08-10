@@ -10,6 +10,7 @@ import {
   updatePattern,
   type PatternFull,
 } from '../lib/db';
+import { track } from '../lib/analytics';
 
 export function NewPatternScreen() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ export function NewPatternScreen() {
     const ok = await setPatternValidation(pattern.id, validation);
     setSubmitting(false);
     if (ok) {
+      if (validation === 'confirmed') track('pattern_validated', { edited: false });
       await refreshPendingPattern();
       navigate('/home');
     }
@@ -61,6 +63,7 @@ export function NewPatternScreen() {
     const ok = await updatePattern(pattern.id, trimmed);
     setSubmitting(false);
     if (ok) {
+      track('pattern_validated', { edited: true });
       await refreshPendingPattern();
       navigate('/home');
     }

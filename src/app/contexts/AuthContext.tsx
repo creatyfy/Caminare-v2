@@ -3,12 +3,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { TERMS_VERSION } from '../content/termsVersion';
+import { track } from '../lib/analytics';
 import {
   isNative,
   isIOS,
@@ -120,6 +122,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  // IDs de usuário que já tiveram o evento de auth disparado nesta sessão do app,
+  // pra o SIGNED_IN (que pode reemitir em refresh/restore) não duplicar contagem.
+  const authTrackedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let active = true;
@@ -130,8 +135,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+
+      // Eventos de OAuth (Google/Apple) são disparados aqui, no ponto central,
+      // porque o sucesso é assíncrono (redirect). Login/cadastro por EMAIL já
+      // disparam nas telas, então filtramos só provedores OAuth pra não duplicar.
+      const user = newSession?.user;
+      if (event === 'SIGNED_IN' && user) {
+        const provider = user.app_metadata?.provider;
+        const isOAuth = provider === 'google' || provider === 'apple';
+        if (isOAuth && !authTrackedRef.current.has(user.id)) {
+          authTrackedRef.current.add(user.id);
+          // Novo usuário: conta criada há pouco (janela de 2 min) = cadastro.
+          const createdAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+          const isNew = createdAt > 0 && Date.now() - createdAt < 120_000;
+          track(isNew ? 'sign_up' : 'login', { method: provider });
+          if (isNew) track('trial_started', { trial_days: 15 });
+        }
+      }
+      if (event === 'SIGNED_OUT') {
+        authTrackedRef.current.clear();
+      }
     });
 
     return () => {
@@ -162,6 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               birth_date: birthDate,
               terms_accepted_at: new Date().toISOString(),
               terms_version: TERMS_VERSION,
+              // Afirmacao explicita de maioridade exigida no cadastro (juridico).
+              age_confirmed_at: new Date().toISOString(),
             },
           },
         });

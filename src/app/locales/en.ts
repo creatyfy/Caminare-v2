@@ -56,6 +56,7 @@ export const en = {
     apple: 'Sign up with Apple',
     acceptTerms:
       'I have read and agree to the <terms>Terms of Use</terms> and the <privacy>Privacy Policy</privacy>.',
+    confirmAge: 'I confirm that I am 18 years of age or older.',
     successTitle: 'Account created!',
     successMessage: 'We sent a confirmation link to <strong>{{email}}</strong>. Check your inbox to continue.',
     goLogin: 'Go to sign in',
@@ -63,11 +64,19 @@ export const en = {
       missingFields: 'Fill in all fields.',
       shortPassword: 'Password must be at least 6 characters.',
       underage: 'You must be 18 or older to create an account.',
+      mustConfirmAge: 'You must confirm that you are 18 or older.',
       alreadyRegistered: 'This email is already registered.',
       invalidEmail: 'Invalid email.',
       passwordInvalid: 'Invalid password — minimum 6 characters.',
       rateLimit: 'Too many attempts. Try again in a moment.',
     },
+  },
+  att: {
+    title: 'Help Caminare grow',
+    body: 'It helps us understand which paths bring people to Caminare and improve the app for those who need it. You decide on the next screen.',
+    privacy: 'Your entries are never shared. Only anonymous app usage data.',
+    continue: 'Continue',
+    notNow: 'Not now',
   },
   forgotPassword: {
     title: 'Forgot your password?',
