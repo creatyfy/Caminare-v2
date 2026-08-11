@@ -1008,21 +1008,24 @@ export async function devSetSubscription(params: {
 
 export async function createTextEntry(
   userId: string,
-  rawText: string
+  rawText: string,
+  language?: string | null
 ): Promise<string | null> {
+  const base = {
+    user_id: userId,
+    input_type: 'text',
+    raw_text: rawText,
+    processing_status: 'pending',
+    recorded_at: new Date().toISOString(),
+  };
+  const row = language ? { ...base, language } : base;
   try {
-    const { data, error } = await supabase
-      .from('entries')
-      .insert({
-        user_id: userId,
-        input_type: 'text',
-        raw_text: rawText,
-        processing_status: 'pending',
-        recorded_at: new Date().toISOString(),
-      })
-      .select('id')
-      .single();
-
+    let { data, error } = await supabase.from('entries').insert(row).select('id').single();
+    // Resiliência ao deploy: se a coluna `language` ainda não existir no banco
+    // (migration pendente), reinsere sem ela para não perder o registro.
+    if (error?.code === '42703') {
+      ({ data, error } = await supabase.from('entries').insert(base).select('id').single());
+    }
     if (error) {
       console.error('[db.createTextEntry]', error);
       return null;
@@ -1032,6 +1035,28 @@ export async function createTextEntry(
     console.error('[db.createTextEntry]', err);
     return null;
   }
+}
+
+/**
+ * Salva o idioma nativo do usuário nos metadados do auth. É esse idioma que vira
+ * o padrão da transcrição e o idioma dos insights (ver src/app/lib/languages.ts).
+ */
+export async function updateNativeLanguage(code: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.auth.updateUser({
+    data: { native_language: code, native_language_changed_at: new Date().toISOString() },
+  });
+  if (error) {
+    console.error('[db.updateNativeLanguage]', error);
+    return { error: error.message };
+  }
+  return { error: null };
+}
+
+/** Dias que faltam pra poder trocar o idioma nativo de novo (0 = pode agora). */
+export function nativeLanguageCooldownDays(changedAtISO?: string | null): number {
+  if (!changedAtISO) return 0;
+  const elapsedDays = (Date.now() - new Date(changedAtISO).getTime()) / 86_400_000;
+  return Math.max(0, Math.ceil(60 - elapsedDays));
 }
 
 export async function getEntriesForSummary(
@@ -1124,6 +1149,8 @@ export interface BeliefInsight {
   content: string;
   occurrence_count: number;
   validation: string;
+  // Nº de crenças variação (parecidas, unidas) sob esta canônica.
+  variations_count?: number;
 }
 
 export interface PatternInsight {
@@ -1181,13 +1208,30 @@ export async function getBeliefs(
       .select('id, content, occurrence_count, validation, last_seen_at')
       .eq('user_id', userId)
       .is('deleted_at', null)
+      // Só crenças canônicas (de topo). As variações unidas ficam ocultas da
+      // lista — aparecem como contagem (variations_count) na canônica.
+      .is('parent_belief_id', null)
       .neq('validation', 'rejected')
       .order('occurrence_count', { ascending: false });
     const since = sinceFor(filter);
     if (since) query = query.gte('last_seen_at', since);
     const { data, error } = await query;
     if (error) { console.error('[db.getBeliefs]', error); return []; }
-    return (data ?? []) as BeliefInsight[];
+    const beliefs = (data ?? []) as BeliefInsight[];
+
+    // Conta as variações (crenças filhas) por canônica.
+    const { data: children } = await supabase
+      .from('beliefs')
+      .select('parent_belief_id')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .not('parent_belief_id', 'is', null);
+    const vcount: Record<string, number> = {};
+    for (const c of children ?? []) {
+      const p = (c as { parent_belief_id: string | null }).parent_belief_id;
+      if (p) vcount[p] = (vcount[p] ?? 0) + 1;
+    }
+    return beliefs.map((b) => ({ ...b, variations_count: vcount[b.id] ?? 0 }));
   } catch (err) {
     console.error('[db.getBeliefs]', err);
     return [];

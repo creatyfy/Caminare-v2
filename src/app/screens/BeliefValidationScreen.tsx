@@ -16,6 +16,7 @@ import {
 } from '../lib/db';
 import { detectPatterns } from '../lib/ai';
 import { track } from '../lib/analytics';
+import { resolveRecordLanguage } from '../lib/languages';
 
 // Padrões só são detectados a cada N registros do usuário (não a cada registro).
 const PATTERN_EVERY = 30;
@@ -27,6 +28,11 @@ export function BeliefValidationScreen() {
   const { refresh: refreshPendingPattern } = usePendingPattern();
   const [searchParams] = useSearchParams();
   const entryId = searchParams.get('entryId');
+  // Insights sempre no idioma nativo (ver EmotionValidationScreen).
+  const insightLang = resolveRecordLanguage({
+    native: (user?.user_metadata?.native_language as string) ?? null,
+    i18nLang: i18n.language,
+  });
 
   const [beliefs, setBeliefs] = useState<BeliefFull[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +60,7 @@ export function BeliefValidationScreen() {
       const stats = await getHomeStats(user.id);
       const total = stats?.totalEntries ?? 0;
       if (total > 0 && total % PATTERN_EVERY === 0) {
-        const res = await detectPatterns(user.id, i18n.language);
+        const res = await detectPatterns(user.id, insightLang);
         if (res.padroes && res.padroes.length > 0) {
           track('pattern_detected', { count: res.padroes.length });
           await refreshPendingPattern();

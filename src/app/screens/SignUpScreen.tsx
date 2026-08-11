@@ -1,19 +1,23 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Trans, useTranslation } from 'react-i18next';
-import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Check, Loader2, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User as UserIcon, Calendar, Check, Loader2, CheckCircle2, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 import { AppleSignInButton } from '../components/AppleSignInButton';
 import { track } from '../lib/analytics';
+import { SUPPORTED_LANGUAGES, defaultLanguageFromInterface } from '../lib/languages';
 
 export function SignUpScreen() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [nativeLanguage, setNativeLanguage] = useState(() =>
+    defaultLanguageFromInterface(i18n.language)
+  );
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [confirmedAge, setConfirmedAge] = useState(false);
@@ -45,7 +49,13 @@ export function SignUpScreen() {
     }
 
     setSubmitting(true);
-    const { error: err } = await signUp(name.trim(), email.trim(), password, birthDate);
+    const { error: err } = await signUp(
+      name.trim(),
+      email.trim(),
+      password,
+      birthDate,
+      nativeLanguage
+    );
     setSubmitting(false);
 
     if (err) {
@@ -226,6 +236,57 @@ export function SignUpScreen() {
           onChange={setBirthDate}
           autoComplete="bday"
         />
+
+        <div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              height: '56px',
+              padding: '0 16px',
+              backgroundColor: 'var(--cam-bg-input)',
+              borderRadius: '16px',
+              border: `1.5px solid var(--cam-border)`,
+              boxShadow: 'var(--cam-shadow-card)',
+            }}
+          >
+            <Globe size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />
+            <select
+              aria-label={t('signup.nativeLanguage')}
+              value={nativeLanguage}
+              onChange={(e) => setNativeLanguage(e.target.value)}
+              style={{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                fontSize: '15px',
+                color: 'var(--cam-text-primary)',
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                appearance: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p
+            style={{
+              fontSize: '12px',
+              color: 'var(--cam-text-secondary)',
+              margin: '6px 4px 0',
+              lineHeight: 1.4,
+            }}
+          >
+            {t('signup.nativeLanguageHint')}
+          </p>
+        </div>
 
         <InputField
           icon={<Lock size={18} color="var(--cam-text-secondary)" strokeWidth={2.2} />}

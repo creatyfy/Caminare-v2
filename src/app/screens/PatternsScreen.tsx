@@ -15,6 +15,7 @@ import {
 } from '../lib/db';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { track } from '../lib/analytics';
+import { mergeBeliefs } from '../lib/ai';
 
 export function PatternsScreen() {
   const { t } = useTranslation();
@@ -32,6 +33,40 @@ export function PatternsScreen() {
   useEffect(() => {
     track('view_insights');
   }, []);
+
+  // De tempos em tempos (no máx. 1x/dia), une crenças validadas muito parecidas
+  // em segundo plano e recarrega a lista se algo mudou. Silencioso.
+  useEffect(() => {
+    if (!user) return;
+    const KEY = 'caminare.beliefs_merge_at';
+    try {
+      const last = Number(localStorage.getItem(KEY) ?? 0);
+      if (Date.now() - last < 24 * 60 * 60 * 1000) return;
+    } catch {
+      /* localStorage indisponível: segue */
+    }
+    let active = true;
+    (async () => {
+      try {
+        const r = await mergeBeliefs();
+        try {
+          localStorage.setItem(KEY, String(Date.now()));
+        } catch {
+          /* noop */
+        }
+        if (active && r?.merged && r.merged > 0) {
+          const b = await getBeliefs(user.id, filter);
+          if (active) setBeliefs(b);
+        }
+      } catch {
+        /* silencioso: não atrapalha os Insights */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   function startEditBelief(belief: BeliefInsight) {
     setEditingBeliefId(belief.id);
@@ -343,6 +378,9 @@ export function PatternsScreen() {
                         <p style={{ fontSize: '13px', color: 'var(--cam-text-secondary)', margin: 0 }}>
                           {belief.occurrence_count}{' '}
                           {belief.occurrence_count === 1 ? t('common.occurrence') : t('common.occurrences')}
+                          {belief.variations_count
+                            ? ` · ${t('patterns.variations', { count: belief.variations_count })}`
+                            : ''}
                         </p>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>

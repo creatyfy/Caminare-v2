@@ -12,6 +12,7 @@ import {
   type EmotionFull,
 } from '../lib/db';
 import { processEntry, analyzeBeliefs } from '../lib/ai';
+import { resolveRecordLanguage } from '../lib/languages';
 
 export function EmotionValidationScreen() {
   const navigate = useNavigate();
@@ -19,6 +20,13 @@ export function EmotionValidationScreen() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const entryId = searchParams.get('entryId');
+  // Insights SEMPRE no idioma nativo do usuário (não no idioma do registro), pra
+  // a contagem de emoções/crenças não fragmentar entre línguas. A transcrição por
+  // voz continua no idioma falado (seletor da tela de voz).
+  const insightLang = resolveRecordLanguage({
+    native: (user?.user_metadata?.native_language as string) ?? null,
+    i18nLang: i18n.language,
+  });
 
   const [emotions, setEmotions] = useState<EmotionFull[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +55,7 @@ export function EmotionValidationScreen() {
       if (status !== 'done') {
         setAnalyzing(true);
         try {
-          const res = await processEntry(entryId, i18n.language);
+          const res = await processEntry(entryId, insightLang);
           // Se outra requisição já reivindicou o registro, o endpoint responde
           // 'processing' (202) — aguardamos a conclusão via polling do status.
           // Se o polling terminar SEM 'done' (ficou 'failed' ou estourou o tempo),
@@ -105,7 +113,7 @@ export function EmotionValidationScreen() {
     try {
       await analyzeBeliefs({
         entryId,
-        idioma: i18n.language,
+        idioma: insightLang,
         emocoesValidadas,
         emocoesRejeitadas,
       });
@@ -116,7 +124,7 @@ export function EmotionValidationScreen() {
     // Sugeridas e não tocadas → 'ignored'. Best-effort: não bloqueia a navegação.
     await ignorePendingEmotions(user.id, entryId);
     setContinuing(false);
-    navigate('/validacao-crencas?entryId=' + entryId);
+    navigate('/validacao-crencas?entryId=' + entryId + '&lang=' + encodeURIComponent(insightLang));
   }
 
   async function handleEmotionValidation(
