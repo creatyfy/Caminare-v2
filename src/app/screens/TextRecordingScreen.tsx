@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, Mic, Square, X, Globe } from 'lucide-react';
+import { ArrowLeft, Mic, Square, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,7 +7,8 @@ import { useEntitlement } from '../contexts/EntitlementContext';
 import { createTextEntry, getHomeStats } from '../lib/db';
 import { useSpeechToText, type SpeechErrorKind } from '../lib/speech';
 import { track } from '../lib/analytics';
-import { SUPPORTED_LANGUAGES, resolveRecordLanguage } from '../lib/languages';
+import { resolveRecordLanguage } from '../lib/languages';
+import { LanguageSelect } from '../components/LanguageSelect';
 
 // Equivalente a aproximadamente 2 min de fala (150 wpm × ~6 chars por palavra)
 const MAX_CHARS = 1800;
@@ -249,33 +250,13 @@ export function TextRecordingScreen() {
         </h1>
 
         {voiceMode && !fellBackToText && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
-            <Globe size={16} color="var(--cam-text-secondary)" strokeWidth={2.2} />
-            <select
-              aria-label={t('recording.language')}
+          <div style={{ marginTop: '12px', maxWidth: '280px' }}>
+            <LanguageSelect
               value={recordLang}
-              onChange={(e) => setRecordLang(e.target.value)}
+              onChange={setRecordLang}
               disabled={listening}
-              style={{
-                border: `1.5px solid var(--cam-border)`,
-                borderRadius: '9999px',
-                backgroundColor: 'var(--cam-bg-input)',
-                color: 'var(--cam-text-primary)',
-                fontSize: '13px',
-                fontWeight: 600,
-                fontFamily: 'inherit',
-                padding: '6px 12px',
-                cursor: listening ? 'not-allowed' : 'pointer',
-                appearance: 'none',
-                opacity: listening ? 0.6 : 1,
-              }}
-            >
-              {SUPPORTED_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
+              ariaLabel={t('recording.language')}
+            />
           </div>
         )}
       </div>

@@ -436,13 +436,19 @@ export function ProfileScreen() {
           )}
           <LanguageRow
             label={t('profile.nativeLanguage')}
-            value={SUPPORTED_LANGUAGES.find((l) => l.code === nativeLang)?.label ?? nativeLang}
+            value={(() => {
+              const l = SUPPORTED_LANGUAGES.find((x) => x.code === nativeLang);
+              return l ? `${l.flag}  ${l.label}` : nativeLang;
+            })()}
             expanded={showNativePicker}
             onToggle={() => setShowNativePicker((v) => !v)}
           />
           {showNativePicker && (
             <OptionList
-              options={SUPPORTED_LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
+              options={SUPPORTED_LANGUAGES.map((l) => ({
+                value: l.code,
+                label: `${l.flag}  ${l.label}`,
+              }))}
               selected={nativeLang}
               onSelect={handleChangeNativeLanguage}
             />
