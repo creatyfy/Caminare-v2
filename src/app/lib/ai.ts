@@ -110,3 +110,31 @@ export function detectPatterns(userId: string, idioma: string): Promise<DetectPa
     idioma,
   });
 }
+
+// ─── translate-insights ──────────────────────────────────────────────────────
+// Traduz emoções, crenças e padrões já salvos para o novo idioma nativo, pra a
+// contagem não fragmentar entre línguas. Disparado na troca de idioma nativo.
+
+export interface TranslateInsightsResult {
+  status: string;
+  translated?: { emotions: number; beliefs: number; patterns: number };
+}
+
+export function translateInsights(targetLanguage: string): Promise<TranslateInsightsResult> {
+  return postJson<TranslateInsightsResult>('/api/translate-insights', {
+    target_language: targetLanguage,
+  });
+}
+
+// ─── merge-beliefs ───────────────────────────────────────────────────────────
+// Une crenças validadas extremamente parecidas: mantém uma canônica, aponta as
+// demais como variação (parent_belief_id) e soma as ocorrências.
+
+export interface MergeBeliefsResult {
+  status: string;
+  merged?: number;
+}
+
+export function mergeBeliefs(): Promise<MergeBeliefsResult> {
+  return postJson<MergeBeliefsResult>('/api/merge-beliefs', {});
+}

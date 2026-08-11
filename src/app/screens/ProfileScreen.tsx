@@ -29,8 +29,14 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type ThemeMode } from '../contexts/ThemeContext';
 import { useEntitlement } from '../contexts/EntitlementContext';
-import { getProfile, deleteAccount, submitFeedback, updateFullName, updateEmail, type Profile } from '../lib/db';
+import { getProfile, deleteAccount, submitFeedback, updateFullName, updateEmail, updateNativeLanguage, nativeLanguageCooldownDays, type Profile } from '../lib/db';
+import { translateInsights } from '../lib/ai';
 import { setLanguage, type Lang } from '../lib/i18n';
+import {
+  SUPPORTED_LANGUAGES,
+  normalizeLanguage,
+  defaultLanguageFromInterface,
+} from '../lib/languages';
 import { DevSubscriptionPanel } from '../components/DevSubscriptionPanel';
 import { showDevTools } from '../lib/native';
 
@@ -43,6 +49,43 @@ export function ProfileScreen() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [showNativePicker, setShowNativePicker] = useState(false);
+  const [nativeLang, setNativeLang] = useState(
+    () =>
+      normalizeLanguage((user?.user_metadata?.native_language as string) ?? null) ??
+      defaultLanguageFromInterface(i18n.language)
+  );
+  const [nativeNotice, setNativeNotice] = useState<string | null>(null);
+
+  function handleChangeNativeLanguage(code: string) {
+    if (code === nativeLang) {
+      setShowNativePicker(false);
+      return;
+    }
+    // Cooldown de 60 dias entre trocas.
+    const remaining = nativeLanguageCooldownDays(
+      (user?.user_metadata?.native_language_changed_at as string) ?? null
+    );
+    if (remaining > 0) {
+      setNativeNotice(t('profile.nativeLangCooldown', { days: remaining }));
+      setShowNativePicker(false);
+      return;
+    }
+    setNativeLang(code);
+    setShowNativePicker(false);
+    setNativeNotice(t('profile.nativeLangTranslating'));
+    // Grava o novo idioma e traduz o histórico de insights (em segundo plano).
+    void (async () => {
+      await updateNativeLanguage(code);
+      try {
+        await translateInsights(code);
+        setNativeNotice(t('profile.nativeLangDone'));
+      } catch {
+        // A troca vale mesmo se a tradução falhar; o usuário pode tentar depois.
+        setNativeNotice(null);
+      }
+    })();
+  }
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
@@ -390,6 +433,35 @@ export function ProfileScreen() {
                 setShowLangPicker(false);
               }}
             />
+          )}
+          <LanguageRow
+            label={t('profile.nativeLanguage')}
+            value={SUPPORTED_LANGUAGES.find((l) => l.code === nativeLang)?.label ?? nativeLang}
+            expanded={showNativePicker}
+            onToggle={() => setShowNativePicker((v) => !v)}
+          />
+          {showNativePicker && (
+            <OptionList
+              options={SUPPORTED_LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
+              selected={nativeLang}
+              onSelect={handleChangeNativeLanguage}
+            />
+          )}
+          {nativeNotice && (
+            <div
+              style={{
+                margin: '0 20px 8px',
+                padding: '10px 14px',
+                borderRadius: '12px',
+                backgroundColor: 'var(--cam-bg-tint)',
+                color: 'var(--cam-text-secondary)',
+                fontSize: '13px',
+                fontWeight: 500,
+                lineHeight: 1.45,
+              }}
+            >
+              {nativeNotice}
+            </div>
           )}
 
           <ThemeRow

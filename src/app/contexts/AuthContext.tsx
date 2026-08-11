@@ -104,7 +104,8 @@ type AuthContextValue = {
     name: string,
     email: string,
     password: string,
-    birthDate: string
+    birthDate: string,
+    nativeLanguage: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -177,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userId: data?.user?.id ?? null,
         };
       },
-      async signUp(name, email, password, birthDate) {
+      async signUp(name, email, password, birthDate, nativeLanguage) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -189,6 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               terms_version: TERMS_VERSION,
               // Afirmacao explicita de maioridade exigida no cadastro (juridico).
               age_confirmed_at: new Date().toISOString(),
+              // Idioma nativo: padrao da transcricao por voz e dos insights.
+              native_language: nativeLanguage,
             },
           },
         });

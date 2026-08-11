@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, Mic, Square, X } from 'lucide-react';
+import { ArrowLeft, Mic, Square, X, Globe } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { useEntitlement } from '../contexts/EntitlementContext';
 import { createTextEntry, getHomeStats } from '../lib/db';
 import { useSpeechToText, type SpeechErrorKind } from '../lib/speech';
 import { track } from '../lib/analytics';
+import { SUPPORTED_LANGUAGES, resolveRecordLanguage } from '../lib/languages';
 
 // Equivalente a aproximadamente 2 min de fala (150 wpm × ~6 chars por palavra)
 const MAX_CHARS = 1800;
@@ -45,7 +46,16 @@ export function TextRecordingScreen() {
   const baseTextRef = useRef(''); // texto já no campo antes da sessão atual de fala
   const autoStartedRef = useRef(false);
 
-  const lang = i18n.language?.startsWith('en') ? 'en-US' : 'pt-BR';
+  // Idioma do registro: padrão é o idioma nativo do usuário (metadados), com
+  // fallback pra interface. Ajustável no seletor da tela de voz. É esse idioma
+  // que a transcrição usa e que os prompts recebem, pra emoções/crenças/insights
+  // saírem na língua do registro, não na da interface.
+  const [recordLang, setRecordLang] = useState(() =>
+    resolveRecordLanguage({
+      native: (user?.user_metadata?.native_language as string) ?? null,
+      i18nLang: i18n.language,
+    })
+  );
   // No modo voz só viramos um campo de texto comum depois de uma falha de voz.
   const asTextField = !voiceMode || fellBackToText;
 
@@ -87,7 +97,7 @@ export function TextRecordingScreen() {
     setSeconds(0);
     baseTextRef.current = text;
     await start({
-      lang,
+      lang: recordLang,
       onResult: (session) => {
         const base = baseTextRef.current;
         const joined = base ? `${base} ${session}` : session;
@@ -160,7 +170,7 @@ export function TextRecordingScreen() {
     setSubmitting(true);
     setError(null);
     try {
-      const entryId = await createTextEntry(user.id, text.trim());
+      const entryId = await createTextEntry(user.id, text.trim(), recordLang);
       if (!entryId) {
         track('record_creation_failed', { input_type: inputType, reason: 'servidor' });
         setError(t('textRecording.errorSave'));
@@ -188,7 +198,7 @@ export function TextRecordingScreen() {
       // recebia 202 'processing' e só fazia polling, sem nunca ver o erro real.
       // Agora a EmotionValidationScreen é a ÚNICA a chamar process-entry: ela
       // aguarda (await) e mostra a mensagem de erro real na tela.
-      navigate(`/validacao-emocoes?entryId=${entryId}`);
+      navigate(`/validacao-emocoes?entryId=${entryId}&lang=${encodeURIComponent(recordLang)}`);
     } catch (err) {
       console.error('Erro ao salvar registro:', err);
       track('record_creation_failed', { input_type: inputType, reason: 'rede' });
@@ -237,6 +247,37 @@ export function TextRecordingScreen() {
         <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--cam-text-primary)', margin: '0 0 4px 0' }}>
           {voiceMode ? t('recording.title') : t('textRecording.title')}
         </h1>
+
+        {voiceMode && !fellBackToText && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+            <Globe size={16} color="var(--cam-text-secondary)" strokeWidth={2.2} />
+            <select
+              aria-label={t('recording.language')}
+              value={recordLang}
+              onChange={(e) => setRecordLang(e.target.value)}
+              disabled={listening}
+              style={{
+                border: `1.5px solid var(--cam-border)`,
+                borderRadius: '9999px',
+                backgroundColor: 'var(--cam-bg-input)',
+                color: 'var(--cam-text-primary)',
+                fontSize: '13px',
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                padding: '6px 12px',
+                cursor: listening ? 'not-allowed' : 'pointer',
+                appearance: 'none',
+                opacity: listening ? 0.6 : 1,
+              }}
+            >
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div
