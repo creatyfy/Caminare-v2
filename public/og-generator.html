@@ -22,7 +22,11 @@
   <p>A coruja branca aplicada sobre a foto do hero. Ajuste o tamanho se quiser e clique em Baixar.</p>
   <canvas id="c" width="1200" height="630"></canvas>
   <div class="row">
-    <label>Tamanho da coruja <input id="size" type="range" min="180" max="420" value="300"></label>
+    <label>Tamanho da coruja <input id="size" type="range" min="140" max="420" value="230"></label>
+  </div>
+  <div class="row">
+    <label>Posição horizontal <input id="posx" type="range" min="0" max="100" value="21"></label>
+    <label>Posição vertical <input id="posy" type="range" min="0" max="100" value="30"></label>
   </div>
   <div class="row">
     <label>Escurecer fundo <input id="dark" type="range" min="0" max="60" value="28"></label>
@@ -36,6 +40,8 @@ const ctx = canvas.getContext('2d');
 const W = 1200, H = 630;
 const status = document.getElementById('status');
 const sizeInput = document.getElementById('size');
+const posXInput = document.getElementById('posx');
+const posYInput = document.getElementById('posy');
 const darkInput = document.getElementById('dark');
 const dlBtn = document.getElementById('dl');
 
@@ -73,10 +79,12 @@ function draw() {
   ctx.fillStyle = 'rgba(25,18,45,' + (darkInput.value / 100) + ')';
   ctx.fillRect(0, 0, W, H);
 
-  // Coruja branca centralizada, com uma sombra suave pra legibilidade
+  // Coruja branca posicionada pelos sliders (centro da coruja em % do canvas).
   const owlH = +sizeInput.value;
   const owlW = owlH * (whiteOwl.width / whiteOwl.height);
-  const ox = (W - owlW) / 2, oy = (H - owlH) / 2;
+  const cx = (+posXInput.value / 100) * W;
+  const cy = (+posYInput.value / 100) * H;
+  const ox = cx - owlW / 2, oy = cy - owlH / 2;
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = 24;
@@ -96,6 +104,8 @@ owl.src = '/owl_cropped.png';
 bg.src = 'https://images.unsplash.com/uploads/1413395496082cbc91228/43e39040?q=80&w=1200&h=630&fit=crop';
 
 sizeInput.addEventListener('input', draw);
+posXInput.addEventListener('input', draw);
+posYInput.addEventListener('input', draw);
 darkInput.addEventListener('input', draw);
 
 dlBtn.addEventListener('click', () => {
