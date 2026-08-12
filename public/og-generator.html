@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador da imagem social — Caminare</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;background:#141026;color:#fff;text-align:center;padding:24px;margin:0}
+  h3{font-weight:600;margin:0 0 6px}
+  p{color:#b7b2c8;margin:6px 0 18px;font-size:14px}
+  canvas{max-width:100%;height:auto;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#222}
+  .row{margin-top:18px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center}
+  button{padding:13px 22px;font-size:16px;font-weight:600;border:none;border-radius:10px;background:#6558D3;color:#fff;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  label{font-size:14px;color:#d7d3e6}
+  input[type=range]{vertical-align:middle}
+  #status{color:#9c98b0;font-size:13px;min-height:18px}
+</style>
+</head>
+<body>
+  <h3>Imagem social do Caminare</h3>
+  <p>A coruja branca aplicada sobre a foto do hero. Ajuste o tamanho se quiser e clique em Baixar.</p>
+  <canvas id="c" width="1200" height="630"></canvas>
+  <div class="row">
+    <label>Tamanho da coruja <input id="size" type="range" min="180" max="420" value="300"></label>
+  </div>
+  <div class="row">
+    <label>Escurecer fundo <input id="dark" type="range" min="0" max="60" value="28"></label>
+    <button id="dl" disabled>Baixar PNG</button>
+  </div>
+  <p id="status">Carregando...</p>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 1200, H = 630;
+const status = document.getElementById('status');
+const sizeInput = document.getElementById('size');
+const darkInput = document.getElementById('dark');
+const dlBtn = document.getElementById('dl');
+
+const bg = new Image();
+bg.crossOrigin = 'anonymous'; // Unsplash envia CORS (*), então não tainta o canvas
+const owl = new Image();      // mesma origem (servido pelo site) -> não tainta
+
+let bgReady = false, owlReady = false, whiteOwl = null;
+
+function buildWhiteOwl() {
+  // Recolore a coruja (roxa/transparente) para branca via source-in.
+  const off = document.createElement('canvas');
+  off.width = owl.width; off.height = owl.height;
+  const o = off.getContext('2d');
+  o.drawImage(owl, 0, 0);
+  o.globalCompositeOperation = 'source-in';
+  o.fillStyle = '#FFFFFF';
+  o.fillRect(0, 0, off.width, off.height);
+  whiteOwl = off;
+}
+
+function draw() {
+  if (!bgReady || !owlReady) return;
+  if (!whiteOwl) buildWhiteOwl();
+
+  // Fundo em "cover" 1200x630
+  const ar = bg.width / bg.height, tar = W / H;
+  let sw, sh, sx, sy;
+  if (ar > tar) { sh = bg.height; sw = sh * tar; sx = (bg.width - sw) / 2; sy = 0; }
+  else { sw = bg.width; sh = sw / tar; sx = 0; sy = (bg.height - sh) / 2; }
+  ctx.clearRect(0, 0, W, H);
+  ctx.drawImage(bg, sx, sy, sw, sh, 0, 0, W, H);
+
+  // Leve escurecimento pra coruja branca destacar
+  ctx.fillStyle = 'rgba(25,18,45,' + (darkInput.value / 100) + ')';
+  ctx.fillRect(0, 0, W, H);
+
+  // Coruja branca centralizada, com uma sombra suave pra legibilidade
+  const owlH = +sizeInput.value;
+  const owlW = owlH * (whiteOwl.width / whiteOwl.height);
+  const ox = (W - owlW) / 2, oy = (H - owlH) / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
+  ctx.shadowBlur = 24;
+  ctx.drawImage(whiteOwl, ox, oy, owlW, owlH);
+  ctx.restore();
+
+  dlBtn.disabled = false;
+  status.textContent = 'Pronto. Clique em Baixar PNG.';
+}
+
+bg.onload = () => { bgReady = true; draw(); };
+bg.onerror = () => { status.textContent = 'Falha ao carregar a foto de fundo.'; };
+owl.onload = () => { owlReady = true; draw(); };
+owl.onerror = () => { status.textContent = 'Falha ao carregar a coruja (/owl_cropped.png).'; };
+
+owl.src = '/owl_cropped.png';
+bg.src = 'https://images.unsplash.com/uploads/1413395496082cbc91228/43e39040?q=80&w=1200&h=630&fit=crop';
+
+sizeInput.addEventListener('input', draw);
+darkInput.addEventListener('input', draw);
+
+dlBtn.addEventListener('click', () => {
+  try {
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'og-caminare.png';
+    a.click();
+  } catch (e) {
+    status.textContent = 'Erro ao exportar: ' + e.message;
+  }
+});
+</script>
+</body>
+</html>
