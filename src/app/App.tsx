@@ -29,7 +29,7 @@ import { ProfileScreen } from './screens/ProfileScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 import { getProfile } from './lib/db';
 import { isNative } from './lib/native';
-import { setScreen, screenNameFromPath } from './lib/analytics';
+import { initAnalytics, setScreen, screenNameFromPath } from './lib/analytics';
 
 // Telas pesadas carregadas sob demanda (code splitting):
 // - LegalScreen tem o conteúdo completo dos Termos e Política em PT e EN
@@ -170,9 +170,15 @@ function RootShell() {
   const location = useLocation();
   const path = location.pathname;
 
-  // screen_view automático: dispara a cada mudança de rota. NO-OP até o SDK de
-  // analytics estar conectado (ver src/app/lib/analytics.ts).
+  // Inicializa o analytics uma vez (no web injeta o gtag do GA4; no nativo no-op).
   useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  // page_view automático a cada mudança de rota. No web, "/" é a landing (iframe
+  // com gtag próprio), então não disparamos aqui pra não contar duplicado.
+  useEffect(() => {
+    if (!isNative && path === '/') return;
     setScreen(screenNameFromPath(path));
   }, [path]);
 
