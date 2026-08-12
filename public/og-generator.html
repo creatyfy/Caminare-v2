@@ -30,7 +30,7 @@
   </div>
   <div class="row">
     <label>Escurecer fundo <input id="dark" type="range" min="0" max="60" value="28"></label>
-    <button id="dl" disabled>Baixar PNG</button>
+    <button id="dl" disabled>Baixar JPG</button>
   </div>
   <p id="status">Carregando...</p>
 
@@ -110,10 +110,12 @@ darkInput.addEventListener('input', draw);
 
 dlBtn.addEventListener('click', () => {
   try {
-    const url = canvas.toDataURL('image/png');
+    // JPG (qualidade 0.82): foto fica leve (~100-150KB), abaixo do limite de
+    // ~300KB que o WhatsApp exige pra mostrar a imagem do preview.
+    const url = canvas.toDataURL('image/jpeg', 0.82);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'og-caminare.png';
+    a.download = 'og-caminare.jpg';
     a.click();
   } catch (e) {
     status.textContent = 'Erro ao exportar: ' + e.message;
