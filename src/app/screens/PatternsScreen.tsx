@@ -379,7 +379,11 @@ export function PatternsScreen() {
                           {belief.occurrence_count}{' '}
                           {belief.occurrence_count === 1 ? t('common.occurrence') : t('common.occurrences')}
                           {belief.variations_count
-                            ? ` · ${t('patterns.variations', { count: belief.variations_count })}`
+                            ? ` · ${belief.variations_count} ${
+                                belief.variations_count === 1
+                                  ? t('patterns.variation')
+                                  : t('patterns.variations')
+                              }`
                             : ''}
                         </p>
                       </div>
