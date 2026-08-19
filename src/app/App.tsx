@@ -8,7 +8,10 @@ import { EntitlementProvider, useEntitlement } from './contexts/EntitlementConte
 import { BottomNav } from './components/BottomNav';
 import { NativeAuthBridge } from './components/NativeAuthBridge';
 import { NameGate } from './components/NameGate';
-import { AttGate } from './components/AttGate';
+// AttGate desativado neste build: sem tracking nativo (Firebase/Meta vêm depois),
+// não faz sentido pedir permissão de rastreamento (ATT). Reativar junto com o
+// Firebase, quando houver tracking de verdade e as declarações de privacidade.
+// import { AttGate } from './components/AttGate';
 import { SplashScreen } from './screens/SplashScreen';
 import { LandingScreen } from './screens/LandingScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -241,7 +244,7 @@ export default function App() {
             <PendingPatternProvider>
               <NativeAuthBridge />
               <NameGate />
-              <AttGate />
+              {/* <AttGate /> desativado neste build (sem tracking nativo). Reativar com o Firebase. */}
               {/* Container raiz do app (375px no web, edge-to-edge no nativo) fica
                   encapsulado no RootShell — que também decide mostrar a landing de
                   marketing em "/" quando é web. */}
