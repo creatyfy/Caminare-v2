@@ -38,11 +38,14 @@ workflows:
             const { data } = await sharp(src).raw().toBuffer({ resolveWithObject: true });
             const bg = { r: data[0], g: data[1], b: data[2], alpha: 1 };
             // Recorta a margem roxa do icon.png (sobra só a coruja, com o traço EXATO)
-            // e amplia p/ ~84% do quadro — compensando a folga que o ícone adaptativo
-            // do Android obriga, pra a coruja ficar grande igual à imagem de referência.
+            // e escala p/ ~62% do quadro. O ícone ADAPTATIVO do Android só garante o
+            // centro (~66% de 108dp); o resto o launcher corta pra fazer o formato
+            // arredondado. A 84% as orelhas da coruja estouravam essa zona e eram
+            // cortadas. A ~62% a coruja inteira cabe na zona segura e fica enquadrada
+            // igual ao iPhone (que não sofre esse corte).
             const owl = await sharp(src).trim().toBuffer();
             const m = await sharp(owl).metadata();
-            const F = 1024, target = Math.round(F * 0.84), scale = target / Math.max(m.width, m.height);
+            const F = 1024, target = Math.round(F * 0.62), scale = target / Math.max(m.width, m.height);
             const owlR = await sharp(owl).resize(Math.round(m.width * scale), Math.round(m.height * scale)).toBuffer();
             await sharp({ create: { width: F, height: F, channels: 4, background: bg } })
               .composite([{ input: owlR, gravity: 'center' }]).png().toFile('assets/icon-foreground.png');
