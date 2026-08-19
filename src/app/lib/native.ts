@@ -28,12 +28,13 @@ export const AUTH_CALLBACK_URL = `${APP_SCHEME}://auth-callback`;
 export const RESET_CALLBACK_URL = `${APP_SCHEME}://reset-callback`;
 
 /**
- * URL de redirect pós-OAuth (Google/Apple). No web volta pra raiz (a Splash
- * roteia); no app nativo volta pelo deep link, capturado por NativeAuthBridge.
+ * URL de redirect pós-OAuth (Google/Apple). No web volta direto pra /home (a raiz
+ * "/" é a landing de marketing, então cair nela deixava o usuário logado mas fora
+ * do app). No app nativo volta pelo deep link, capturado por NativeAuthBridge.
  */
 export function getOAuthRedirectUrl(): string {
   if (isNative) return AUTH_CALLBACK_URL;
-  return `${window.location.origin}/`;
+  return `${window.location.origin}/home`;
 }
 
 /**
