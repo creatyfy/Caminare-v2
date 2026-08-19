@@ -58,6 +58,35 @@ function gtag(): ((...args: unknown[]) => void) | null {
   return g ?? null;
 }
 
+// --- Firebase Analytics (nativo) -------------------------------------------
+// Carregado por import dinâmico só no nativo, pra não entrar no bundle web.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let fbAnalyticsPromise: Promise<any> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getFirebaseAnalytics(): Promise<any> {
+  if (!isNative) return null;
+  if (!fbAnalyticsPromise) {
+    // Import dinâmico (chunk separado) pra o plugin entrar no bundle sem pesar o
+    // carregamento inicial. No web esta função retorna antes (guarda isNative),
+    // então o chunk nunca é baixado no navegador.
+    fbAnalyticsPromise = import('@capacitor-firebase/analytics')
+      .then((m) => m.FirebaseAnalytics)
+      .catch(() => null);
+  }
+  return fbAnalyticsPromise;
+}
+
+/** Firebase só aceita string/number nos params: remove null/undefined e
+ *  converte boolean pra 0/1. */
+function sanitizeParams(params: EventParams): Record<string, string | number> {
+  const out: Record<string, string | number> = {};
+  for (const [k, v] of Object.entries(params)) {
+    if (v === null || v === undefined) continue;
+    out[k] = typeof v === 'boolean' ? (v ? 1 : 0) : v;
+  }
+  return out;
+}
+
 let inited = false;
 
 /**
@@ -69,7 +98,14 @@ let inited = false;
 export function initAnalytics(): void {
   if (inited) return;
   inited = true;
-  if (isNative) return; // nativo usa Firebase (build nativo)
+  if (isNative) {
+    // Nativo: o SDK do Firebase se auto-inicializa (google-services.json no
+    // Android / GoogleService-Info.plist no iOS). Só garantimos a coleta ligada.
+    getFirebaseAnalytics().then((FA) => {
+      if (FA) FA.setEnabled({ enabled: true }).catch(() => {});
+    });
+    return;
+  }
   if (typeof document === 'undefined') return;
   try {
     const w = window as unknown as { dataLayer?: unknown[]; gtag?: (...a: unknown[]) => void };
@@ -98,10 +134,14 @@ export async function track(name: EventName, params: EventParams = {}): Promise<
       // eslint-disable-next-line no-console
       console.debug('[analytics]', name, params);
     }
+    if (isNative) {
+      const FA = await getFirebaseAnalytics();
+      if (FA) await FA.logEvent({ name, params: sanitizeParams(params) });
+      return;
+    }
     const g = gtag();
     if (g) g('event', name, params);
-    // TODO(nativo): encaminhar pro Firebase via @capacitor-firebase/analytics,
-    // e espelhar as conversões de marketing no Meta.
+    // TODO(marketing): espelhar as conversões de marketing no Meta.
   } catch {
     // Analytics nunca deve quebrar o fluxo do usuário.
   }
@@ -116,6 +156,11 @@ export async function setScreen(screenName: string): Promise<void> {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.debug('[analytics] page_view', screenName);
+    }
+    if (isNative) {
+      const FA = await getFirebaseAnalytics();
+      if (FA) await FA.setCurrentScreen({ screenName });
+      return;
     }
     const g = gtag();
     if (g) g('event', 'page_view', { page_title: screenName });

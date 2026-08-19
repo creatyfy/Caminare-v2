@@ -24,7 +24,7 @@ workflows:
       java: 17
     scripts:
       - name: Instalar dependências
-        script: npm ci
+        script: npm install
       - name: Gerar ícone do Android a partir de assets/icon.png
         script: |
           # Deriva as 2 camadas do ícone adaptativo (coruja branca transparente +
@@ -105,7 +105,7 @@ workflows:
       cocoapods: default
     scripts:
       - name: Instalar dependências
-        script: npm ci
+        script: npm install
       - name: Gerar .env de produção
         script: |
           printf "VITE_SUPABASE_URL=%s\n" "$VITE_SUPABASE_URL" > .env.production
@@ -170,6 +170,11 @@ workflows:
           # está desativado em native/ios/App.entitlements enquanto o domínio de produção
           # não existe (o placeholder quebrava a assinatura). Restaurar lá quando houver domínio.
           cp native/ios/App.entitlements ios/App/App/App.entitlements
+          # GoogleService-Info.plist (Firebase Analytics). A pasta ios/ é gerada no CI,
+          # então copiamos o plist versionado pra dentro do target. Só copiar não basta:
+          # ele precisa estar REGISTRADO como recurso do target pra ir no bundle — feito
+          # no ruby abaixo.
+          cp native/ios/GoogleService-Info.plist ios/App/App/GoogleService-Info.plist
           # ⚠️ CRÍTICO: copiar o arquivo NÃO basta. O template iOS do Capacitor não seta
           # CODE_SIGN_ENTITLEMENTS, então o Xcode ignora o App.entitlements e o IPA assinado
           # sai SEM a entitlement com.apple.developer.applesignin. Resultado: "Sign in with
@@ -183,6 +188,15 @@ workflows:
             target.build_configurations.each do |c|
               c.build_settings["CODE_SIGN_ENTITLEMENTS"] = "App/App.entitlements"
               puts "CODE_SIGN_ENTITLEMENTS -> App/App.entitlements (#{c.name})"
+            end
+            # Registra o GoogleService-Info.plist como recurso do target App (o Firebase
+            # precisa do arquivo no bundle do app). Idempotente.
+            app_group = project.main_group["App"]
+            already = target.resources_build_phase.files.any? { |bf| bf.file_ref && bf.file_ref.display_name == "GoogleService-Info.plist" }
+            unless already
+              ref = app_group.new_file("GoogleService-Info.plist")
+              target.resources_build_phase.add_file_reference(ref, true)
+              puts "GoogleService-Info.plist registrado nos recursos do target App"
             end
             project.save
           '

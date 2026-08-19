@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "847616220686",
+    "project_id": "caminare-503817",
+    "storage_bucket": "caminare-503817.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:847616220686:android:514b1f899e2a4d3d18a65f",
+        "android_client_info": {
+          "package_name": "com.caminare.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQyVLixK1oYmRu5z914ivCVn55CEElDCA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
