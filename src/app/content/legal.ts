@@ -3209,7 +3209,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
   "privacy": {
     "pt-BR": {
       "title": "Política de Privacidade",
-      "updated": "Última atualização: 21/05/2026",
+      "updated": "Última atualização: 19/08/2026",
       "blocks": [
         {
           "t": "p",
@@ -3361,7 +3361,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Podemos coletar automaticamente determinados dados técnicos, incluindo:"
+          "s": "Podemos coletar automaticamente determinados dados técnicos e de uso relacionados à utilização da Plataforma, incluindo, conforme aplicável:"
         },
         {
           "t": "li",
@@ -3369,11 +3369,11 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "identificadores de dispositivo"
+          "s": "identificadores técnicos ou de dispositivo"
         },
         {
           "t": "li",
-          "s": "modelo do aparelho"
+          "s": "modelo e características do dispositivo"
         },
         {
           "t": "li",
@@ -3385,7 +3385,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "idioma"
+          "s": "idioma e configurações regionais"
         },
         {
           "t": "li",
@@ -3393,67 +3393,47 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "dados de sessão"
+          "s": "informações de sessão"
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "informações sobre navegação e interação com a Plataforma"
         },
         {
           "t": "li",
-          "s": "crash reports"
+          "s": "dados relacionados ao desempenho e funcionamento do aplicativo"
         },
         {
           "t": "li",
-          "s": "informações de navegação e interação"
+          "s": "relatórios de falhas (crash reports)"
         },
         {
-          "t": "h2",
-          "s": "2.4 Cookies e tecnologias similares"
+          "t": "li",
+          "s": "dados de analytics e mensuração de uso"
+        },
+        {
+          "t": "li",
+          "s": "informações sobre eventos e ações realizadas na Plataforma"
         },
         {
           "t": "p",
-          "s": "O Caminare não utiliza remarketing baseado em conteúdo emocional, crenças pessoais ou inferências subjetivas do usuário."
+          "s": "Os dados de analytics e mensuração poderão incluir informações sobre eventos como criação e acesso à Conta, login, início e conversão do período gratuito, visualização de planos, contratação e renovação de assinaturas, utilização das funcionalidades, criação de registros, marcos de utilização, acesso a históricos, insights e resumos, exportação ou compartilhamento de conteúdo, permissões do dispositivo, falhas técnicas e outros eventos necessários à análise do funcionamento e desempenho da Plataforma."
         },
         {
           "t": "p",
-          "s": "Os cookies e tecnologias similares são utilizados unicamente para melhorar a experiência dos usuários."
+          "s": "Quando utilizados para analytics, mensuração de produto ou mensuração de campanhas, esses eventos poderão utilizar metadados e informações operacionais, como tipo de evento, tipo de entrada (texto ou voz), número ou quantidade de registros, tipo de plano, período de cobrança, informações relacionadas à conversão, status de determinadas operações e informações técnicas necessárias à mensuração."
         },
         {
           "t": "p",
-          "s": "Quando aplicável, poderemos utilizar:"
-        },
-        {
-          "t": "li",
-          "s": "cookies"
-        },
-        {
-          "t": "li",
-          "s": "pixels"
-        },
-        {
-          "t": "li",
-          "s": "identificadores técnicos"
-        },
-        {
-          "t": "li",
-          "s": "SDKs"
-        },
-        {
-          "t": "li",
-          "s": "tecnologias similares de analytics e medição"
+          "s": "O conteúdo dos registros do usuário, incluindo textos, áudios, transcrições, emoções, pensamentos, crenças, padrões e outras informações subjetivas inseridas ou geradas no contexto do uso do Caminare, não é enviado aos provedores de analytics ou de publicidade como parte desses eventos de mensuração."
         },
         {
           "t": "p",
-          "s": "Essas tecnologias podem ser utilizadas para:"
+          "s": "Os dados técnicos e de uso poderão ser utilizados para:"
         },
         {
           "t": "li",
-          "s": "funcionamento da Plataforma"
-        },
-        {
-          "t": "li",
-          "s": "autenticação"
+          "s": "funcionamento e manutenção da Plataforma"
         },
         {
           "t": "li",
@@ -3461,11 +3441,15 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "diagnóstico e correção de falhas"
         },
         {
           "t": "li",
-          "s": "métricas de desempenho"
+          "s": "análise de desempenho"
+        },
+        {
+          "t": "li",
+          "s": "compreensão da utilização das funcionalidades"
         },
         {
           "t": "li",
@@ -3473,7 +3457,95 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "campanhas institucionais e publicitárias"
+          "s": "desenvolvimento e aprimoramento do produto"
+        },
+        {
+          "t": "li",
+          "s": "analytics e métricas de produto"
+        },
+        {
+          "t": "li",
+          "s": "mensuração de campanhas e conversões, quando aplicável"
+        },
+        {
+          "t": "li",
+          "s": "prevenção de fraudes e abusos"
+        },
+        {
+          "t": "li",
+          "s": "cumprimento de obrigações legais e regulatórias"
+        },
+        {
+          "t": "h2",
+          "s": "2.4 Cookies, SDKs e tecnologias similares"
+        },
+        {
+          "t": "p",
+          "s": "O Caminare utiliza, quando aplicável, cookies, SDKs, identificadores técnicos, pixels, tecnologias de armazenamento local e outras tecnologias similares para possibilitar o funcionamento da Plataforma, compreender sua utilização, medir seu desempenho e aprimorar nossos produtos e serviços."
+        },
+        {
+          "t": "p",
+          "s": "Essas tecnologias poderão ser utilizadas para:"
+        },
+        {
+          "t": "li",
+          "s": "funcionamento e operação da Plataforma"
+        },
+        {
+          "t": "li",
+          "s": "autenticação e gerenciamento de sessão"
+        },
+        {
+          "t": "li",
+          "s": "segurança e prevenção de fraudes e abusos"
+        },
+        {
+          "t": "li",
+          "s": "análise de desempenho e diagnóstico de falhas"
+        },
+        {
+          "t": "li",
+          "s": "analytics e mensuração de utilização do produto"
+        },
+        {
+          "t": "li",
+          "s": "compreensão de como os usuários utilizam as funcionalidades da Plataforma"
+        },
+        {
+          "t": "li",
+          "s": "desenvolvimento e aprimoramento do produto"
+        },
+        {
+          "t": "li",
+          "s": "mensuração de campanhas e conversões"
+        },
+        {
+          "t": "li",
+          "s": "atribuição de instalações, assinaturas e outras conversões de marketing, quando aplicável"
+        },
+        {
+          "t": "li",
+          "s": "campanhas institucionais e publicitárias, observadas as limitações descritas nesta Política"
+        },
+        {
+          "t": "p",
+          "s": "O Caminare poderá utilizar serviços de analytics e mensuração fornecidos por terceiros, incluindo Google Analytics for Firebase (GA4), bem como tecnologias de mensuração relacionadas ao Google Ads e ao Meta, conforme aplicável."
+        },
+        {
+          "t": "p",
+          "s": "Os eventos enviados para fins de analytics, mensuração de produto e mensuração de campanhas são estruturados para utilizar dados técnicos, operacionais e metadados necessários à mensuração. O Caminare não envia aos provedores de analytics ou publicidade, para essas finalidades, o conteúdo dos registros pessoais do usuário, incluindo textos, áudios, transcrições, emoções, pensamentos, crenças, padrões ou outras informações subjetivas inseridas ou geradas na Plataforma."
+        },
+        {
+          "t": "p",
+          "s": "O Caminare não utiliza remarketing baseado no conteúdo emocional dos registros, em crenças pessoais, pensamentos, emoções, padrões comportamentais ou outras inferências subjetivas do usuário."
+        },
+        {
+          "t": "p",
+          "s": "Nos dispositivos iOS, determinadas funcionalidades relacionadas à atribuição e mensuração de campanhas publicitárias poderão depender da autorização do usuário por meio do App Tracking Transparency (ATT) da Apple. O usuário poderá aceitar ou recusar essa autorização, conforme as opções apresentadas pelo sistema operacional. A recusa da autorização não impede o uso normal do Caminare."
+        },
+        {
+          "t": "p",
+          "s": "As informações coletadas por meio dessas tecnologias poderão ser compartilhadas com os respectivos provedores tecnológicos na medida necessária para as finalidades descritas nesta Política, observadas as regras sobre compartilhamento de dados e transferências internacionais previstas nesta Política."
         },
         {
           "t": "h",
@@ -3525,19 +3597,19 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Os dados poderão ser utilizados para:"
+          "s": "Os dados pessoais e demais informações coletadas poderão ser utilizados, conforme aplicável, para as seguintes finalidades:"
         },
         {
           "t": "li",
-          "s": "criação e gerenciamento da conta"
+          "s": "criação, manutenção e gerenciamento da conta"
         },
         {
           "t": "li",
-          "s": "autenticação"
+          "s": "autenticação e gerenciamento de acesso"
         },
         {
           "t": "li",
-          "s": "prestação do Serviço"
+          "s": "prestação e operação do Serviço"
         },
         {
           "t": "li",
@@ -3569,31 +3641,55 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "exportação de conteúdo"
+          "s": "exportação e compartilhamento de conteúdo, quando solicitado pelo usuário"
         },
         {
           "t": "li",
-          "s": "suporte técnico"
+          "s": "suporte técnico e atendimento ao usuário"
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "analytics e mensuração da utilização e do desempenho da Plataforma"
         },
         {
           "t": "li",
-          "s": "segurança"
+          "s": "análise de funcionamento e utilização das funcionalidades"
         },
         {
           "t": "li",
-          "s": "prevenção de fraudes"
+          "s": "diagnóstico e correção de falhas e problemas técnicos"
         },
         {
           "t": "li",
-          "s": "melhoria da Plataforma"
+          "s": "segurança, prevenção de fraudes e prevenção de usos abusivos"
+        },
+        {
+          "t": "li",
+          "s": "melhoria, desenvolvimento e aprimoramento da Plataforma"
+        },
+        {
+          "t": "li",
+          "s": "mensuração de campanhas publicitárias e conversões, quando aplicável"
+        },
+        {
+          "t": "li",
+          "s": "atribuição e análise de desempenho de campanhas de marketing, quando aplicável"
+        },
+        {
+          "t": "li",
+          "s": "processamento de pagamentos e gerenciamento de assinaturas"
         },
         {
           "t": "li",
           "s": "cumprimento de obrigações legais e regulatórias"
+        },
+        {
+          "t": "li",
+          "s": "exercício regular de direitos"
+        },
+        {
+          "t": "p",
+          "s": "Os dados utilizados para analytics, mensuração de produto e mensuração de campanhas serão tratados de acordo com as disposições desta Política, incluindo as limitações relativas ao uso e compartilhamento do conteúdo dos registros pessoais do usuário descritas nos itens 2.3 e 2.4."
         },
         {
           "t": "h",
@@ -3717,11 +3813,11 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Os dados poderão ser compartilhados, conforme necessário, com categorias de terceiros como:"
+          "s": "Os dados pessoais e demais informações tratados pelo Caminare poderão ser compartilhados, quando necessário e de acordo com as finalidades descritas nesta Política, com categorias de terceiros envolvidas na operação, segurança, suporte, mensuração e prestação dos serviços da Plataforma, incluindo:"
         },
         {
           "t": "li",
-          "s": "provedores de infraestrutura cloud"
+          "s": "provedores de infraestrutura e serviços de computação em nuvem"
         },
         {
           "t": "li",
@@ -3733,15 +3829,19 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "provedores de analytics"
+          "s": "provedores de analytics e mensuração, incluindo Google Analytics for Firebase (GA4)"
         },
         {
           "t": "li",
-          "s": "provedores de crash reporting"
+          "s": "provedores de mensuração e atribuição de campanhas publicitárias, incluindo Google Ads e Meta, quando aplicável"
         },
         {
           "t": "li",
-          "s": "processadores de pagamento"
+          "s": "provedores de crash reporting e monitoramento técnico"
+        },
+        {
+          "t": "li",
+          "s": "processadores e provedores de pagamento"
         },
         {
           "t": "li",
@@ -3753,43 +3853,67 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "parceiros tecnológicos"
+          "s": "parceiros e fornecedores de tecnologia"
+        },
+        {
+          "t": "li",
+          "s": "outros prestadores de serviços necessários à operação da Plataforma"
         },
         {
           "t": "p",
-          "s": "O compartilhamento ocorrerá na medida necessária para:"
+          "s": "O compartilhamento poderá ocorrer na medida necessária para:"
         },
         {
           "t": "li",
-          "s": "funcionamento da Plataforma"
+          "s": "funcionamento e manutenção da Plataforma"
         },
         {
           "t": "li",
-          "s": "processamento operacional"
+          "s": "prestação do Serviço"
         },
         {
           "t": "li",
-          "s": "segurança"
+          "s": "processamento e organização de dados"
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "utilização dos serviços de inteligência artificial"
         },
         {
           "t": "li",
-          "s": "autenticação"
+          "s": "autenticação e gerenciamento de acesso"
         },
         {
           "t": "li",
-          "s": "suporte"
+          "s": "analytics e mensuração de produto"
         },
         {
           "t": "li",
-          "s": "processamento de pagamentos"
+          "s": "mensuração e atribuição de campanhas e conversões, quando aplicável"
         },
         {
           "t": "li",
-          "s": "cumprimento legal"
+          "s": "segurança e prevenção de fraudes e abusos"
+        },
+        {
+          "t": "li",
+          "s": "diagnóstico e correção de falhas"
+        },
+        {
+          "t": "li",
+          "s": "suporte técnico e atendimento"
+        },
+        {
+          "t": "li",
+          "s": "processamento de pagamentos e gerenciamento de assinaturas"
+        },
+        {
+          "t": "li",
+          "s": "cumprimento de obrigações legais e regulatórias"
+        },
+        {
+          "t": "p",
+          "s": "Quando os dados forem compartilhados com provedores de analytics, mensuração ou publicidade para as finalidades descritas nos itens 2.3 e 2.4, o Caminare busca limitar o compartilhamento aos dados técnicos, operacionais e metadados necessários à mensuração. O conteúdo dos registros pessoais do usuário, incluindo textos, áudios, transcrições, emoções, pensamentos, crenças, padrões e outras informações subjetivas, não é compartilhado com esses provedores para fins de analytics ou publicidade."
         },
         {
           "t": "p",
@@ -3797,19 +3921,27 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "mediante obrigação legal"
+          "s": "quando exigido por lei ou regulamentação aplicável"
         },
         {
           "t": "li",
-          "s": "por ordem judicial"
+          "s": "mediante ordem ou determinação de autoridade competente"
         },
         {
           "t": "li",
-          "s": "para exercício regular de direitos"
+          "s": "para o exercício regular de direitos"
         },
         {
           "t": "li",
-          "s": "em reorganizações societárias, fusões, aquisições ou operações equivalentes"
+          "s": "para prevenção ou investigação de fraudes, abusos ou incidentes de segurança"
+        },
+        {
+          "t": "li",
+          "s": "em operações societárias, incluindo reorganizações, fusões, aquisições, incorporações ou operações equivalentes"
+        },
+        {
+          "t": "p",
+          "s": "O compartilhamento com terceiros não implica autorização para que esses terceiros utilizem os dados para finalidades próprias incompatíveis com aquelas descritas nesta Política, ressalvadas as situações em que o terceiro atue como controlador independente e o respectivo tratamento esteja sujeito às suas próprias políticas e obrigações legais."
         },
         {
           "t": "h",
@@ -3833,7 +3965,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Os dados poderão ser mantidos:"
+          "s": "Os dados pessoais e demais informações poderão ser mantidos pelo período necessário para as finalidades descritas nesta Política, incluindo, conforme aplicável:"
         },
         {
           "t": "li",
@@ -3841,35 +3973,71 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "pelo período necessário à prestação do Serviço"
+          "s": "durante o período necessário à prestação do Serviço"
         },
         {
           "t": "li",
-          "s": "para cumprimento de obrigações legais"
+          "s": "durante o período necessário para manutenção, segurança e funcionamento da Plataforma"
         },
         {
           "t": "li",
-          "s": "para exercício regular de direitos"
+          "s": "para cumprimento de obrigações legais e regulatórias"
         },
         {
           "t": "li",
-          "s": "para prevenção de fraudes"
+          "s": "para o exercício regular de direitos"
         },
         {
           "t": "li",
-          "s": "para finalidades legítimas compatíveis com a legislação aplicável"
+          "s": "para prevenção e investigação de fraudes, abusos e incidentes de segurança"
+        },
+        {
+          "t": "li",
+          "s": "para analytics, mensuração e melhoria da Plataforma, observados os períodos de retenção aplicáveis a cada tecnologia e serviço"
+        },
+        {
+          "t": "li",
+          "s": "por outros períodos quando houver fundamento legal para sua conservação"
+        },
+        {
+          "t": "h2",
+          "s": "9.1 Retenção de dados de analytics"
         },
         {
           "t": "p",
-          "s": "O usuário poderá solicitar exclusão da conta pelos meios disponibilizados pela Plataforma."
+          "s": "Os dados coletados por meio de ferramentas de analytics e mensuração poderão estar sujeitos a períodos de retenção específicos definidos pelos respectivos provedores tecnológicos."
         },
         {
           "t": "p",
-          "s": "Após solicitação de exclusão:"
+          "s": "No caso do Google Analytics for Firebase (GA4), os dados detalhados de analytics poderão ser mantidos pelo período de retenção configurado na ferramenta, atualmente de até 14 (quatorze) meses, conforme aplicável à configuração adotada pelo Caminare."
+        },
+        {
+          "t": "p",
+          "s": "Determinados dados de analytics poderão também ser exportados para ambientes de armazenamento e análise sob controle operacional do Caminare, como o Google BigQuery, para fins de análise histórica, mensuração, desenvolvimento e aprimoramento da Plataforma."
+        },
+        {
+          "t": "p",
+          "s": "Os dados exportados para esses ambientes poderão ser mantidos por período superior ao período de retenção da interface do GA4, inclusive por prazo indeterminado, quando tecnicamente necessário e juridicamente permitido, desde que tratados de acordo com as finalidades descritas nesta Política e, sempre que aplicável, de forma anonimizada, agregada ou estatística."
+        },
+        {
+          "t": "p",
+          "s": "Os dados utilizados exclusivamente para analytics, mensuração de produto e campanhas não incluem o conteúdo dos registros pessoais do usuário, conforme descrito nos itens 2.3 e 2.4."
+        },
+        {
+          "t": "h2",
+          "s": "9.2 Exclusão da conta"
+        },
+        {
+          "t": "p",
+          "s": "O usuário poderá solicitar a exclusão de sua conta pelos meios disponibilizados pela Plataforma."
+        },
+        {
+          "t": "p",
+          "s": "Após a solicitação de exclusão:"
         },
         {
           "t": "li",
-          "s": "os dados operacionais poderão ser removidos"
+          "s": "os dados operacionais associados à conta poderão ser removidos ou anonimizados, conforme aplicável"
         },
         {
           "t": "li",
@@ -3877,7 +4045,15 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "determinadas informações poderão ser retidas quando exigido legalmente"
+          "s": "determinadas informações poderão ser mantidas quando exigido ou permitido pela legislação aplicável"
+        },
+        {
+          "t": "li",
+          "s": "dados de analytics previamente coletados poderão permanecer nos sistemas de analytics ou armazenamento histórico pelo período de retenção aplicável, especialmente quando não for tecnicamente possível vinculá-los diretamente à conta individual ou quando estiverem anonimizados ou agregados"
+        },
+        {
+          "t": "p",
+          "s": "A exclusão da conta não implica necessariamente a eliminação imediata de todos os registros técnicos, estatísticos, de segurança, auditoria ou analytics, quando sua retenção for necessária ou legalmente permitida para as finalidades descritas nesta Política."
         },
         {
           "t": "h",
@@ -4067,7 +4243,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
     },
     "en": {
       "title": "Privacy Policy",
-      "updated": "Last updated: May 21, 2026",
+      "updated": "Last updated: Aug 19, 2026",
       "blocks": [
         {
           "t": "p",
@@ -4219,7 +4395,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "We may automatically collect certain technical data, including:"
+          "s": "We may automatically collect certain technical and usage data related to the use of the Platform, including, where applicable:"
         },
         {
           "t": "li",
@@ -4227,11 +4403,11 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "device identifiers"
+          "s": "technical or device identifiers"
         },
         {
           "t": "li",
-          "s": "device model"
+          "s": "device model and characteristics"
         },
         {
           "t": "li",
@@ -4243,7 +4419,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "language settings"
+          "s": "language and regional settings"
         },
         {
           "t": "li",
@@ -4251,11 +4427,15 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "session data"
+          "s": "session information"
         },
         {
           "t": "li",
-          "s": "analytics data"
+          "s": "information regarding navigation and interaction with the Platform"
+        },
+        {
+          "t": "li",
+          "s": "data relating to application performance and operation"
         },
         {
           "t": "li",
@@ -4263,55 +4443,31 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "navigation and interaction information"
+          "s": "analytics and usage measurement data"
         },
         {
-          "t": "h2",
-          "s": "2.4 Cookies and Similar Technologies"
+          "t": "li",
+          "s": "information regarding events and actions performed on the Platform"
         },
         {
           "t": "p",
-          "s": "Caminare does not use remarketing based on emotional content, personal beliefs, or users’ subjective inferred information."
+          "s": "Analytics and measurement data may include information about events such as Account creation and access, login, start and conversion of the free trial period, plan views, subscription purchases and renewals, use of functionalities, record creation, usage milestones, access to history, insights and summaries, content export or sharing, device permissions, technical failures, and other events necessary to analyze the operation and performance of the Platform."
         },
         {
           "t": "p",
-          "s": "Cookies and similar technologies are used solely to improve the user experience."
+          "s": "When used for analytics, product measurement, or campaign measurement, these events may use metadata and operational information, such as event type, input type (text or voice), record number or count, subscription plan, billing period, conversion-related information, status of certain operations, and technical information necessary for measurement."
         },
         {
           "t": "p",
-          "s": "Where applicable, we may use:"
-        },
-        {
-          "t": "li",
-          "s": "cookies"
-        },
-        {
-          "t": "li",
-          "s": "pixels"
-        },
-        {
-          "t": "li",
-          "s": "technical identifiers"
-        },
-        {
-          "t": "li",
-          "s": "SDKs"
-        },
-        {
-          "t": "li",
-          "s": "similar analytics and measurement technologies"
+          "s": "User record content, including texts, audio, transcriptions, emotions, thoughts, beliefs, patterns, and other subjective information entered or generated in connection with the use of Caminare, is not sent to analytics or advertising providers as part of these measurement events."
         },
         {
           "t": "p",
-          "s": "These technologies may be used for:"
+          "s": "Technical and usage data may be used for:"
         },
         {
           "t": "li",
-          "s": "operation of the Platform"
-        },
-        {
-          "t": "li",
-          "s": "authentication"
+          "s": "operation and maintenance of the Platform"
         },
         {
           "t": "li",
@@ -4319,19 +4475,111 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "troubleshooting and failure diagnosis"
         },
         {
           "t": "li",
-          "s": "performance measurement"
+          "s": "performance analysis"
         },
         {
           "t": "li",
-          "s": "user experience improvement"
+          "s": "understanding the use of functionalities"
         },
         {
           "t": "li",
-          "s": "institutional and advertising campaigns"
+          "s": "improving the user experience"
+        },
+        {
+          "t": "li",
+          "s": "product development and enhancement"
+        },
+        {
+          "t": "li",
+          "s": "analytics and product metrics"
+        },
+        {
+          "t": "li",
+          "s": "campaign and conversion measurement, where applicable"
+        },
+        {
+          "t": "li",
+          "s": "fraud and abuse prevention"
+        },
+        {
+          "t": "li",
+          "s": "compliance with legal and regulatory obligations"
+        },
+        {
+          "t": "h2",
+          "s": "2.4 Cookies, SDKs and Similar Technologies"
+        },
+        {
+          "t": "p",
+          "s": "Caminare uses, where applicable, cookies, SDKs, technical identifiers, pixels, local storage technologies, and other similar technologies to enable the operation of the Platform, understand how it is used, measure its performance, and improve our products and services."
+        },
+        {
+          "t": "p",
+          "s": "These technologies may be used for:"
+        },
+        {
+          "t": "li",
+          "s": "operation and functionality of the Platform"
+        },
+        {
+          "t": "li",
+          "s": "authentication and session management"
+        },
+        {
+          "t": "li",
+          "s": "security and prevention of fraud and abuse"
+        },
+        {
+          "t": "li",
+          "s": "performance analysis and failure diagnosis"
+        },
+        {
+          "t": "li",
+          "s": "product analytics and usage measurement"
+        },
+        {
+          "t": "li",
+          "s": "understanding how users interact with the Platform’s features"
+        },
+        {
+          "t": "li",
+          "s": "product development and enhancement"
+        },
+        {
+          "t": "li",
+          "s": "campaign and conversion measurement"
+        },
+        {
+          "t": "li",
+          "s": "attribution of app installations, subscriptions, and other marketing conversions, where applicable"
+        },
+        {
+          "t": "li",
+          "s": "institutional and advertising campaigns, subject to the limitations described in this Privacy Policy"
+        },
+        {
+          "t": "p",
+          "s": "Caminare may use analytics and measurement services provided by third parties, including Google Analytics for Firebase (GA4), as well as measurement technologies associated with Google Ads and Meta, where applicable."
+        },
+        {
+          "t": "p",
+          "s": "Events sent for analytics, product measurement, and campaign measurement purposes are designed to use the technical, operational, and metadata information necessary for measurement. Caminare does not send users’ personal record content to analytics or advertising providers for these purposes, including texts, audio, transcriptions, emotions, thoughts, beliefs, patterns, or other subjective information entered or generated within the Platform."
+        },
+        {
+          "t": "p",
+          "s": "Caminare does not use remarketing based on the emotional content of users’ records, personal beliefs, thoughts, emotions, behavioral patterns, or other subjective inferences about users."
+        },
+        {
+          "t": "p",
+          "s": "On iOS devices, certain functionalities related to advertising attribution and campaign measurement may depend on the user’s authorization through Apple’s App Tracking Transparency (ATT) framework. Users may grant or deny such authorization according to the options presented by the operating system. Denying authorization does not prevent normal use of Caminare."
+        },
+        {
+          "t": "p",
+          "s": "Information collected through these technologies may be shared with the relevant technology providers to the extent necessary for the purposes described in this Privacy Policy, subject to the data-sharing and international data-transfer provisions set forth herein."
         },
         {
           "t": "h",
@@ -4383,19 +4631,19 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Data may be used for:"
+          "s": "Personal data and other information collected may be used, where applicable, for the following purposes:"
         },
         {
           "t": "li",
-          "s": "account creation and management"
+          "s": "creating, maintaining, and managing the Account"
         },
         {
           "t": "li",
-          "s": "authentication"
+          "s": "authentication and access management"
         },
         {
           "t": "li",
-          "s": "provision of the Service"
+          "s": "providing and operating the Service"
         },
         {
           "t": "li",
@@ -4403,7 +4651,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "organization of records"
+          "s": "organizing records"
         },
         {
           "t": "li",
@@ -4415,43 +4663,67 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "suggestion of underlying beliefs"
+          "s": "suggesting underlying beliefs"
         },
         {
           "t": "li",
-          "s": "identification of patterns"
+          "s": "identifying patterns"
         },
         {
           "t": "li",
-          "s": "generation of insights"
+          "s": "generating insights"
         },
         {
           "t": "li",
-          "s": "export of content"
+          "s": "exporting and sharing content, when requested by the User"
         },
         {
           "t": "li",
-          "s": "technical support"
+          "s": "technical support and user assistance"
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "analytics and measurement of Platform usage and performance"
         },
         {
           "t": "li",
-          "s": "security"
+          "s": "analyzing the operation and use of Platform features"
         },
         {
           "t": "li",
-          "s": "fraud prevention"
+          "s": "diagnosing and resolving technical failures and issues"
         },
         {
           "t": "li",
-          "s": "improvement of the Platform"
+          "s": "security, fraud prevention, and prevention of abusive use"
+        },
+        {
+          "t": "li",
+          "s": "improving, developing, and enhancing the Platform"
+        },
+        {
+          "t": "li",
+          "s": "measuring advertising campaigns and conversions, where applicable"
+        },
+        {
+          "t": "li",
+          "s": "attribution and performance analysis of marketing campaigns, where applicable"
+        },
+        {
+          "t": "li",
+          "s": "payment processing and subscription management"
         },
         {
           "t": "li",
           "s": "compliance with legal and regulatory obligations"
+        },
+        {
+          "t": "li",
+          "s": "exercising and defending legal rights"
+        },
+        {
+          "t": "p",
+          "s": "Data used for analytics, product measurement, and campaign measurement will be processed in accordance with this Privacy Policy, including the limitations concerning the use and sharing of users’ personal record content described in Sections 2.3 and 2.4."
         },
         {
           "t": "h",
@@ -4575,11 +4847,11 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Data may be shared, where necessary, with categories of third parties such as:"
+          "s": "Personal data and other information processed by Caminare may be shared, where necessary and in accordance with the purposes described in this Privacy Policy, with categories of third parties involved in the operation, security, support, measurement, and provision of the Platform, including:"
         },
         {
           "t": "li",
-          "s": "cloud infrastructure providers"
+          "s": "cloud infrastructure and computing service providers"
         },
         {
           "t": "li",
@@ -4591,15 +4863,19 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "analytics providers"
+          "s": "analytics and measurement providers, including Google Analytics for Firebase (GA4)"
         },
         {
           "t": "li",
-          "s": "crash reporting providers"
+          "s": "advertising campaign measurement and attribution providers, including Google Ads and Meta, where applicable"
         },
         {
           "t": "li",
-          "s": "payment processors"
+          "s": "crash reporting and technical monitoring providers"
+        },
+        {
+          "t": "li",
+          "s": "payment processors and payment service providers"
         },
         {
           "t": "li",
@@ -4611,43 +4887,67 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "technology partners"
+          "s": "technology partners and technology service providers"
+        },
+        {
+          "t": "li",
+          "s": "other service providers necessary for the operation of the Platform"
         },
         {
           "t": "p",
-          "s": "Such sharing occurs to the extent necessary for:"
+          "s": "Data may be shared to the extent necessary for:"
         },
         {
           "t": "li",
-          "s": "operation of the Platform"
+          "s": "operation and maintenance of the Platform"
         },
         {
           "t": "li",
-          "s": "operational processing"
+          "s": "provision of the Service"
         },
         {
           "t": "li",
-          "s": "security"
+          "s": "data processing and organization"
         },
         {
           "t": "li",
-          "s": "analytics"
+          "s": "use of artificial intelligence services"
         },
         {
           "t": "li",
-          "s": "authentication"
+          "s": "authentication and access management"
         },
         {
           "t": "li",
-          "s": "support"
+          "s": "product analytics and measurement"
         },
         {
           "t": "li",
-          "s": "payment processing"
+          "s": "campaign and conversion measurement and attribution, where applicable"
         },
         {
           "t": "li",
-          "s": "legal compliance"
+          "s": "security and prevention of fraud and abuse"
+        },
+        {
+          "t": "li",
+          "s": "diagnosis and resolution of technical failures"
+        },
+        {
+          "t": "li",
+          "s": "technical support and user assistance"
+        },
+        {
+          "t": "li",
+          "s": "payment processing and subscription management"
+        },
+        {
+          "t": "li",
+          "s": "compliance with legal and regulatory obligations"
+        },
+        {
+          "t": "p",
+          "s": "When data is shared with analytics, measurement, or advertising providers for the purposes described in Sections 2.3 and 2.4, Caminare seeks to limit such sharing to the technical, operational, and metadata information necessary for measurement. Users’ personal record content, including texts, audio, transcriptions, emotions, thoughts, beliefs, patterns, and other subjective information, is not shared with such providers for analytics or advertising purposes."
         },
         {
           "t": "p",
@@ -4655,19 +4955,27 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "where legally required"
+          "s": "where required by applicable law or regulation"
         },
         {
           "t": "li",
-          "s": "pursuant to court order"
+          "s": "pursuant to an order or determination by a competent authority"
         },
         {
           "t": "li",
-          "s": "for the regular exercise of legal rights"
+          "s": "for the exercise and defense of legal rights"
         },
         {
           "t": "li",
-          "s": "in corporate reorganizations, mergers, acquisitions, or equivalent transactions"
+          "s": "for the prevention or investigation of fraud, abuse, or security incidents"
+        },
+        {
+          "t": "li",
+          "s": "in corporate transactions, including reorganizations, mergers, acquisitions, consolidations, or equivalent transactions"
+        },
+        {
+          "t": "p",
+          "s": "Sharing data with third parties does not authorize such third parties to use the data for their own purposes that are incompatible with those described in this Privacy Policy, except where a third party acts as an independent data controller and its processing is subject to its own policies and legal obligations."
         },
         {
           "t": "h",
@@ -4691,7 +4999,7 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "p",
-          "s": "Data may be retained:"
+          "s": "Personal data and other information may be retained for as long as necessary to fulfill the purposes described in this Privacy Policy, including, where applicable:"
         },
         {
           "t": "li",
@@ -4703,31 +5011,67 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "to comply with legal obligations"
+          "s": "for the period necessary to maintain the security and operation of the Platform"
         },
         {
           "t": "li",
-          "s": "for the regular exercise of legal rights"
+          "s": "to comply with legal and regulatory obligations"
         },
         {
           "t": "li",
-          "s": "for fraud prevention"
+          "s": "for the exercise and defense of legal rights"
         },
         {
           "t": "li",
-          "s": "for legitimate purposes compatible with applicable law"
+          "s": "for the prevention and investigation of fraud, abuse, and security incidents"
+        },
+        {
+          "t": "li",
+          "s": "for analytics, measurement, and improvement of the Platform, subject to the retention periods applicable to each technology and service"
+        },
+        {
+          "t": "li",
+          "s": "for other periods where there is a lawful basis for retention"
+        },
+        {
+          "t": "h2",
+          "s": "9.1 Analytics Data Retention"
         },
         {
           "t": "p",
-          "s": "Users may request account deletion through the means made available by the Platform."
+          "s": "Data collected through analytics and measurement tools may be subject to specific retention periods established by the respective technology providers."
         },
         {
           "t": "p",
-          "s": "Following a deletion request:"
+          "s": "For Google Analytics for Firebase (GA4), detailed analytics data may be retained for the retention period configured in the tool, currently up to 14 (fourteen) months, as applicable to the configuration adopted by Caminare."
+        },
+        {
+          "t": "p",
+          "s": "Certain analytics data may also be exported to storage and analytics environments under Caminare’s operational control, such as Google BigQuery, for purposes including historical analysis, measurement, development, and improvement of the Platform."
+        },
+        {
+          "t": "p",
+          "s": "Data exported to such environments may be retained for longer than the retention period applicable within the GA4 interface, including for an indefinite period, where technically necessary and legally permitted, provided that such data is processed in accordance with the purposes described in this Privacy Policy and, where applicable, in anonymized, aggregated, or statistical form."
+        },
+        {
+          "t": "p",
+          "s": "Data used exclusively for analytics, product measurement, and campaign measurement does not include users’ personal record content, as described in Sections 2.3 and 2.4."
+        },
+        {
+          "t": "h2",
+          "s": "9.2 Account Deletion"
+        },
+        {
+          "t": "p",
+          "s": "Users may request deletion of their account through the means made available by the Platform."
+        },
+        {
+          "t": "p",
+          "s": "Following an account deletion request:"
         },
         {
           "t": "li",
-          "s": "operational data may be removed"
+          "s": "operational data associated with the account may be deleted or anonymized, as applicable"
         },
         {
           "t": "li",
@@ -4735,7 +5079,15 @@ export const legalDocs: Record<LegalKind, Record<'pt-BR' | 'en', LegalDoc>> = {
         },
         {
           "t": "li",
-          "s": "certain information may be retained where legally required"
+          "s": "certain information may be retained where required or permitted by applicable law"
+        },
+        {
+          "t": "li",
+          "s": "previously collected analytics data may remain in analytics or historical storage systems for the applicable retention period, particularly where such data can no longer be technically linked directly to an individual account or where it has been anonymized or aggregated"
+        },
+        {
+          "t": "p",
+          "s": "Deletion of an account does not necessarily result in the immediate deletion of all technical, statistical, security, audit, or analytics records where their retention is necessary or legally permitted for the purposes described in this Privacy Policy."
         },
         {
           "t": "h",
