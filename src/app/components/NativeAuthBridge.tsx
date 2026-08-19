@@ -44,8 +44,12 @@ export function NativeAuthBridge() {
         // ignore — pode não ter sido aberto via plugin
       }
 
+      // Erros aparecem NA TELA (alert) além do console, pra diagnosticar no
+      // próprio aparelho sem precisar de Mac/console remoto. Só dispara em falha;
+      // login com sucesso não mostra nada.
       if (errorDesc) {
         console.error('[NativeAuthBridge] erro no callback de auth:', errorDesc);
+        alert('Erro no login: ' + errorDesc);
         return;
       }
 
@@ -56,15 +60,19 @@ export function NativeAuthBridge() {
         });
         if (error) {
           console.error('[NativeAuthBridge] setSession falhou:', error.message);
+          alert('Erro ao entrar (sessão): ' + error.message);
           return;
         }
       } else if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
           console.error('[NativeAuthBridge] exchangeCodeForSession falhou:', error.message);
+          alert('Erro ao entrar (código): ' + error.message);
           return;
         }
       } else {
+        console.error('[NativeAuthBridge] callback sem token nem código:', rawUrl);
+        alert('Login voltou sem token nem código. Verifique a config do OAuth.');
         return;
       }
 
