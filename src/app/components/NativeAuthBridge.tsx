@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { supabase } from '../lib/supabase';
 import { isNative } from '../lib/native';
@@ -9,6 +9,12 @@ import { isNative } from '../lib/native';
 // então capturamos a URL aqui e entregamos a sessão ao Supabase.
 export function NativeAuthBridge() {
   const navigate = useNavigate();
+  // URLs de callback já processadas. O SO pode entregar o MESMO deep link duas
+  // vezes (getLaunchUrl + appUrlOpen, ou reentrega ao reabrir o app). Sem trava,
+  // no fluxo implícito o setSession roda de novo e o navigate('/') joga o usuário
+  // de volta pro Splash — é o "a Home aparece e volta pro splash". Processa cada
+  // URL uma vez só.
+  const handledRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isNative) return;
@@ -27,6 +33,9 @@ export function NativeAuthBridge() {
       if (!rawUrl.includes('auth-callback') && !rawUrl.includes('reset-callback')) {
         return;
       }
+      // Trava anti-duplicidade: processa cada callback uma única vez.
+      if (handledRef.current.has(rawUrl)) return;
+      handledRef.current.add(rawUrl);
       const isReset = rawUrl.includes('reset-callback');
       const hash = url.hash.startsWith('#') ? url.hash.slice(1) : url.hash;
       const hashParams = new URLSearchParams(hash);
