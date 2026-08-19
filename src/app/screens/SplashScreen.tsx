@@ -23,7 +23,12 @@ export function SplashScreen() {
     };
   }, []);
 
-  // Verifica se o usuário logado é admin (pra rotear pro painel direto)
+  // Verifica se o usuário logado é admin (pra rotear pro painel direto).
+  // IMPORTANTE: nunca deixar o Splash preso aqui. No login com Google o usuário
+  // é recém-criado e o getProfile pode falhar ou demorar (perfil acabou de nascer,
+  // rede instável). Se a checagem nunca terminasse, o Splash ficava travado (o
+  // "loop do splash"). Por isso: .catch segue como não-admin, e um timeout de
+  // segurança libera a navegação mesmo que o getProfile não responda.
   useEffect(() => {
     if (loading) return;
     if (!user) {
@@ -31,13 +36,21 @@ export function SplashScreen() {
       return;
     }
     let active = true;
-    getProfile(user.id).then((p) => {
-      if (!active) return;
-      setIsAdmin(!!p?.is_admin);
-      setAdminChecked(true);
-    });
+    const fallback = setTimeout(() => {
+      if (active) setAdminChecked(true);
+    }, 3000);
+    getProfile(user.id)
+      .then((p) => {
+        if (!active) return;
+        setIsAdmin(!!p?.is_admin);
+        setAdminChecked(true);
+      })
+      .catch(() => {
+        if (active) setAdminChecked(true);
+      });
     return () => {
       active = false;
+      clearTimeout(fallback);
     };
   }, [loading, user]);
 
