@@ -138,3 +138,12 @@ export interface MergeBeliefsResult {
 export function mergeBeliefs(): Promise<MergeBeliefsResult> {
   return postJson<MergeBeliefsResult>('/api/merge-beliefs', {});
 }
+
+// ─── delete-account ──────────────────────────────────────────────────────────
+// Apaga o usuário de AUTENTICAÇÃO (auth.users) no servidor. A RPC delete_my_account
+// limpa os dados, mas não remove o usuário de auth — sem isto, o login social
+// reencontra o mesmo usuário e a conta "excluída" reabre.
+
+export function deleteAuthUser(): Promise<{ status: string }> {
+  return postJson<{ status: string }>('/api/delete-account', {});
+}
