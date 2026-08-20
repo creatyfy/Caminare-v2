@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { deleteAuthUser } from './ai';
 
 export interface Profile {
   full_name: string | null;
@@ -124,11 +125,22 @@ export async function updateEmail(newEmail: string): Promise<{ error: string | n
 
 export async function deleteAccount(): Promise<{ error: string | null }> {
   try {
+    // 1) Limpa os dados do usuário (função no banco, roda como o próprio usuário).
     const { error } = await supabase.rpc('delete_my_account');
     if (error) {
-      console.error('[db.deleteAccount]', error);
+      console.error('[db.deleteAccount] rpc', error);
       return { error: error.message };
     }
+    // 2) Remove o usuário de AUTENTICAÇÃO no servidor. Sem isto, o login com
+    //    Google/Apple reencontra o mesmo usuário e a conta "excluída" reabre.
+    try {
+      await deleteAuthUser();
+    } catch (e) {
+      console.error('[db.deleteAccount] auth user', e);
+      return { error: 'Conta parcialmente excluída. Tente novamente em instantes.' };
+    }
+    // 3) Encerra a sessão local (o usuário de auth já não existe).
+    await supabase.auth.signOut().catch(() => {});
     return { error: null };
   } catch (err) {
     console.error('[db.deleteAccount]', err);
