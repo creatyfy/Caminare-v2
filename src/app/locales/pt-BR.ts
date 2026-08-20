@@ -426,6 +426,13 @@ export const ptBR = {
       viewDetails: 'Ver detalhes',
       subscriptionsSoon: 'Assinaturas e lojas — em breve',
       subscriptionsBody: 'Disponível quando o módulo de assinatura e a integração com as lojas forem ligados.',
+      subscriptionsTitle: 'Assinaturas e lojas',
+      subsTrials: 'Em teste (trial)',
+      subsActive: 'Assinantes ativos',
+      subsMonthly: 'Plano mensal',
+      subsAnnual: 'Plano anual',
+      subsApple: 'Contas Apple',
+      subsGoogle: 'Contas Google',
     },
     detail: {
       empty: 'Sem dados no período.',

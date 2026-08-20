@@ -426,6 +426,13 @@ export const en = {
       viewDetails: 'View details',
       subscriptionsSoon: 'Subscriptions & stores — coming soon',
       subscriptionsBody: 'Available once the subscription module and store integration are enabled.',
+      subscriptionsTitle: 'Subscriptions & stores',
+      subsTrials: 'On trial',
+      subsActive: 'Active subscribers',
+      subsMonthly: 'Monthly plan',
+      subsAnnual: 'Annual plan',
+      subsApple: 'Apple accounts',
+      subsGoogle: 'Google accounts',
     },
     detail: {
       empty: 'No data for this period.',
