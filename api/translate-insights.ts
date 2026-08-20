@@ -27,21 +27,26 @@ type Db = ReturnType<typeof serviceClient>;
 // vez de arrays paralelos) corrige o bug em que, se o modelo devolvia a lista de
 // crenças com tamanho diferente do enviado, TODAS as crenças eram descartadas.
 // Com mapa cada item é casado pelo próprio texto; se faltar um, só ele é pulado.
-const SYSTEM_TRANSLATE = `Você é um tradutor preciso para um app de autoconhecimento. Recebe um idioma alvo (código BCP-47) e uma lista de textos curtos. Traduza cada texto para o idioma alvo, preservando sentido e tom. Emoções: UMA palavra em minúsculas. Crenças e padrões: frases curtas. Se o texto já estiver no idioma alvo, repita-o igual. Responda SOMENTE com um objeto JSON que mapeia CADA texto de entrada (exatamente como recebido, sem alterar a chave) para a sua tradução. Não adicione nem omita chaves.`;
+// Casamento por ÍNDICE (não por texto): o modelo devolve {"0":"trad","1":"trad"}.
+// Isso corrige o caso das crenças/padrões (frases), em que o modelo não repetia a
+// frase original idêntica como chave, então o casamento por texto falhava e nada
+// era traduzido. Por índice, basta ele preservar a numeração.
+const SYSTEM_TRANSLATE = `Você é um tradutor preciso para um app de autoconhecimento. Recebe um idioma alvo (código BCP-47) e uma lista de itens numerados no formato [{"i":0,"text":"..."}]. Traduza o campo "text" de cada item para o idioma alvo, preservando sentido e tom. Emoções: UMA palavra em minúsculas. Crenças e padrões: frases curtas. Se já estiver no idioma alvo, repita igual. Responda SOMENTE com um objeto JSON que mapeia o índice (i, como string) para a tradução, ex.: {"0":"...","1":"..."}. Inclua TODOS os índices recebidos.`;
 
 async function translateList(target: string, items: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   if (items.length === 0) return map;
   try {
+    const numbered = items.map((text, i) => ({ i, text }));
     const { data } = await runStructured<Record<string, string>>(
       SYSTEM_TRANSLATE,
-      JSON.stringify({ target_language: target, items }),
+      JSON.stringify({ target_language: target, items: numbered }),
       4000
     );
-    for (const it of items) {
-      const to = (data?.[it] ?? '').trim();
-      if (to) map.set(it, to);
-    }
+    items.forEach((orig, i) => {
+      const to = (data?.[String(i)] ?? '').trim();
+      if (to && to !== orig) map.set(orig, to);
+    });
   } catch (err) {
     console.error('[translate-insights] falha ao traduzir lista:', err);
   }
