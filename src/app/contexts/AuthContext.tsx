@@ -165,17 +165,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           let intent: string | null = null;
           try {
             intent = localStorage.getItem(PENDING_OAUTH_INTENT_KEY);
+            // Consumo ÚNICO: apaga o flag já na leitura, pra re-disparos futuros do
+            // SIGNED_IN (refresh/restore de sessão) não o reaproveitarem.
+            localStorage.removeItem(PENDING_OAUTH_INTENT_KEY);
           } catch {
             /* ignore */
           }
 
-          // LOGIN social só vale pra quem JÁ se cadastrou. Se o clique foi no
-          // "entrar" (login) e o OAuth acabou de CRIAR a conta, é login sem conta:
-          // removemos a conta recém-criada, deslogamos e avisamos a tela de login.
-          // (Criar conta é exclusivo do cadastro, que exige termos + 18+.)
-          if (isNew && intent !== 'signup') {
+          // LOGIN social só vale pra quem JÁ se cadastrou. Só rejeita quando o
+          // clique foi EXPLICITAMENTE no "entrar" (intent === 'login') E a conta
+          // acabou de nascer. Re-disparos do SIGNED_IN vêm SEM intent (já consumido),
+          // então NUNCA apagam uma conta recém-criada no cadastro.
+          if (isNew && intent === 'login') {
             try {
-              localStorage.removeItem(PENDING_OAUTH_INTENT_KEY);
               localStorage.setItem(OAUTH_NO_ACCOUNT_KEY, '1');
             } catch {
               /* ignore */
@@ -224,7 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           try {
-            localStorage.removeItem(PENDING_OAUTH_INTENT_KEY);
             localStorage.removeItem(PENDING_NATIVE_LANG_KEY);
           } catch {
             /* ignore */
