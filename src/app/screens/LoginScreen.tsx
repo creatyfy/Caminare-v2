@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, OAUTH_NO_ACCOUNT_KEY } from '../contexts/AuthContext';
 import { GoogleSignInButton, AuthDivider } from '../components/GoogleSignInButton';
 import { AppleSignInButton } from '../components/AppleSignInButton';
 import { getProfile } from '../lib/db';
@@ -17,6 +17,19 @@ export function LoginScreen() {
   const [showPass, setShowPass] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Voltou do "Continuar com Google/Apple" sem ter conta: o AuthContext removeu a
+  // conta recém-criada e sinalizou aqui. Avisa que precisa se cadastrar primeiro.
+  useEffect(() => {
+    let flagged = false;
+    try {
+      flagged = localStorage.getItem(OAUTH_NO_ACCOUNT_KEY) === '1';
+      if (flagged) localStorage.removeItem(OAUTH_NO_ACCOUNT_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (flagged) setError(t('login.errors.noAccount'));
+  }, [t]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

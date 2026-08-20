@@ -24,6 +24,12 @@ import { normalizeLanguage, defaultLanguageFromInterface } from '../lib/language
 // Chave onde o formulário de cadastro guarda o idioma nativo escolhido antes de
 // abrir o Google/Apple (o fluxo OAuth sai da tela e não leva o formulário junto).
 export const PENDING_NATIVE_LANG_KEY = 'caminare.pending_native_language';
+// Intenção do clique no botão social: 'login' (só entrar, conta tem que existir)
+// ou 'signup' (cadastrar). O botão grava antes de abrir o provedor.
+export const PENDING_OAUTH_INTENT_KEY = 'caminare.oauth_intent';
+// Sinaliza pra tela de login que o "Continuar com Google/Apple" foi feito sem
+// conta existente (a conta recém-criada foi removida), pra mostrar o aviso.
+export const OAUTH_NO_ACCOUNT_KEY = 'caminare.oauth_no_account';
 
 // Nonce p/ o fluxo nativo do Sign in with Apple: o app envia o SHA-256 do nonce
 // pra Apple e o nonce cru pro Supabase (signInWithIdToken) — Supabase confere.
@@ -152,38 +158,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' && user) {
         const provider = user.app_metadata?.provider;
         const isOAuth = provider === 'google' || provider === 'apple';
-        if (isOAuth && !authTrackedRef.current.has(user.id)) {
-          authTrackedRef.current.add(user.id);
-          // Novo usuário: conta criada há pouco (janela de 2 min) = cadastro.
+        if (isOAuth) {
+          // Novo usuário: conta criada há pouco (janela de 2 min) = acabou de nascer.
           const createdAt = user.created_at ? new Date(user.created_at).getTime() : 0;
           const isNew = createdAt > 0 && Date.now() - createdAt < 120_000;
-          track(isNew ? 'sign_up' : 'login', { method: provider });
-          if (isNew) track('trial_started', { trial_days: 15 });
-        }
+          let intent: string | null = null;
+          try {
+            intent = localStorage.getItem(PENDING_OAUTH_INTENT_KEY);
+          } catch {
+            /* ignore */
+          }
 
-        // Backfill do idioma nativo no cadastro via OAuth: Google/Apple não levam
-        // o idioma escolhido no formulário. Se o usuário ainda não tem idioma
-        // nativo, aplica o que o formulário guardou antes de abrir o provedor (ou
-        // o padrão da interface). Idempotente: só roda quando está vazio, então
-        // não sobrescreve o idioma de quem já tem (login de usuário existente).
-        if (isOAuth) {
-          const current = (user.user_metadata?.native_language as string | undefined)?.trim();
-          if (!current) {
-            let pending: string | null = null;
+          // LOGIN social só vale pra quem JÁ se cadastrou. Se o clique foi no
+          // "entrar" (login) e o OAuth acabou de CRIAR a conta, é login sem conta:
+          // removemos a conta recém-criada, deslogamos e avisamos a tela de login.
+          // (Criar conta é exclusivo do cadastro, que exige termos + 18+.)
+          if (isNew && intent !== 'signup') {
             try {
-              pending = localStorage.getItem(PENDING_NATIVE_LANG_KEY);
+              localStorage.removeItem(PENDING_OAUTH_INTENT_KEY);
+              localStorage.setItem(OAUTH_NO_ACCOUNT_KEY, '1');
             } catch {
               /* ignore */
             }
-            const lang =
-              (pending ? normalizeLanguage(pending) : undefined) ??
-              defaultLanguageFromInterface(i18n.language);
-            void supabase.auth.updateUser({ data: { native_language: lang } });
-            try {
-              localStorage.removeItem(PENDING_NATIVE_LANG_KEY);
-            } catch {
-              /* ignore */
+            void (async () => {
+              try {
+                await supabase.rpc('delete_my_account');
+              } catch {
+                /* ignore — pior caso a conta vazia fica, mas o usuário é deslogado */
+              }
+              await supabase.auth.signOut().catch(() => {});
+            })();
+            return;
+          }
+
+          if (!authTrackedRef.current.has(user.id)) {
+            authTrackedRef.current.add(user.id);
+            track(isNew ? 'sign_up' : 'login', { method: provider });
+            if (isNew) track('trial_started', { trial_days: 15 });
+          }
+
+          // Cadastro social válido: grava o consentimento (o botão de cadastro
+          // exigiu os checkboxes de termos + 18+) e o idioma escolhido no
+          // formulário. No login de conta existente nada disto é sobrescrito.
+          if (isNew && intent === 'signup') {
+            const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+            const patch: Record<string, unknown> = {};
+            if (!meta.terms_accepted_at) {
+              patch.terms_accepted_at = new Date().toISOString();
+              patch.terms_version = TERMS_VERSION;
             }
+            if (!meta.age_confirmed_at) patch.age_confirmed_at = new Date().toISOString();
+            const curLang = (meta.native_language as string | undefined)?.trim();
+            if (!curLang) {
+              let pending: string | null = null;
+              try {
+                pending = localStorage.getItem(PENDING_NATIVE_LANG_KEY);
+              } catch {
+                /* ignore */
+              }
+              patch.native_language =
+                (pending ? normalizeLanguage(pending) : undefined) ??
+                defaultLanguageFromInterface(i18n.language);
+            }
+            if (Object.keys(patch).length > 0) void supabase.auth.updateUser({ data: patch });
+          }
+
+          try {
+            localStorage.removeItem(PENDING_OAUTH_INTENT_KEY);
+            localStorage.removeItem(PENDING_NATIVE_LANG_KEY);
+          } catch {
+            /* ignore */
           }
         }
       }

@@ -447,6 +447,7 @@ export function SignUpScreen() {
           label={t('signup.google')}
           disabled={!acceptedTerms || !confirmedAge}
           pendingNativeLanguage={nativeLanguage}
+          intent="signup"
           onError={(msg) => setError(translateSignupError(msg, t))}
         />
 
@@ -454,6 +455,7 @@ export function SignUpScreen() {
           label={t('signup.apple')}
           disabled={!acceptedTerms || !confirmedAge}
           pendingNativeLanguage={nativeLanguage}
+          intent="signup"
           onError={(msg) => setError(translateSignupError(msg, t))}
           onSuccess={() => navigate('/home', { replace: true })}
         />
