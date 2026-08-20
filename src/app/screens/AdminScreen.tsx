@@ -71,6 +71,8 @@ export function AdminScreen() {
   const [beliefsData, setBeliefsData] = useState<AdminBeliefs | null>(null);
   const [patternsData, setPatternsData] = useState<AdminPatternsData | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  // Bump pra forçar re-fetch dos dados da aba de detalhe (usado pelo botão atualizar).
+  const [detailRefreshKey, setDetailRefreshKey] = useState(0);
 
   // Carrega profile uma vez
   useEffect(() => {
@@ -134,7 +136,7 @@ export function AdminScreen() {
     return () => {
       active = false;
     };
-  }, [section, period]);
+  }, [section, period, detailRefreshKey]);
 
   async function handleStatusChange(feedbackId: string, status: FeedbackStatus) {
     const ok = await updateFeedbackStatus(feedbackId, status);
@@ -305,7 +307,10 @@ export function AdminScreen() {
 
           <button
             type="button"
-            onClick={() => load(false)}
+            onClick={() => {
+              void load(false);
+              setDetailRefreshKey((k) => k + 1);
+            }}
             disabled={refreshing || loading}
             aria-label={t('admin.refresh')}
             style={{
@@ -666,7 +671,6 @@ function OverviewView({
   onNavigate: (s: AdminSection) => void;
 }) {
   const { t } = useTranslation();
-  const [subsOpen, setSubsOpen] = useState(false);
 
   // Taxa de validação = aceitas (validadas + editadas) sobre o total sugerido.
   // Editar conta como aceitar (o usuário manteve a sugestão, só ajustou o texto).
@@ -804,55 +808,32 @@ function OverviewView({
         <ProportionLegend />
       </section>
 
-      {/* Assinaturas e lojas — em breve (recolhível) */}
+      {/* Assinaturas e lojas — números reais */}
       <section>
-        <button
-          type="button"
-          onClick={() => setSubsOpen((v) => !v)}
+        <h2
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-            background: 'var(--cam-bg-card)',
-            border: 'none',
-            borderRadius: '14px',
-            padding: '14px 18px',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            boxShadow: 'var(--cam-shadow-card)',
+            fontSize: '15px',
+            fontWeight: 700,
+            color: 'var(--cam-text-primary)',
+            margin: '0 0 12px 4px',
           }}
         >
-          <span
-            style={{
-              fontSize: '14px',
-              fontWeight: 500,
-              color: 'var(--cam-text-secondary)',
-            }}
-          >
-            {t('admin.overview.subscriptionsSoon')}
-          </span>
-          <ChevronRight
-            size={16}
-            color="var(--cam-text-secondary)"
-            style={{
-              transform: subsOpen ? 'rotate(90deg)' : 'none',
-              transition: 'transform 0.2s ease',
-            }}
-          />
-        </button>
-        {subsOpen && (
-          <p
-            style={{
-              fontSize: '13px',
-              color: 'var(--cam-text-secondary)',
-              lineHeight: 1.5,
-              margin: '10px 4px 0 4px',
-            }}
-          >
-            {t('admin.overview.subscriptionsBody')}
-          </p>
-        )}
+          {t('admin.overview.subscriptionsTitle')}
+        </h2>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '12px',
+          }}
+        >
+          <KpiCard label={t('admin.overview.subsTrials')} value={stats.users_trial} />
+          <KpiCard label={t('admin.overview.subsActive')} value={stats.users_active} accent />
+          <KpiCard label={t('admin.overview.subsMonthly')} value={stats.subs_monthly_active} />
+          <KpiCard label={t('admin.overview.subsAnnual')} value={stats.subs_annual_active} />
+          <KpiCard label={t('admin.overview.subsApple')} value={stats.users_apple} />
+          <KpiCard label={t('admin.overview.subsGoogle')} value={stats.users_google} />
+        </div>
       </section>
     </div>
   );
