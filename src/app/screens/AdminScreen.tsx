@@ -668,10 +668,13 @@ function OverviewView({
   const { t } = useTranslation();
   const [subsOpen, setSubsOpen] = useState(false);
 
+  // Taxa de validação = aceitas (validadas + editadas) sobre o total sugerido.
+  // Editar conta como aceitar (o usuário manteve a sugestão, só ajustou o texto).
   const suggested = stats.emotions_total + stats.beliefs_total + stats.patterns_total;
-  const confirmed =
-    stats.emotions_confirmed + stats.beliefs_confirmed + stats.patterns_confirmed;
-  const validationRate = suggested > 0 ? Math.round((confirmed / suggested) * 100) : 0;
+  const accepted =
+    stats.emotions_confirmed + stats.beliefs_confirmed + stats.patterns_confirmed +
+    stats.emotions_adjusted + stats.beliefs_adjusted + stats.patterns_adjusted;
+  const validationRate = suggested > 0 ? Math.round((accepted / suggested) * 100) : 0;
 
   const quality: {
     section: AdminSection;
@@ -1022,7 +1025,12 @@ function StatusCards({
   ignored: number;
 }) {
   const { t } = useTranslation();
-  const rate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+  // "Pendente" no banco = o usuário não validou nem rejeitou, ou seja, ignorou.
+  // Não existe categoria "pendente": somamos essas às ignoradas. Assim os cards
+  // fecham com o total (validadas + editadas + rejeitadas + ignoradas = sugeridas).
+  const ignoredTotal = Math.max(0, total - confirmed - rejected - edited);
+  // Taxa de validação = aceitas (validadas + editadas) sobre o total sugerido.
+  const rate = total > 0 ? Math.round(((confirmed + edited) / total) * 100) : 0;
   return (
     <div
       style={{
@@ -1034,9 +1042,9 @@ function StatusCards({
     >
       <MetricCard label={t('admin.metrics.suggested')} value={total} />
       <MetricCard label={t('admin.metrics.validated')} value={confirmed} accent="accent" />
-      <MetricCard label={t('admin.metrics.rejected')} value={rejected} accent="error" />
       <MetricCard label={t('admin.metrics.edited')} value={edited} accent="warning" />
-      <MetricCard label={t('admin.metrics.ignored')} value={ignored} />
+      <MetricCard label={t('admin.metrics.rejected')} value={rejected} accent="error" />
+      <MetricCard label={t('admin.metrics.ignored')} value={ignoredTotal} />
       <MetricCard label={t('admin.detail.validationRate')} value={`${rate}%`} accent="accent" />
     </div>
   );
@@ -1121,9 +1129,10 @@ function StatusBadge({ validation }: { validation: string }) {
     rejected: { label: t('admin.metrics.rejected'), color: STATUS_COLOR.rejected },
     edited: { label: t('admin.metrics.edited'), color: STATUS_COLOR.edited },
     ignored: { label: t('admin.metrics.ignored'), color: STATUS_COLOR.ignored },
-    pending: { label: t('admin.metrics.suggested'), color: STATUS_COLOR.pending },
+    // "Pendente" (não validada nem rejeitada) é tratada como ignorada.
+    pending: { label: t('admin.metrics.ignored'), color: STATUS_COLOR.ignored },
   };
-  const cfg = map[validation] ?? map.pending;
+  const cfg = map[validation] ?? map.ignored;
   return (
     <span
       style={{
@@ -1182,7 +1191,8 @@ function DetailEmpty() {
   );
 }
 
-// Status selecionável nas abas de detalhe ('all' = todos).
+// Status selecionável nas abas de detalhe ('all' = todos). "Ignoradas" inclui as
+// pendentes (não validadas nem rejeitadas), que na prática são ignoradas.
 type DetailStatus = 'all' | 'confirmed' | 'edited' | 'rejected' | 'ignored';
 
 // Filtro de status (pills com a contagem em cada). Reutilizado nas 3 abas.
@@ -1265,7 +1275,8 @@ function EmotionsView({
     confirmed: data.confirmed,
     edited: data.edited,
     rejected: data.rejected,
-    ignored: data.ignored,
+    // Ignoradas engloba as pendentes (não validadas nem rejeitadas).
+    ignored: Math.max(0, data.total - data.confirmed - data.rejected - data.edited),
   };
 
   // Ranking de nomes dentro do status escolhido. 'all' soma todos os status
@@ -1277,7 +1288,11 @@ function EmotionsView({
     ranking = [...byName.entries()].map(([label, count]) => ({ label, count }));
   } else {
     ranking = data.items
-      .filter((it) => it.validation === status)
+      .filter(
+        (it) =>
+          it.validation === status ||
+          (status === 'ignored' && it.validation === 'pending')
+      )
       .map((it) => ({ label: it.name, count: it.count }));
   }
   ranking = ranking.sort((a, b) => b.count - a.count).slice(0, 30);
@@ -1335,10 +1350,17 @@ function BeliefsView({
     confirmed: data.confirmed,
     edited: data.edited,
     rejected: data.rejected,
-    ignored: data.ignored,
+    // Ignoradas engloba as pendentes (não validadas nem rejeitadas).
+    ignored: Math.max(0, data.total - data.confirmed - data.rejected - data.edited),
   };
   const filtered =
-    status === 'all' ? data.items : data.items.filter((b) => b.validation === status);
+    status === 'all'
+      ? data.items
+      : data.items.filter(
+          (b) =>
+            b.validation === status ||
+            (status === 'ignored' && b.validation === 'pending')
+        );
 
   return (
     <div>
@@ -1458,10 +1480,17 @@ function PatternsView({
     confirmed: data.confirmed,
     edited: data.edited,
     rejected: data.rejected,
-    ignored: data.ignored,
+    // Ignoradas engloba as pendentes (não validadas nem rejeitadas).
+    ignored: Math.max(0, data.total - data.confirmed - data.rejected - data.edited),
   };
   const filtered =
-    status === 'all' ? data.list : data.list.filter((p) => p.validation === status);
+    status === 'all'
+      ? data.list
+      : data.list.filter(
+          (p) =>
+            p.validation === status ||
+            (status === 'ignored' && p.validation === 'pending')
+        );
 
   return (
     <div>

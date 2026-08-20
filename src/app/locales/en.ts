@@ -39,6 +39,7 @@ export const en = {
       invalidCredentials: 'Incorrect email or password.',
       emailNotConfirmed: 'Confirm your email before signing in.',
       rateLimit: 'Too many attempts. Try again in a moment.',
+      noAccount: 'No account found for this login. Please create an account first.',
     },
   },
   signup: {
@@ -482,6 +483,7 @@ export const en = {
       totalEntries: 'Total entries',
       avgWeekly: 'Weekly average per user',
       suggested: 'Suggested',
+      pending: 'Pending',
       validated: 'Validated',
       rejected: 'Rejected',
       edited: 'Edited',

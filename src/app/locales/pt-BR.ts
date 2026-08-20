@@ -39,6 +39,7 @@ export const ptBR = {
       invalidCredentials: 'Email ou senha incorretos.',
       emailNotConfirmed: 'Confirme seu email antes de entrar.',
       rateLimit: 'Muitas tentativas. Tente novamente em instantes.',
+      noAccount: 'Nenhuma conta encontrada com esse login. Crie uma conta primeiro.',
     },
   },
   signup: {
@@ -482,6 +483,7 @@ export const ptBR = {
       totalEntries: 'Total de registros',
       avgWeekly: 'Média semanal por usuário',
       suggested: 'Sugeridas',
+      pending: 'Pendentes',
       validated: 'Validadas',
       rejected: 'Rejeitadas',
       edited: 'Editadas',
