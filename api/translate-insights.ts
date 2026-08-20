@@ -21,15 +21,32 @@ interface Body {
   target_language?: string;
 }
 
-interface TranslateResult {
-  emotions: string[];
-  beliefs: string[];
-  patterns: string[];
-}
-
 type Db = ReturnType<typeof serviceClient>;
 
-const SYSTEM_TRANSLATE = `Você é um tradutor preciso. Recebe listas de textos curtos (emoções, crenças e padrões de um app de autoconhecimento) e um idioma alvo em código BCP-47. Traduza cada texto para o idioma alvo, preservando o sentido e o tom, mantendo o formato: emoções como UMA palavra em minúsculas; crenças e padrões como frases curtas. Se um texto já estiver no idioma alvo, repita-o igual. NÃO adicione, remova ou reordene itens. Responda SOMENTE com JSON no formato exato {"emotions":[...],"beliefs":[...],"patterns":[...]}, com cada array na MESMA ORDEM e MESMO TAMANHO da entrada correspondente.`;
+// Traduz UMA categoria por vez e devolve um MAPA original->tradução. Usar mapa (em
+// vez de arrays paralelos) corrige o bug em que, se o modelo devolvia a lista de
+// crenças com tamanho diferente do enviado, TODAS as crenças eram descartadas.
+// Com mapa cada item é casado pelo próprio texto; se faltar um, só ele é pulado.
+const SYSTEM_TRANSLATE = `Você é um tradutor preciso para um app de autoconhecimento. Recebe um idioma alvo (código BCP-47) e uma lista de textos curtos. Traduza cada texto para o idioma alvo, preservando sentido e tom. Emoções: UMA palavra em minúsculas. Crenças e padrões: frases curtas. Se o texto já estiver no idioma alvo, repita-o igual. Responda SOMENTE com um objeto JSON que mapeia CADA texto de entrada (exatamente como recebido, sem alterar a chave) para a sua tradução. Não adicione nem omita chaves.`;
+
+async function translateList(target: string, items: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (items.length === 0) return map;
+  try {
+    const { data } = await runStructured<Record<string, string>>(
+      SYSTEM_TRANSLATE,
+      JSON.stringify({ target_language: target, items }),
+      4000
+    );
+    for (const it of items) {
+      const to = (data?.[it] ?? '').trim();
+      if (to) map.set(it, to);
+    }
+  } catch (err) {
+    console.error('[translate-insights] falha ao traduzir lista:', err);
+  }
+  return map;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return;
@@ -62,22 +79,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendJson(res, 200, { status: 'ok', translated: { emotions: 0, beliefs: 0, patterns: 0 } });
   }
 
-  let out: TranslateResult;
-  try {
-    const { data } = await runStructured<TranslateResult>(
-      SYSTEM_TRANSLATE,
-      JSON.stringify({ target_language: target, emotions, beliefs, patterns }),
-      4000
-    );
-    out = data;
-  } catch (err) {
-    console.error('[translate-insights] falha na tradução:', err);
-    return sendError(res, 502, 'Não foi possível traduzir os insights agora.');
-  }
+  // Cada categoria é traduzida no seu próprio pedido, com mapa original->tradução,
+  // pra um problema numa categoria (ex.: crenças) não derrubar as outras.
+  const [emoMap, belMap, patMap] = await Promise.all([
+    translateList(target, emotions),
+    translateList(target, beliefs),
+    translateList(target, patterns),
+  ]);
 
-  const nEmo = await translateColumn(db, user.id, 'emotions', 'name', emotions, out.emotions, false);
-  const nBel = await translateColumn(db, user.id, 'beliefs', 'content', beliefs, out.beliefs, true);
-  const nPat = await translateColumn(db, user.id, 'patterns', 'description', patterns, out.patterns, true);
+  const nEmo = await translateColumn(db, user.id, 'emotions', 'name', emotions, emoMap, false);
+  const nBel = await translateColumn(db, user.id, 'beliefs', 'content', beliefs, belMap, true);
+  const nPat = await translateColumn(db, user.id, 'patterns', 'description', patterns, patMap, true);
 
   // Crenças que ficaram idênticas após a tradução viram variação de uma canônica.
   await dedupeExactBeliefs(db, user.id);
@@ -94,15 +106,13 @@ async function translateColumn(
   userId: string,
   table: string,
   col: string,
-  olds: string[],
-  news: string[] | undefined,
+  items: string[],
+  map: Map<string, string>,
   softDelete: boolean
 ): Promise<number> {
-  if (!Array.isArray(news) || news.length !== olds.length) return 0;
   let count = 0;
-  for (let i = 0; i < olds.length; i++) {
-    const from = olds[i];
-    const to = (news[i] ?? '').trim();
+  for (const from of items) {
+    const to = (map.get(from) ?? '').trim();
     if (!to || to === from) continue;
     // db dinâmico por nome de tabela: cast local para não brigar com os tipos gerados.
     let query = (db as any).from(table).update({ [col]: to }).eq('user_id', userId).eq(col, from);
