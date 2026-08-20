@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, PENDING_NATIVE_LANG_KEY } from '../contexts/AuthContext';
 
 // Botão "Continuar com Apple". Sign in with Apple é OBRIGATÓRIO na App Store
 // quando há outro login social (Google). Segue o estilo da Apple HIG: botão
@@ -11,11 +11,15 @@ export function AppleSignInButton({
   onError,
   onSuccess,
   disabled = false,
+  pendingNativeLanguage,
 }: {
   label?: string;
   onError?: (msg: string) => void;
   onSuccess?: () => void;
   disabled?: boolean;
+  // No cadastro, idioma nativo escolhido no formulário. Guardado antes do OAuth
+  // pra o AuthContext aplicar quando a sessão volta (o fluxo sai da tela).
+  pendingNativeLanguage?: string;
 }) {
   const { t } = useTranslation();
   const { signInWithApple } = useAuth();
@@ -23,6 +27,13 @@ export function AppleSignInButton({
 
   async function handleClick() {
     if (loading || disabled) return;
+    if (pendingNativeLanguage) {
+      try {
+        localStorage.setItem(PENDING_NATIVE_LANG_KEY, pendingNativeLanguage);
+      } catch {
+        /* ignore */
+      }
+    }
     setLoading(true);
     try {
       const { error } = await signInWithApple();

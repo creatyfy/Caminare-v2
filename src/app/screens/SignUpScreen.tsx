@@ -446,12 +446,14 @@ export function SignUpScreen() {
         <GoogleSignInButton
           label={t('signup.google')}
           disabled={!acceptedTerms || !confirmedAge}
+          pendingNativeLanguage={nativeLanguage}
           onError={(msg) => setError(translateSignupError(msg, t))}
         />
 
         <AppleSignInButton
           label={t('signup.apple')}
           disabled={!acceptedTerms || !confirmedAge}
+          pendingNativeLanguage={nativeLanguage}
           onError={(msg) => setError(translateSignupError(msg, t))}
           onSuccess={() => navigate('/home', { replace: true })}
         />

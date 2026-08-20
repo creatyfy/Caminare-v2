@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, PENDING_NATIVE_LANG_KEY } from '../contexts/AuthContext';
 
 export function GoogleSignInButton({
   label,
   onError,
   disabled = false,
+  pendingNativeLanguage,
 }: {
   label?: string;
   onError?: (msg: string) => void;
   disabled?: boolean;
+  // No cadastro, o idioma nativo escolhido no formulário. O OAuth sai da tela, então
+  // guardamos aqui antes de abrir o Google; o AuthContext aplica quando a sessão volta.
+  pendingNativeLanguage?: string;
 }) {
   const { t } = useTranslation();
   const { signInWithGoogle } = useAuth();
@@ -18,6 +22,13 @@ export function GoogleSignInButton({
 
   async function handleClick() {
     if (loading || disabled) return;
+    if (pendingNativeLanguage) {
+      try {
+        localStorage.setItem(PENDING_NATIVE_LANG_KEY, pendingNativeLanguage);
+      } catch {
+        /* ignore */
+      }
+    }
     setLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {

@@ -18,6 +18,12 @@ import {
   getResetRedirectUrl,
   AUTH_CALLBACK_URL,
 } from '../lib/native';
+import i18n from 'i18next';
+import { normalizeLanguage, defaultLanguageFromInterface } from '../lib/languages';
+
+// Chave onde o formulário de cadastro guarda o idioma nativo escolhido antes de
+// abrir o Google/Apple (o fluxo OAuth sai da tela e não leva o formulário junto).
+export const PENDING_NATIVE_LANG_KEY = 'caminare.pending_native_language';
 
 // Nonce p/ o fluxo nativo do Sign in with Apple: o app envia o SHA-256 do nonce
 // pra Apple e o nonce cru pro Supabase (signInWithIdToken) — Supabase confere.
@@ -153,6 +159,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const isNew = createdAt > 0 && Date.now() - createdAt < 120_000;
           track(isNew ? 'sign_up' : 'login', { method: provider });
           if (isNew) track('trial_started', { trial_days: 15 });
+        }
+
+        // Backfill do idioma nativo no cadastro via OAuth: Google/Apple não levam
+        // o idioma escolhido no formulário. Se o usuário ainda não tem idioma
+        // nativo, aplica o que o formulário guardou antes de abrir o provedor (ou
+        // o padrão da interface). Idempotente: só roda quando está vazio, então
+        // não sobrescreve o idioma de quem já tem (login de usuário existente).
+        if (isOAuth) {
+          const current = (user.user_metadata?.native_language as string | undefined)?.trim();
+          if (!current) {
+            let pending: string | null = null;
+            try {
+              pending = localStorage.getItem(PENDING_NATIVE_LANG_KEY);
+            } catch {
+              /* ignore */
+            }
+            const lang =
+              (pending ? normalizeLanguage(pending) : undefined) ??
+              defaultLanguageFromInterface(i18n.language);
+            void supabase.auth.updateUser({ data: { native_language: lang } });
+            try {
+              localStorage.removeItem(PENDING_NATIVE_LANG_KEY);
+            } catch {
+              /* ignore */
+            }
+          }
         }
       }
       if (event === 'SIGNED_OUT') {
