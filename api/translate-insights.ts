@@ -53,6 +53,46 @@ async function translateList(target: string, items: string[]): Promise<Map<strin
   return map;
 }
 
+// Traduz uma lista de textos e devolve um ARRAY alinhado por índice (null onde não
+// traduziu). Usado por crenças/padrões, que são atualizadas linha a linha pelo ID.
+async function translateTexts(target: string, texts: string[]): Promise<(string | null)[]> {
+  if (texts.length === 0) return [];
+  try {
+    const numbered = texts.map((text, i) => ({ i, text }));
+    const { data } = await runStructured<Record<string, string>>(
+      SYSTEM_TRANSLATE,
+      JSON.stringify({ target_language: target, items: numbered }),
+      4000
+    );
+    return texts.map((orig, i) => {
+      const to = (data?.[String(i)] ?? '').trim();
+      return to && to !== orig ? to : null;
+    });
+  } catch (err) {
+    console.error('[translate-insights] falha ao traduzir textos:', err);
+    return texts.map(() => null);
+  }
+}
+
+// Atualiza cada linha pelo seu ID com a tradução correspondente (alinhada por índice).
+// Sem casar texto — impossível "não achar" a linha. Retorna quantas foram atualizadas.
+async function updateById(
+  db: Db,
+  table: string,
+  col: string,
+  rows: { id: string }[],
+  translations: (string | null)[]
+): Promise<number> {
+  let count = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const to = translations[i];
+    if (!to) continue;
+    const { error } = await (db as any).from(table).update({ [col]: to }).eq('id', rows[i].id);
+    if (!error) count += 1;
+  }
+  return count;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (applyCors(req, res)) return;
 
@@ -69,32 +109,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const [emoRes, belRes, patRes] = await Promise.all([
     db.from('emotions').select('name').eq('user_id', user.id),
-    db.from('beliefs').select('content').eq('user_id', user.id).is('deleted_at', null),
-    db.from('patterns').select('description').eq('user_id', user.id).is('deleted_at', null),
+    db.from('beliefs').select('id, content').eq('user_id', user.id).is('deleted_at', null),
+    db.from('patterns').select('id, description').eq('user_id', user.id).is('deleted_at', null),
   ]);
 
   const uniq = (arr: (string | null | undefined)[]) =>
     Array.from(new Set(arr.map((s) => (s ?? '').trim()).filter(Boolean)));
 
+  // Emoções: muitas linhas com nomes repetidos, então uniq + atualiza por valor.
   const emotions = uniq(((emoRes.data ?? []) as any[]).map((r) => r.name));
-  const beliefs = uniq(((belRes.data ?? []) as any[]).map((r) => r.content));
-  const patterns = uniq(((patRes.data ?? []) as any[]).map((r) => r.description));
+  // Crenças e padrões: linhas agregadas (poucas), atualizadas 1 a 1 pelo ID.
+  const belRows = ((belRes.data ?? []) as any[]).filter((r) => (r.content ?? '').trim());
+  const patRows = ((patRes.data ?? []) as any[]).filter((r) => (r.description ?? '').trim());
 
-  if (emotions.length + beliefs.length + patterns.length === 0) {
+  if (emotions.length + belRows.length + patRows.length === 0) {
     return sendJson(res, 200, { status: 'ok', translated: { emotions: 0, beliefs: 0, patterns: 0 } });
   }
 
-  // Cada categoria é traduzida no seu próprio pedido, com mapa original->tradução,
-  // pra um problema numa categoria (ex.: crenças) não derrubar as outras.
-  const [emoMap, belMap, patMap] = await Promise.all([
+  const [emoMap, belT, patT] = await Promise.all([
     translateList(target, emotions),
-    translateList(target, beliefs),
-    translateList(target, patterns),
+    translateTexts(target, belRows.map((r) => r.content as string)),
+    translateTexts(target, patRows.map((r) => r.description as string)),
   ]);
 
   const nEmo = await translateColumn(db, user.id, 'emotions', 'name', emotions, emoMap, false);
-  const nBel = await translateColumn(db, user.id, 'beliefs', 'content', beliefs, belMap, true);
-  const nPat = await translateColumn(db, user.id, 'patterns', 'description', patterns, patMap, true);
+  const nBel = await updateById(db, 'beliefs', 'content', belRows, belT);
+  const nPat = await updateById(db, 'patterns', 'description', patRows, patT);
 
   // Crenças que ficaram idênticas após a tradução viram variação de uma canônica.
   await dedupeExactBeliefs(db, user.id);
