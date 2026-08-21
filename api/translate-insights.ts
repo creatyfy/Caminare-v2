@@ -64,25 +64,27 @@ const SCHEMA_MISMATCH = new Set(['42703', '22P02', '22023', '23514']);
 // de conteúdo; um update simples (sem version+1) falha em silêncio e a tradução
 // não grava — era ESTE o motivo de as crenças nunca traduzirem. Fallback sem
 // version pra tabelas que não têm a coluna (código 42703).
+// Retorna null em sucesso, ou a mensagem de erro do banco (pra diagnosticar).
 async function updateRowVersioned(
   db: Db,
   table: string,
   col: string,
   id: string,
   value: string
-): Promise<boolean> {
+): Promise<string | null> {
   const { data: cur } = await (db as any).from(table).select('version').eq('id', id).maybeSingle();
   const next = cur && typeof cur.version === 'number' ? cur.version + 1 : undefined;
   const attempts: Record<string, unknown>[] =
     next !== undefined ? [{ [col]: value, version: next }, { [col]: value }] : [{ [col]: value }];
+  let last = 'sem tentativa';
   for (const payload of attempts) {
     const { error } = await (db as any).from(table).update(payload).eq('id', id);
-    if (!error) return true;
+    if (!error) return null;
+    last = `${error.code}: ${error.message}`;
     if (SCHEMA_MISMATCH.has(String(error.code))) continue; // tenta payload mais simples
-    console.error(`[translate-insights] update ${table}:`, error);
-    return false;
+    return last;
   }
-  return false;
+  return last;
 }
 
 // Atualiza cada linha (crença/padrão) pelo ID, com a tradução alinhada por índice.
@@ -92,13 +94,17 @@ async function updateRows(
   col: string,
   rows: { id: string }[],
   translations: (string | null)[]
-): Promise<number> {
+): Promise<{ count: number; error: string | null }> {
   let count = 0;
+  let error: string | null = null;
   for (let i = 0; i < rows.length; i++) {
     const to = translations[i];
-    if (to && (await updateRowVersioned(db, table, col, rows[i].id, to))) count += 1;
+    if (!to) continue;
+    const err = await updateRowVersioned(db, table, col, rows[i].id, to);
+    if (err === null) count += 1;
+    else if (!error) error = err;
   }
-  return count;
+  return { count, error };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -153,8 +159,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!error) nEmo += 1;
   }
 
-  const nBel = await updateRows(db, 'beliefs', 'content', belRows, belT);
-  const nPat = await updateRows(db, 'patterns', 'description', patRows, patT);
+  const belUpd = await updateRows(db, 'beliefs', 'content', belRows, belT);
+  const patUpd = await updateRows(db, 'patterns', 'description', patRows, patT);
+  const nBel = belUpd.count;
+  const nPat = patUpd.count;
 
   // Crenças que ficaram idênticas após a tradução viram variação de uma canônica.
   await dedupeExactBeliefs(db, user.id);
@@ -162,6 +170,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   return sendJson(res, 200, {
     status: 'ok',
     translated: { emotions: nEmo, beliefs: nBel, patterns: nPat },
+    // DIAGNÓSTICO TEMPORÁRIO — remover depois de achar a causa das crenças.
+    debug: {
+      belFetched: belRows.length,
+      belTranslated: belT.filter(Boolean).length,
+      belSample: belT.find(Boolean) ?? null,
+      belError: belUpd.error,
+      patFetched: patRows.length,
+      patError: patUpd.error,
+    },
   });
 }
 
