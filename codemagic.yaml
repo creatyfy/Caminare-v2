@@ -202,7 +202,18 @@ workflows:
           '
       - name: Instalar pods
         script: |
-          cd ios/App && pod install
+          cd ios/App
+          # O plugin @capacitor-firebase/analytics tem subspec PADRAO "Lite", que NAO
+          # inclui o Firebase. Por isso o build quebrava em 'FirebaseCore'/'FirebaseAnalytics'
+          # nao resolvidos. O 'npx cap sync' gera "pod 'CapacitorFirebaseAnalytics'" (Lite),
+          # entao aqui trocamos para o subspec "AnalyticsWithoutAdIdSupport" — traz o
+          # FirebaseAnalytics SEM coleta de IDFA (alinhado com o ATT desligado; evita
+          # reprovacao da Apple por coletar IDFA sem pedir permissao de rastreamento).
+          sed -i '' "s|pod 'CapacitorFirebaseAnalytics'|pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport'|" Podfile
+          echo "=== linha do plugin no Podfile ==="
+          grep -n "CapacitorFirebaseAnalytics" Podfile || true
+          # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
+          pod install --repo-update
       - name: Configurar code signing
         script: |
           set -e
