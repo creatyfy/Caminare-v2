@@ -79,13 +79,19 @@ workflows:
           # Android 16 (API 36) e novo; a maquina do CI pode nao ter a plataforma
           # instalada. Baixamos a plataforma 36 e o build-tools 36 e aceitamos as
           # licencas pra o compileSdk 36 nao falhar por "SDK Platform 36 not found".
-          # O 'sdkmanager' nao esta no PATH do Codemagic, entao localizamos o binario.
+          # Usamos o sdkmanager do 'cmdline-tools' (novo). O legado 'tools/bin/sdkmanager'
+          # quebra no JDK 17 (NoClassDefFoundError javax/xml/bind — JAXB foi removido do
+          # Java 11+). Se nao houver cmdline-tools, deixamos o AGP baixar o SDK 36 sozinho.
           SDKROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
-          SDKMANAGER="$(find "$SDKROOT" -name sdkmanager -type f 2>/dev/null | head -1)"
+          SDKMANAGER="$(ls "$SDKROOT"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)"
           echo "ANDROID_SDK_ROOT=$SDKROOT"
           echo "sdkmanager=$SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
-          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+          if [ -x "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+            "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
+          else
+            echo "cmdline-tools nao encontrado; o AGP vai tentar baixar o SDK 36 no build."
+          fi
       - name: Build AAB (release)
         script: |
           cd android
