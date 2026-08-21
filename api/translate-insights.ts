@@ -33,14 +33,22 @@ const SYSTEM_TRANSLATE = `Você é um tradutor preciso para um app de autoconhec
 async function translateTexts(target: string, texts: string[]): Promise<(string | null)[]> {
   if (texts.length === 0) return [];
   try {
-    const { data } = await runStructured<string[]>(
+    const { data } = await runStructured<unknown>(
       SYSTEM_TRANSLATE,
       JSON.stringify({ target_language: target, items: texts }),
       4000
     );
-    const arr = Array.isArray(data) ? data : [];
+    // Aceita array ["t0","t1"] OU objeto {"0":"t0","1":"t1"}: o modelo às vezes
+    // devolve um formato, às vezes o outro. Assim funciona nos dois casos.
+    const at = (i: number): string => {
+      if (Array.isArray(data)) return (data[i] ?? '').toString();
+      if (data && typeof data === 'object') {
+        return (((data as Record<string, unknown>)[String(i)] ?? '') as string).toString();
+      }
+      return '';
+    };
     return texts.map((orig, i) => {
-      const to = (arr[i] ?? '').toString().trim();
+      const to = at(i).trim();
       return to && to !== orig ? to : null;
     });
   } catch (err) {
