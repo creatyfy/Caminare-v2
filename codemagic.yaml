@@ -74,6 +74,13 @@ workflows:
           keyAlias=$CM_KEY_ALIAS
           keyPassword=$CM_KEY_PASSWORD
           EOF
+      - name: Instalar Android SDK 36
+        script: |
+          # Android 16 (API 36) e novo; a maquina do CI pode nao ter a plataforma
+          # instalada. Baixamos a plataforma 36 e o build-tools 36 e aceitamos as
+          # licencas pra o compileSdk 36 nao falhar por "SDK Platform 36 not found".
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Build AAB (release)
         script: |
           cd android
