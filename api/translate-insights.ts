@@ -170,15 +170,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   return sendJson(res, 200, {
     status: 'ok',
     translated: { emotions: nEmo, beliefs: nBel, patterns: nPat },
-    // DIAGNÓSTICO TEMPORÁRIO — remover depois de achar a causa das crenças.
-    debug: {
-      belFetched: belRows.length,
-      belTranslated: belT.filter(Boolean).length,
-      belSample: belT.find(Boolean) ?? null,
-      belError: belUpd.error,
-      patFetched: patRows.length,
-      patError: patUpd.error,
-    },
   });
 }
 
