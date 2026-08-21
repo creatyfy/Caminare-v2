@@ -79,8 +79,13 @@ workflows:
           # Android 16 (API 36) e novo; a maquina do CI pode nao ter a plataforma
           # instalada. Baixamos a plataforma 36 e o build-tools 36 e aceitamos as
           # licencas pra o compileSdk 36 nao falhar por "SDK Platform 36 not found".
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          # O 'sdkmanager' nao esta no PATH do Codemagic, entao localizamos o binario.
+          SDKROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          SDKMANAGER="$(find "$SDKROOT" -name sdkmanager -type f 2>/dev/null | head -1)"
+          echo "ANDROID_SDK_ROOT=$SDKROOT"
+          echo "sdkmanager=$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0"
       - name: Build AAB (release)
         script: |
           cd android
