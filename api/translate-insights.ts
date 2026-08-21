@@ -1,13 +1,16 @@
 // =============================================================================
 // POST /api/translate-insights
 // -----------------------------------------------------------------------------
-// Traduz para o novo idioma nativo todo o conteúdo de insights já salvo do
-// usuário: nomes de emoções, textos de crenças e descrições de padrões. Isso
-// evita a contagem fragmentada quando registros foram feitos em línguas
-// diferentes (ex.: "ansiedade" e "anxiety" contadas separado). Após traduzir,
-// crenças que ficaram idênticas viram variação umas das outras (parent_belief_id).
+// Traduz para o novo idioma nativo o conteúdo de insights já salvo do usuário:
+// nomes de emoções, textos de crenças e descrições de padrões. Disparado quando
+// o usuário troca o idioma nativo no perfil.
 //
-// Disparado pelo app quando o usuário troca o idioma nativo no perfil.
+// Estratégia (simples e robusta):
+//  - A IA recebe uma lista de textos e devolve um ARRAY de traduções na MESMA
+//    ORDEM. Casamos por ÍNDICE (não por texto), então frases (crenças/padrões)
+//    não dependem do modelo repetir a frase original.
+//  - Emoções: muitas linhas repetem o mesmo nome, então atualizamos por valor.
+//  - Crenças e padrões: linhas agregadas (poucas), atualizadas 1 a 1 pelo ID.
 // =============================================================================
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -23,60 +26,59 @@ interface Body {
 
 type Db = ReturnType<typeof serviceClient>;
 
-// Traduz UMA categoria por vez e devolve um MAPA original->tradução. Usar mapa (em
-// vez de arrays paralelos) corrige o bug em que, se o modelo devolvia a lista de
-// crenças com tamanho diferente do enviado, TODAS as crenças eram descartadas.
-// Com mapa cada item é casado pelo próprio texto; se faltar um, só ele é pulado.
-// Casamento por ÍNDICE (não por texto): o modelo devolve {"0":"trad","1":"trad"}.
-// Isso corrige o caso das crenças/padrões (frases), em que o modelo não repetia a
-// frase original idêntica como chave, então o casamento por texto falhava e nada
-// era traduzido. Por índice, basta ele preservar a numeração.
-const SYSTEM_TRANSLATE = `Você é um tradutor preciso para um app de autoconhecimento. Recebe um idioma alvo (código BCP-47) e uma lista de itens numerados no formato [{"i":0,"text":"..."}]. Traduza o campo "text" de cada item para o idioma alvo, preservando sentido e tom. Emoções: UMA palavra em minúsculas. Crenças e padrões: frases curtas. Se já estiver no idioma alvo, repita igual. Responda SOMENTE com um objeto JSON que mapeia o índice (i, como string) para a tradução, ex.: {"0":"...","1":"..."}. Inclua TODOS os índices recebidos.`;
+const SYSTEM_TRANSLATE = `Você é um tradutor preciso para um app de autoconhecimento. Recebe um idioma alvo (código BCP-47) e uma lista de textos em "items". Traduza CADA texto para o idioma alvo, preservando sentido e tom. Emoções: UMA palavra em minúsculas. Crenças e padrões: frases curtas. Se um texto já estiver no idioma alvo, repita-o igual. Responda SOMENTE com um array JSON de traduções, na MESMA ORDEM e MESMO TAMANHO da lista recebida. Exemplo: ["tradução 1","tradução 2","tradução 3"].`;
 
-async function translateList(target: string, items: string[]): Promise<Map<string, string>> {
-  const map = new Map<string, string>();
-  if (items.length === 0) return map;
-  try {
-    const numbered = items.map((text, i) => ({ i, text }));
-    const { data } = await runStructured<Record<string, string>>(
-      SYSTEM_TRANSLATE,
-      JSON.stringify({ target_language: target, items: numbered }),
-      4000
-    );
-    items.forEach((orig, i) => {
-      const to = (data?.[String(i)] ?? '').trim();
-      if (to && to !== orig) map.set(orig, to);
-    });
-  } catch (err) {
-    console.error('[translate-insights] falha ao traduzir lista:', err);
-  }
-  return map;
-}
-
-// Traduz uma lista de textos e devolve um ARRAY alinhado por índice (null onde não
-// traduziu). Usado por crenças/padrões, que são atualizadas linha a linha pelo ID.
+// Traduz uma lista e devolve um array alinhado por índice (null onde não traduziu
+// ou onde a tradução ficou igual ao original).
 async function translateTexts(target: string, texts: string[]): Promise<(string | null)[]> {
   if (texts.length === 0) return [];
   try {
-    const numbered = texts.map((text, i) => ({ i, text }));
-    const { data } = await runStructured<Record<string, string>>(
+    const { data } = await runStructured<string[]>(
       SYSTEM_TRANSLATE,
-      JSON.stringify({ target_language: target, items: numbered }),
+      JSON.stringify({ target_language: target, items: texts }),
       4000
     );
+    const arr = Array.isArray(data) ? data : [];
     return texts.map((orig, i) => {
-      const to = (data?.[String(i)] ?? '').trim();
+      const to = (arr[i] ?? '').toString().trim();
       return to && to !== orig ? to : null;
     });
   } catch (err) {
-    console.error('[translate-insights] falha ao traduzir textos:', err);
+    console.error('[translate-insights] falha ao traduzir:', err);
     return texts.map(() => null);
   }
 }
 
-// Atualiza cada linha pelo seu ID com a tradução correspondente (alinhada por índice).
-// Sem casar texto — impossível "não achar" a linha. Retorna quantas foram atualizadas.
-async function updateById(
+const SCHEMA_MISMATCH = new Set(['42703', '22P02', '22023', '23514']);
+
+// Atualiza uma linha pelo ID BUMPANDO a versão. As crenças têm um trigger
+// BEFORE UPDATE (snapshot_belief_version) que exige a versão nova a cada alteração
+// de conteúdo; um update simples (sem version+1) falha em silêncio e a tradução
+// não grava — era ESTE o motivo de as crenças nunca traduzirem. Fallback sem
+// version pra tabelas que não têm a coluna (código 42703).
+async function updateRowVersioned(
+  db: Db,
+  table: string,
+  col: string,
+  id: string,
+  value: string
+): Promise<boolean> {
+  const { data: cur } = await (db as any).from(table).select('version').eq('id', id).maybeSingle();
+  const next = cur && typeof cur.version === 'number' ? cur.version + 1 : undefined;
+  const attempts: Record<string, unknown>[] =
+    next !== undefined ? [{ [col]: value, version: next }, { [col]: value }] : [{ [col]: value }];
+  for (const payload of attempts) {
+    const { error } = await (db as any).from(table).update(payload).eq('id', id);
+    if (!error) return true;
+    if (SCHEMA_MISMATCH.has(String(error.code))) continue; // tenta payload mais simples
+    console.error(`[translate-insights] update ${table}:`, error);
+    return false;
+  }
+  return false;
+}
+
+// Atualiza cada linha (crença/padrão) pelo ID, com a tradução alinhada por índice.
+async function updateRows(
   db: Db,
   table: string,
   col: string,
@@ -86,9 +88,7 @@ async function updateById(
   let count = 0;
   for (let i = 0; i < rows.length; i++) {
     const to = translations[i];
-    if (!to) continue;
-    const { error } = await (db as any).from(table).update({ [col]: to }).eq('id', rows[i].id);
-    if (!error) count += 1;
+    if (to && (await updateRowVersioned(db, table, col, rows[i].id, to))) count += 1;
   }
   return count;
 }
@@ -116,9 +116,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const uniq = (arr: (string | null | undefined)[]) =>
     Array.from(new Set(arr.map((s) => (s ?? '').trim()).filter(Boolean)));
 
-  // Emoções: muitas linhas com nomes repetidos, então uniq + atualiza por valor.
+  // Emoções: uniq (nomes repetem em muitas linhas), atualizadas por valor.
   const emotions = uniq(((emoRes.data ?? []) as any[]).map((r) => r.name));
-  // Crenças e padrões: linhas agregadas (poucas), atualizadas 1 a 1 pelo ID.
+  // Crenças e padrões: linhas agregadas, atualizadas 1 a 1 pelo ID.
   const belRows = ((belRes.data ?? []) as any[]).filter((r) => (r.content ?? '').trim());
   const patRows = ((patRes.data ?? []) as any[]).filter((r) => (r.description ?? '').trim());
 
@@ -126,15 +126,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return sendJson(res, 200, { status: 'ok', translated: { emotions: 0, beliefs: 0, patterns: 0 } });
   }
 
-  const [emoMap, belT, patT] = await Promise.all([
-    translateList(target, emotions),
+  const [emoT, belT, patT] = await Promise.all([
+    translateTexts(target, emotions),
     translateTexts(target, belRows.map((r) => r.content as string)),
     translateTexts(target, patRows.map((r) => r.description as string)),
   ]);
 
-  const nEmo = await translateColumn(db, user.id, 'emotions', 'name', emotions, emoMap, false);
-  const nBel = await updateById(db, 'beliefs', 'content', belRows, belT);
-  const nPat = await updateById(db, 'patterns', 'description', patRows, patT);
+  // Emoções por valor (uma linha por ocorrência; muitas repetem o mesmo nome).
+  let nEmo = 0;
+  for (let i = 0; i < emotions.length; i++) {
+    const to = emoT[i];
+    if (!to) continue;
+    const { error } = await db
+      .from('emotions')
+      .update({ name: to })
+      .eq('user_id', user.id)
+      .eq('name', emotions[i]);
+    if (!error) nEmo += 1;
+  }
+
+  const nBel = await updateRows(db, 'beliefs', 'content', belRows, belT);
+  const nPat = await updateRows(db, 'patterns', 'description', patRows, patT);
 
   // Crenças que ficaram idênticas após a tradução viram variação de uma canônica.
   await dedupeExactBeliefs(db, user.id);
@@ -145,30 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 }
 
-/** Aplica old->new em uma coluna de texto, casando por valor. Retorna quantos grupos mudaram. */
-async function translateColumn(
-  db: Db,
-  userId: string,
-  table: string,
-  col: string,
-  items: string[],
-  map: Map<string, string>,
-  softDelete: boolean
-): Promise<number> {
-  let count = 0;
-  for (const from of items) {
-    const to = (map.get(from) ?? '').trim();
-    if (!to || to === from) continue;
-    // db dinâmico por nome de tabela: cast local para não brigar com os tipos gerados.
-    let query = (db as any).from(table).update({ [col]: to }).eq('user_id', userId).eq(col, from);
-    if (softDelete) query = query.is('deleted_at', null);
-    const { error } = await query;
-    if (!error) count += 1;
-  }
-  return count;
-}
-
-/** Une crenças com conteúdo idêntico numa canônica (parent_belief_id + soma ocorrências). */
+// Une crenças com conteúdo idêntico numa canônica (parent_belief_id + soma ocorrências).
 async function dedupeExactBeliefs(db: Db, userId: string): Promise<void> {
   const { data } = await db
     .from('beliefs')
