@@ -25,7 +25,7 @@ android {
         // local sem a variavel, cai em 1.
         def ciBuildNumber = System.getenv("BUILD_NUMBER")?.trim()
         versionCode ciBuildNumber ? ciBuildNumber.toInteger() : 1
-        versionName "3.1.1"
+        versionName "3.1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
