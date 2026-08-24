@@ -16,6 +16,7 @@
 // =============================================================================
 
 import { isNative } from './native';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 // ID de medição do GA4 (fluxo Web).
 const GA_MEASUREMENT_ID = 'G-NGNBB1JBDL';
@@ -59,21 +60,15 @@ function gtag(): ((...args: unknown[]) => void) | null {
 }
 
 // --- Firebase Analytics (nativo) -------------------------------------------
-// Carregado por import dinâmico só no nativo, pra não entrar no bundle web.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let fbAnalyticsPromise: Promise<any> | null = null;
+// Import ESTÁTICO do plugin. Antes era import() dinâmico "só no nativo", mas no
+// build nativo esse chunk dinâmico não estava sendo carregado, então os eventos
+// personalizados (logEvent / setCurrentScreen) nunca chegavam ao Firebase — só
+// os automáticos (first_open, session_start, screen_view) apareciam. O import
+// direto garante o plugin no bundle. No web nunca é chamado (guardado por
+// isNative), e a implementação web do plugin é inócua.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getFirebaseAnalytics(): Promise<any> {
-  if (!isNative) return null;
-  if (!fbAnalyticsPromise) {
-    // Import dinâmico (chunk separado) pra o plugin entrar no bundle sem pesar o
-    // carregamento inicial. No web esta função retorna antes (guarda isNative),
-    // então o chunk nunca é baixado no navegador.
-    fbAnalyticsPromise = import('@capacitor-firebase/analytics')
-      .then((m) => m.FirebaseAnalytics)
-      .catch(() => null);
-  }
-  return fbAnalyticsPromise;
+  return isNative ? FirebaseAnalytics : null;
 }
 
 /** Firebase só aceita string/number nos params: remove null/undefined e

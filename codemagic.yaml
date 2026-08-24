@@ -218,6 +218,21 @@ workflows:
             end
             project.save
           '
+      - name: Inicializar Firebase no iOS (AppDelegate)
+        script: |
+          set -e
+          APPDELEGATE="ios/App/App/AppDelegate.swift"
+          # O plugin @capacitor-firebase/analytics NAO chama FirebaseApp.configure().
+          # No iOS o Firebase nao se auto-inicializa so com o GoogleService-Info.plist
+          # (diferente do Android), entao sem esse configure() os eventos nunca sobem e
+          # o Realtime fica zerado. Adicionamos o import + o configure() no AppDelegate.
+          # Idempotente (grep antes de inserir).
+          grep -q "import FirebaseCore" "$APPDELEGATE" \
+            || sed -i '' 's/import Capacitor/import Capacitor\nimport FirebaseCore/' "$APPDELEGATE"
+          grep -q "FirebaseApp.configure()" "$APPDELEGATE" \
+            || sed -i '' 's/didFinishLaunchingWithOptions\(.*\)-> Bool {/didFinishLaunchingWithOptions\1-> Bool {\n        FirebaseApp.configure()/' "$APPDELEGATE"
+          echo "=== AppDelegate.swift ==="
+          cat "$APPDELEGATE"
       - name: Instalar pods
         script: |
           cd ios/App
