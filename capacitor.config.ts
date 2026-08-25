@@ -30,8 +30,11 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     Keyboard: {
-      // Empurra o conteúdo ao abrir o teclado (melhor pra ditado no registro de texto).
-      resize: 'native',
+      // 'none': o teclado NÃO redimensiona o webview — a tela fica PARADA e o teclado
+      // desliza por cima. Antes era 'native', que encolhia o viewport e fazia as telas
+      // (login/cadastro, centralizadas) "pularem" ao focar um campo. Com 'none' o iOS
+      // rola o campo focado pra área visível, então os inputs continuam acessíveis.
+      resize: 'none',
     },
   },
 };
