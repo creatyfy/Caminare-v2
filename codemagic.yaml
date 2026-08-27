@@ -213,8 +213,16 @@ workflows:
               ldflags = [ldflags] unless ldflags.is_a?(Array)
               ldflags << "$(inherited)" unless ldflags.include?("$(inherited)")
               ldflags << "-ObjC" unless ldflags.include?("-ObjC")
+              # -force_load: carrega o binario INTEIRO do framework do plugin, forcando a
+              # classe FirebaseAnalyticsPlugin a existir em runtime (o -ObjC nao carrega
+              # de framework estatico). Sem isso o Capacitor nao acha o plugin no iOS.
+              fbaFw = "${PODS_CONFIGURATION_BUILD_DIR}/CapacitorFirebaseAnalytics/CapacitorFirebaseAnalytics.framework/CapacitorFirebaseAnalytics"
+              unless ldflags.include?(fbaFw)
+                ldflags << "-force_load"
+                ldflags << fbaFw
+              end
               c.build_settings["OTHER_LDFLAGS"] = ldflags
-              puts "CODE_SIGN_ENTITLEMENTS + OTHER_LDFLAGS(-ObjC) (#{c.name})"
+              puts "CODE_SIGN_ENTITLEMENTS + OTHER_LDFLAGS(-ObjC + force_load) (#{c.name})"
             end
             # Registra o GoogleService-Info.plist como recurso do target App (o Firebase
             # precisa do arquivo no bundle do app). Idempotente.
