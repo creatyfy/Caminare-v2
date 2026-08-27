@@ -213,16 +213,8 @@ workflows:
               ldflags = [ldflags] unless ldflags.is_a?(Array)
               ldflags << "$(inherited)" unless ldflags.include?("$(inherited)")
               ldflags << "-ObjC" unless ldflags.include?("-ObjC")
-              # -force_load: carrega o binario INTEIRO do framework do plugin, forcando a
-              # classe FirebaseAnalyticsPlugin a existir em runtime (o -ObjC nao carrega
-              # de framework estatico). Sem isso o Capacitor nao acha o plugin no iOS.
-              fbaFw = "${PODS_CONFIGURATION_BUILD_DIR}/CapacitorFirebaseAnalytics/CapacitorFirebaseAnalytics.framework/CapacitorFirebaseAnalytics"
-              unless ldflags.include?(fbaFw)
-                ldflags << "-force_load"
-                ldflags << fbaFw
-              end
               c.build_settings["OTHER_LDFLAGS"] = ldflags
-              puts "CODE_SIGN_ENTITLEMENTS + OTHER_LDFLAGS(-ObjC + force_load) (#{c.name})"
+              puts "CODE_SIGN_ENTITLEMENTS + OTHER_LDFLAGS(-ObjC) (#{c.name})"
             end
             # Registra o GoogleService-Info.plist como recurso do target App (o Firebase
             # precisa do arquivo no bundle do app). Idempotente.
@@ -262,6 +254,14 @@ workflows:
       - name: Instalar pods
         script: |
           cd ios/App
+          # use_frameworks! :linkage => :static: padroniza TODOS os pods como frameworks
+          # estaticos. O plugin do Firebase e static_framework e os outros plugins do
+          # Capacitor sao frameworks normais; essa MISTURA fazia o CocoaPods NAO linkar o
+          # plugin do Firebase ao app (ele nao aparecia no -framework do linker, por isso
+          # a classe nao existia em runtime). Padronizando tudo, o plugin linka e registra.
+          grep -q "use_frameworks!" Podfile || sed -i '' 's/^platform :ios.*/&\nuse_frameworks! :linkage => :static/' Podfile
+          echo "=== use_frameworks aplicado? ==="
+          grep -n "use_frameworks" Podfile || echo "!!! use_frameworks NAO aplicado"
           # DOC OFICIAL do @capacitor-firebase/analytics: o pod do plugin precisa ficar
           # DENTRO do bloco 'target App', NAO em 'def capacitor_pods'. Quando o cap sync
           # o poe em capacitor_pods, o modulo do plugin nao fica importavel/registrado no
