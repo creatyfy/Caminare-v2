@@ -131,14 +131,22 @@ export async function track(name: EventName, params: EventParams = {}): Promise<
     }
     if (isNative) {
       const FA = await getFirebaseAnalytics();
-      if (FA) await FA.logEvent({ name, params: sanitizeParams(params) });
+      if (!FA) {
+        // DIAGNÓSTICO TEMPORÁRIO — remover depois de confirmar o tagueamento.
+        try { window.alert('[diag] ' + name + ': SEM PLUGIN'); } catch { /* noop */ }
+        return;
+      }
+      await FA.logEvent({ name, params: sanitizeParams(params) });
+      // DIAGNÓSTICO TEMPORÁRIO — remover depois de confirmar o tagueamento.
+      try { window.alert('[diag] ' + name + ': enviado OK'); } catch { /* noop */ }
       return;
     }
     const g = gtag();
     if (g) g('event', name, params);
     // TODO(marketing): espelhar as conversões de marketing no Meta.
-  } catch {
-    // Analytics nunca deve quebrar o fluxo do usuário.
+  } catch (err) {
+    // DIAGNÓSTICO TEMPORÁRIO — remover depois de confirmar o tagueamento.
+    try { window.alert('[diag] ' + name + ': ERRO ' + String(err)); } catch { /* noop */ }
   }
 }
 
