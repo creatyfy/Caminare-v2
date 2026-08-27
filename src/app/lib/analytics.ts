@@ -88,8 +88,14 @@ function gtag(): ((...args: unknown[]) => void) | null {
 // os automáticos (first_open, session_start, screen_view) apareciam. O import
 // direto garante o plugin no bundle. No web nunca é chamado (guardado por
 // isNative), e a implementação web do plugin é inócua.
+// IMPORTANTE: função SÍNCRONA, SEM Promise. O objeto FirebaseAnalytics é um Proxy do
+// Capacitor: acessar qualquer propriedade nele (inclusive `.then`) devolve uma função.
+// Se ele for embrulhado numa Promise (async/await/.then), o JS o trata como "thenable"
+// e chama `.then(...)` no plugin nativo, que TRAVA pra sempre. Era ESTE o motivo de
+// nenhum evento personalizado disparar: `await getFirebaseAnalytics()` nunca resolvia.
+// Retornamos o proxy direto e os callers NÃO usam await nele (só nos métodos dele).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getFirebaseAnalytics(): Promise<any> {
+function getFirebaseAnalytics(): any {
   return isNative ? FirebaseAnalytics : null;
 }
 
@@ -119,16 +125,13 @@ export function initAnalytics(): void {
     // Nativo: o SDK do Firebase se auto-inicializa (google-services.json no
     // Android / GoogleService-Info.plist no iOS). Só garantimos a coleta ligada.
     diag('init: isNative=' + isNative + ' plataforma=' + platform);
-    getFirebaseAnalytics()
-      .then((FA) => {
-        diag('plugin Firebase=' + (FA ? 'OK (carregado)' : 'NULL (nao carregou)'));
-        if (FA) {
-          FA.setEnabled({ enabled: true })
-            .then(() => diag('setEnabled OK'))
-            .catch((e: unknown) => diag('setEnabled ERRO ' + String(e)));
-        }
-      })
-      .catch((e: unknown) => diag('getFirebaseAnalytics ERRO ' + String(e)));
+    const FA = getFirebaseAnalytics();
+    diag('plugin Firebase=' + (FA ? 'OK (carregado)' : 'NULL (nao carregou)'));
+    if (FA) {
+      FA.setEnabled({ enabled: true })
+        .then(() => diag('setEnabled OK'))
+        .catch((e: unknown) => diag('setEnabled ERRO ' + String(e)));
+    }
     return;
   }
   if (typeof document === 'undefined') return;
@@ -160,7 +163,7 @@ export async function track(name: EventName, params: EventParams = {}): Promise<
       console.debug('[analytics]', name, params);
     }
     if (isNative) {
-      const FA = await getFirebaseAnalytics();
+      const FA = getFirebaseAnalytics();
       if (!FA) {
         diag('track ' + name + ': SEM PLUGIN');
         return;
@@ -188,7 +191,7 @@ export async function setScreen(screenName: string): Promise<void> {
       console.debug('[analytics] page_view', screenName);
     }
     if (isNative) {
-      const FA = await getFirebaseAnalytics();
+      const FA = getFirebaseAnalytics();
       if (FA) await FA.setCurrentScreen({ screenName });
       return;
     }
