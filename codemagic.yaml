@@ -254,14 +254,19 @@ workflows:
       - name: Instalar pods
         script: |
           cd ios/App
-          # use_frameworks! :linkage => :static: padroniza TODOS os pods como frameworks
-          # estaticos. O plugin do Firebase e static_framework e os outros plugins do
-          # Capacitor sao frameworks normais; essa MISTURA fazia o CocoaPods NAO linkar o
-          # plugin do Firebase ao app (ele nao aparecia no -framework do linker, por isso
-          # a classe nao existia em runtime). Padronizando tudo, o plugin linka e registra.
-          grep -q "use_frameworks!" Podfile || sed -i '' 's/^platform :ios.*/&\nuse_frameworks! :linkage => :static/' Podfile
-          echo "=== use_frameworks aplicado? ==="
-          grep -n "use_frameworks" Podfile || echo "!!! use_frameworks NAO aplicado"
+          # O Podfile do Capacitor 6 JA VEM com 'use_frameworks!' (dinamico) por padrao.
+          # Isso deixa os plugins do Capacitor dinamicos, mas o plugin do Firebase e
+          # static_framework -> MISTURA de linkagem, e o CocoaPods nao linka o plugin do
+          # Firebase ao app (nao aparece no -framework do linker; classe some em runtime).
+          # A correcao e forcar :linkage => :static (tudo estatico e consistente). Como a
+          # linha ja existe, SUBSTITUIMOS (nao adianta so "adicionar se nao existir").
+          if grep -q "^use_frameworks!" Podfile; then
+            sed -i '' 's/^use_frameworks!.*/use_frameworks! :linkage => :static/' Podfile
+          else
+            sed -i '' 's/^platform :ios.*/&\nuse_frameworks! :linkage => :static/' Podfile
+          fi
+          echo "=== use_frameworks (deve ter :linkage => :static) ==="
+          grep -n "use_frameworks" Podfile || echo "!!! use_frameworks NAO encontrado"
           # DOC OFICIAL do @capacitor-firebase/analytics: o pod do plugin precisa ficar
           # DENTRO do bloco 'target App', NAO em 'def capacitor_pods'. Quando o cap sync
           # o poe em capacitor_pods, o modulo do plugin nao fica importavel/registrado no
