@@ -205,7 +205,16 @@ workflows:
             target = project.targets.find { |t| t.name == "App" } or abort("target App nao encontrado")
             target.build_configurations.each do |c|
               c.build_settings["CODE_SIGN_ENTITLEMENTS"] = "App/App.entitlements"
-              puts "CODE_SIGN_ENTITLEMENTS -> App/App.entitlements (#{c.name})"
+              # -ObjC: forca o linker a carregar as classes @objc dos frameworks
+              # ESTATICOS (FirebaseAnalytics usa static_framework=true). Sem isso o
+              # Swift @objc do FirebaseAnalyticsPlugin e descartado pelo linker e o
+              # Capacitor nao acha o plugin em runtime ("not implemented on ios").
+              ldflags = c.build_settings["OTHER_LDFLAGS"] || "$(inherited)"
+              ldflags = [ldflags] unless ldflags.is_a?(Array)
+              ldflags << "$(inherited)" unless ldflags.include?("$(inherited)")
+              ldflags << "-ObjC" unless ldflags.include?("-ObjC")
+              c.build_settings["OTHER_LDFLAGS"] = ldflags
+              puts "CODE_SIGN_ENTITLEMENTS + OTHER_LDFLAGS(-ObjC) (#{c.name})"
             end
             # Registra o GoogleService-Info.plist como recurso do target App (o Firebase
             # precisa do arquivo no bundle do app). Idempotente.
@@ -247,6 +256,8 @@ workflows:
           grep -n "CapacitorFirebaseAnalytics" Podfile || true
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
+          echo "=== Podfile.lock: plugin + Firebase instalados? ==="
+          grep -i "CapacitorFirebaseAnalytics\|FirebaseAnalytics\|FirebaseCore" Podfile.lock || echo "!!! NAO ACHOU plugin/Firebase no Podfile.lock"
       - name: Configurar code signing
         script: |
           set -e
