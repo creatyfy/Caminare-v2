@@ -15,11 +15,33 @@
 // Firebase entrar no build nativo.
 // =============================================================================
 
-import { isNative } from './native';
+import { isNative, platform } from './native';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 // ID de medição do GA4 (fluxo Web).
 const GA_MEASUREMENT_ID = 'G-NGNBB1JBDL';
+
+// DIAGNÓSTICO TEMPORÁRIO — faixa visível no rodapé mostrando o estado do analytics
+// no nativo (plugin carregado? eventos enviados?). Não depende de window.alert (que
+// a WebView pode suprimir). REMOVER depois de confirmar o tagueamento.
+function diag(msg: string): void {
+  try {
+    if (typeof document === 'undefined') return;
+    let el = document.getElementById('__diag');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = '__diag';
+      el.style.cssText =
+        'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:rgba(0,0,0,0.88);' +
+        'color:#0f0;font:11px/1.4 monospace;padding:6px 8px;max-height:45%;overflow:auto;white-space:pre-wrap;';
+      document.body.appendChild(el);
+    }
+    const now = new Date().toLocaleTimeString();
+    el.textContent = now + '  ' + msg + '\n' + (el.textContent ?? '');
+  } catch {
+    /* noop */
+  }
+}
 
 export type EventName =
   // Conversões de marketing (FB + Ads + Meta)
@@ -96,9 +118,17 @@ export function initAnalytics(): void {
   if (isNative) {
     // Nativo: o SDK do Firebase se auto-inicializa (google-services.json no
     // Android / GoogleService-Info.plist no iOS). Só garantimos a coleta ligada.
-    getFirebaseAnalytics().then((FA) => {
-      if (FA) FA.setEnabled({ enabled: true }).catch(() => {});
-    });
+    diag('init: isNative=' + isNative + ' plataforma=' + platform);
+    getFirebaseAnalytics()
+      .then((FA) => {
+        diag('plugin Firebase=' + (FA ? 'OK (carregado)' : 'NULL (nao carregou)'));
+        if (FA) {
+          FA.setEnabled({ enabled: true })
+            .then(() => diag('setEnabled OK'))
+            .catch((e: unknown) => diag('setEnabled ERRO ' + String(e)));
+        }
+      })
+      .catch((e: unknown) => diag('getFirebaseAnalytics ERRO ' + String(e)));
     return;
   }
   if (typeof document === 'undefined') return;
@@ -132,21 +162,18 @@ export async function track(name: EventName, params: EventParams = {}): Promise<
     if (isNative) {
       const FA = await getFirebaseAnalytics();
       if (!FA) {
-        // DIAGNÓSTICO TEMPORÁRIO — remover depois de confirmar o tagueamento.
-        try { window.alert('[diag] ' + name + ': SEM PLUGIN'); } catch { /* noop */ }
+        diag('track ' + name + ': SEM PLUGIN');
         return;
       }
       await FA.logEvent({ name, params: sanitizeParams(params) });
-      // DIAGNÓSTICO TEMPORÁRIO — remover depois de confirmar o tagueamento.
-      try { window.alert('[diag] ' + name + ': enviado OK'); } catch { /* noop */ }
+      diag('track ' + name + ': enviado OK');
       return;
     }
     const g = gtag();
     if (g) g('event', name, params);
     // TODO(marketing): espelhar as conversões de marketing no Meta.
   } catch (err) {
-    // DIAGNÓSTICO TEMPORÁRIO — remover depois de confirmar o tagueamento.
-    try { window.alert('[diag] ' + name + ': ERRO ' + String(err)); } catch { /* noop */ }
+    diag('track ' + name + ': ERRO ' + String(err));
   }
 }
 
