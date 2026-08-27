@@ -273,10 +273,13 @@ workflows:
           # iOS (canImport=false -> "not implemented on ios"). Entao removemos a linha que
           # o cap sync gerou e adicionamos o plugin (subspec sem IDFA, alinhado com o ATT
           # desligado) DENTRO do target 'App', logo apos a chamada de capacitor_pods.
-          sed -i '' "/pod 'CapacitorFirebaseAnalytics/d" Podfile
-          sed -i '' "s|^\( *\)capacitor_pods$|\1capacitor_pods\n\1pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path => '../../node_modules/@capacitor-firebase/analytics'|" Podfile
-          echo "=== Podfile (target + plugin) ==="
-          grep -n "target 'App'\|capacitor_pods\|CapacitorFirebaseAnalytics" Podfile || true
+          # Mantemos o plugin em capacitor_pods (IGUAL aos outros plugins do Capacitor,
+          # que registram normalmente), so trocando a linha gerada pelo cap sync pelo
+          # subspec sem IDFA. A doc sugere o bloco 'target', mas ali o plugin NAO registrou;
+          # os que funcionam estao todos em capacitor_pods, entao igualamos o setup.
+          sed -i '' "s|pod 'CapacitorFirebaseAnalytics', :path|pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path|" Podfile
+          echo "=== Podfile (plugin) ==="
+          grep -n "CapacitorFirebaseAnalytics\|capacitor_pods" Podfile || true
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
           echo "=== Podfile.lock: plugin + Firebase instalados? ==="
