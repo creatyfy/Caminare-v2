@@ -254,42 +254,15 @@ workflows:
       - name: Instalar pods
         script: |
           cd ios/App
-          # O Podfile do Capacitor 6 JA VEM com 'use_frameworks!' (dinamico) por padrao.
-          # Isso deixa os plugins do Capacitor dinamicos, mas o plugin do Firebase e
-          # static_framework -> MISTURA de linkagem, e o CocoaPods nao linka o plugin do
-          # Firebase ao app (nao aparece no -framework do linker; classe some em runtime).
-          # A correcao e forcar :linkage => :static (tudo estatico e consistente). Como a
-          # linha ja existe, SUBSTITUIMOS (nao adianta so "adicionar se nao existir").
-          if grep -q "^use_frameworks!" Podfile; then
-            sed -i '' 's/^use_frameworks!.*/use_frameworks! :linkage => :static/' Podfile
-          else
-            sed -i '' 's/^platform :ios.*/&\nuse_frameworks! :linkage => :static/' Podfile
-          fi
-          echo "=== use_frameworks (deve ter :linkage => :static) ==="
-          grep -n "use_frameworks" Podfile || echo "!!! use_frameworks NAO encontrado"
-          # DOC OFICIAL do @capacitor-firebase/analytics: o pod do plugin precisa ficar
-          # DENTRO do bloco 'target App', NAO em 'def capacitor_pods'. Quando o cap sync
-          # o poe em capacitor_pods, o modulo do plugin nao fica importavel/registrado no
-          # iOS (canImport=false -> "not implemented on ios"). Entao removemos a linha que
-          # o cap sync gerou e adicionamos o plugin (subspec sem IDFA, alinhado com o ATT
-          # desligado) DENTRO do target 'App', logo apos a chamada de capacitor_pods.
-          # Mantemos o plugin em capacitor_pods (IGUAL aos outros plugins do Capacitor,
-          # que registram normalmente), so trocando a linha gerada pelo cap sync pelo
-          # subspec sem IDFA. A doc sugere o bloco 'target', mas ali o plugin NAO registrou;
-          # os que funcionam estao todos em capacitor_pods, entao igualamos o setup.
-          sed -i '' "s|pod 'CapacitorFirebaseAnalytics', :path|pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path|" Podfile
-          echo "=== Podfile (plugin) ==="
-          grep -n "CapacitorFirebaseAnalytics\|capacitor_pods" Podfile || true
-          # PROVA (otool -oV): a classe do plugin fica AUSENTE do app e nenhum framework
-          # do plugin e gerado, enquanto os outros plugins do Capacitor (nao static_framework)
-          # geram framework e registram. A diferenca e a linha 's.static_framework = true' no
-          # podspec do plugin: com use_frameworks :linkage => :static ela e redundante e
-          # impede o framework do plugin de ser construido/linkado. Removemos ela pra o plugin
-          # ser tratado IGUAL aos outros (que funcionam).
-          PODSPEC="../../node_modules/@capacitor-firebase/analytics/CapacitorFirebaseAnalytics.podspec"
-          sed -i '' 's/s.static_framework = true/s.static_framework = false/' "$PODSPEC"
-          echo "=== podspec static_framework (deve estar false) ==="
-          grep -n "static_framework" "$PODSPEC" || echo "(sem static_framework)"
+          # SETUP LIMPO conforme a DOC OFICIAL: Podfile PADRAO do Capacitor (use_frameworks!
+          # dinamico, NAO mexemos) + plugin no bloco 'target App' com o subspec sem IDFA.
+          # NAO mexemos em use_frameworks nem em static_framework, pra o diagnostico refletir
+          # o config conhecido-bom da doc (eu vinha empilhando mudancas e mascarando o
+          # resultado). Removemos a linha que o cap sync gera e adicionamos no target.
+          sed -i '' "/pod 'CapacitorFirebaseAnalytics/d" Podfile
+          sed -i '' "s|^\( *\)capacitor_pods$|\1capacitor_pods\n\1pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path => '../../node_modules/@capacitor-firebase/analytics'|" Podfile
+          echo "=== Podfile (use_frameworks + plugin) ==="
+          grep -n "use_frameworks\|target 'App'\|capacitor_pods\|CapacitorFirebaseAnalytics" Podfile || true
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
           echo "=== Podfile.lock: plugin + Firebase instalados? ==="
