@@ -254,20 +254,16 @@ workflows:
       - name: Instalar pods
         script: |
           cd ios/App
-          # Firebase (e o plugin dele) exigem pods como FRAMEWORKS pra os modulos Swift
-          # ficarem importaveis/registrados. Sem isso o modulo do plugin nao e visivel
-          # ao app (canImport=false) e o Capacitor nao acha o plugin ("not implemented
-          # on ios"). :linkage => :static mantem o link estatico (sem frameworks dinamicos).
-          grep -q "use_frameworks!" Podfile || sed -i '' 's/^platform :ios.*/&\nuse_frameworks! :linkage => :static/' Podfile
-          # O plugin @capacitor-firebase/analytics tem subspec PADRAO "Lite", que NAO
-          # inclui o Firebase. Por isso o build quebrava em 'FirebaseCore'/'FirebaseAnalytics'
-          # nao resolvidos. O 'npx cap sync' gera "pod 'CapacitorFirebaseAnalytics'" (Lite),
-          # entao aqui trocamos para o subspec "AnalyticsWithoutAdIdSupport" — traz o
-          # FirebaseAnalytics SEM coleta de IDFA (alinhado com o ATT desligado; evita
-          # reprovacao da Apple por coletar IDFA sem pedir permissao de rastreamento).
-          sed -i '' "s|pod 'CapacitorFirebaseAnalytics'|pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport'|" Podfile
-          echo "=== linha do plugin no Podfile ==="
-          grep -n "CapacitorFirebaseAnalytics" Podfile || true
+          # DOC OFICIAL do @capacitor-firebase/analytics: o pod do plugin precisa ficar
+          # DENTRO do bloco 'target App', NAO em 'def capacitor_pods'. Quando o cap sync
+          # o poe em capacitor_pods, o modulo do plugin nao fica importavel/registrado no
+          # iOS (canImport=false -> "not implemented on ios"). Entao removemos a linha que
+          # o cap sync gerou e adicionamos o plugin (subspec sem IDFA, alinhado com o ATT
+          # desligado) DENTRO do target 'App', logo apos a chamada de capacitor_pods.
+          sed -i '' "/pod 'CapacitorFirebaseAnalytics/d" Podfile
+          sed -i '' "s|^\( *\)capacitor_pods$|\1capacitor_pods\n\1pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path => '../../node_modules/@capacitor-firebase/analytics'|" Podfile
+          echo "=== Podfile (target + plugin) ==="
+          grep -n "target 'App'\|capacitor_pods\|CapacitorFirebaseAnalytics" Podfile || true
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
           echo "=== Podfile.lock: plugin + Firebase instalados? ==="
