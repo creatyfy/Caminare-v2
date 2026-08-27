@@ -254,15 +254,18 @@ workflows:
       - name: Instalar pods
         script: |
           cd ios/App
-          # SETUP LIMPO conforme a DOC OFICIAL: Podfile PADRAO do Capacitor (use_frameworks!
-          # dinamico, NAO mexemos) + plugin no bloco 'target App' com o subspec sem IDFA.
-          # NAO mexemos em use_frameworks nem em static_framework, pra o diagnostico refletir
-          # o config conhecido-bom da doc (eu vinha empilhando mudancas e mascarando o
-          # resultado). Removemos a linha que o cap sync gera e adicionamos no target.
-          sed -i '' "/pod 'CapacitorFirebaseAnalytics/d" Podfile
-          sed -i '' "s|^\( *\)capacitor_pods$|\1capacitor_pods\n\1pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path => '../../node_modules/@capacitor-firebase/analytics'|" Podfile
-          echo "=== Podfile (use_frameworks + plugin) ==="
-          grep -n "use_frameworks\|target 'App'\|capacitor_pods\|CapacitorFirebaseAnalytics" Podfile || true
+          # CAUSA PROVADA: instalado via SUBSPEC, o CocoaPods NAO compila o source_files do
+          # root do plugin (framework do plugin nunca e gerado; classe ausente do app). O
+          # subspec so declara a dependencia do Firebase; a fonte fica no root. No modo PLAIN
+          # a fonte compila (o 1o build plain falhou compilando a fonte sem Firebase). FIX:
+          # colocar a dependencia do Firebase (sem IDFA) direto no ROOT do podspec e instalar
+          # o pod PLAIN (o que o cap sync ja gera). Nao mexemos no Podfile nem em use_frameworks.
+          PODSPEC="../../node_modules/@capacitor-firebase/analytics/CapacitorFirebaseAnalytics.podspec"
+          sed -i '' "s#s.dependency 'Capacitor'#s.dependency 'Capacitor'\n  s.dependency 'FirebaseAnalytics/WithoutAdIdSupport', '~> 11.0'#" "$PODSPEC"
+          echo "=== podspec (deps do root; deve ter FirebaseAnalytics/WithoutAdIdSupport) ==="
+          grep -n "dependency" "$PODSPEC" || true
+          echo "=== Podfile (plugin plain do cap sync) ==="
+          grep -n "CapacitorFirebaseAnalytics" Podfile || true
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
           echo "=== Podfile.lock: plugin + Firebase instalados? ==="
