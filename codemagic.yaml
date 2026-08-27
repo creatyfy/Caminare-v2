@@ -280,6 +280,16 @@ workflows:
           sed -i '' "s|pod 'CapacitorFirebaseAnalytics', :path|pod 'CapacitorFirebaseAnalytics/AnalyticsWithoutAdIdSupport', :path|" Podfile
           echo "=== Podfile (plugin) ==="
           grep -n "CapacitorFirebaseAnalytics\|capacitor_pods" Podfile || true
+          # PROVA (otool -oV): a classe do plugin fica AUSENTE do app e nenhum framework
+          # do plugin e gerado, enquanto os outros plugins do Capacitor (nao static_framework)
+          # geram framework e registram. A diferenca e a linha 's.static_framework = true' no
+          # podspec do plugin: com use_frameworks :linkage => :static ela e redundante e
+          # impede o framework do plugin de ser construido/linkado. Removemos ela pra o plugin
+          # ser tratado IGUAL aos outros (que funcionam).
+          PODSPEC="../../node_modules/@capacitor-firebase/analytics/CapacitorFirebaseAnalytics.podspec"
+          sed -i '' 's/s.static_framework = true/s.static_framework = false/' "$PODSPEC"
+          echo "=== podspec static_framework (deve estar false) ==="
+          grep -n "static_framework" "$PODSPEC" || echo "(sem static_framework)"
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
           echo "=== Podfile.lock: plugin + Firebase instalados? ==="
