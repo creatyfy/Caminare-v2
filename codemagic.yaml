@@ -254,6 +254,11 @@ workflows:
       - name: Instalar pods
         script: |
           cd ios/App
+          # Firebase (e o plugin dele) exigem pods como FRAMEWORKS pra os modulos Swift
+          # ficarem importaveis/registrados. Sem isso o modulo do plugin nao e visivel
+          # ao app (canImport=false) e o Capacitor nao acha o plugin ("not implemented
+          # on ios"). :linkage => :static mantem o link estatico (sem frameworks dinamicos).
+          grep -q "use_frameworks!" Podfile || sed -i '' 's/^platform :ios.*/&\nuse_frameworks! :linkage => :static/' Podfile
           # O plugin @capacitor-firebase/analytics tem subspec PADRAO "Lite", que NAO
           # inclui o Firebase. Por isso o build quebrava em 'FirebaseCore'/'FirebaseAnalytics'
           # nao resolvidos. O 'npx cap sync' gera "pod 'CapacitorFirebaseAnalytics'" (Lite),
