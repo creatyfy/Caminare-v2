@@ -238,8 +238,17 @@ workflows:
           # Idempotente (grep antes de inserir).
           grep -q "import FirebaseCore" "$APPDELEGATE" \
             || sed -i '' 's/import Capacitor/import Capacitor\nimport FirebaseCore/' "$APPDELEGATE"
+          # Import do modulo do plugin (guardado por canImport pra nao quebrar o build
+          # caso o nome do modulo mude).
+          grep -q "canImport(CapacitorFirebaseAnalytics)" "$APPDELEGATE" \
+            || sed -i '' 's/import FirebaseCore/import FirebaseCore\n#if canImport(CapacitorFirebaseAnalytics)\nimport CapacitorFirebaseAnalytics\n#endif/' "$APPDELEGATE"
           grep -q "FirebaseApp.configure()" "$APPDELEGATE" \
             || sed -i '' 's/didFinishLaunchingWithOptions\(.*\)-> Bool {/didFinishLaunchingWithOptions\1-> Bool {\n        FirebaseApp.configure()/' "$APPDELEGATE"
+          # Referencia DIRETA a classe do plugin: forca o linker a manter a classe no
+          # binario (o -ObjC sozinho nao registrou o plugin do framework estatico). Com
+          # a classe presente, o Capacitor a encontra em runtime e o plugin funciona.
+          grep -q "FirebaseAnalyticsPlugin.self" "$APPDELEGATE" \
+            || sed -i '' 's/FirebaseApp.configure()/FirebaseApp.configure()\n        #if canImport(CapacitorFirebaseAnalytics)\n        _ = FirebaseAnalyticsPlugin.self\n        #endif/' "$APPDELEGATE"
           echo "=== AppDelegate.swift ==="
           cat "$APPDELEGATE"
       - name: Instalar pods
