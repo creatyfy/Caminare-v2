@@ -316,6 +316,17 @@ workflows:
           if otool -oV "$APP" 2>/dev/null | grep -qi "StatusBarPlugin"; then echo "  StatusBarPlugin (controle, funciona): PRESENTE"; else echo "  StatusBarPlugin (controle): AUSENTE"; fi
           echo "--- total de classes com 'Plugin' no binario ---"
           otool -oV "$APP" 2>/dev/null | grep -ci "Plugin"
+          DD="$HOME/Library/Developer/Xcode/DerivedData"
+          echo "--- onde esta o framework do plugin (vs SplashScreen)? ---"
+          echo "[FBA framework]:"; find "$DD" -name "CapacitorFirebaseAnalytics.framework" 2>/dev/null | head -3 || echo "  (nao achou framework)"
+          echo "[Splash framework]:"; find "$DD" -name "CapacitorSplashScreen.framework" 2>/dev/null | head -3 || echo "  (nao achou framework)"
+          echo "--- a classe existe no binario do framework do plugin? ---"
+          FBABIN=$(find "$DD" -path "*CapacitorFirebaseAnalytics.framework/CapacitorFirebaseAnalytics" -type f 2>/dev/null | head -1)
+          echo "  binario do framework: $FBABIN"
+          if [ -n "$FBABIN" ] && otool -oV "$FBABIN" 2>/dev/null | grep -qi "FirebaseAnalyticsPlugin"; then echo "  -> classe COMPILADA no framework do plugin (so falta linkar ao app)"; else echo "  -> classe NAO esta no framework do plugin (fonte pode nao estar compilando)"; fi
+          echo "--- a classe esta no Pods_App? ---"
+          PABIN=$(find "$DD" -path "*Pods_App.framework/Pods_App" -type f 2>/dev/null | head -1)
+          if [ -n "$PABIN" ] && otool -oV "$PABIN" 2>/dev/null | grep -qi "FirebaseAnalyticsPlugin"; then echo "  -> classe esta no Pods_App"; else echo "  -> classe NAO esta no Pods_App"; fi
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
