@@ -310,14 +310,12 @@ workflows:
           APPDIR=$(find "$HOME/Library/Developer/Xcode/DerivedData" build -name "App.app" -type d 2>/dev/null | grep -i "App.app$" | head -1)
           APP="$APPDIR/App"
           echo "=== App.app: $APPDIR ==="
-          echo "--- classe FirebaseAnalyticsPlugin dentro do binario do app? (nm) ---"
-          nm "$APP" 2>/dev/null | grep -i "FirebaseAnalyticsPlugin" | head -5 || echo "!!! FirebaseAnalyticsPlugin NAO esta no binario do app (classe descartada/nao linkada)"
-          echo "--- frameworks linkados dinamicamente (otool -L) ---"
-          otool -L "$APP" 2>/dev/null | grep -i "Capacitor\|Firebase" || echo "(nenhum Capacitor/Firebase em otool -L = linkagem estatica)"
-          echo "--- frameworks embarcados em App.app/Frameworks ---"
-          ls "$APPDIR/Frameworks" 2>/dev/null | grep -i "Capacitor\|Firebase" || echo "(sem Capacitor/Firebase embarcado)"
-          echo "--- todas as classes CAPPlugin/Capacitor no binario (amostra) ---"
-          nm "$APP" 2>/dev/null | grep -i "Plugin" | grep -i "Capacitor\|Firebase\|SplashScreen\|StatusBar" | head -20 || true
+          echo "--- classes ObjC de plugin no binario (otool -oV; metadados ObjC NAO sao stripados) ---"
+          if otool -oV "$APP" 2>/dev/null | grep -qi "FirebaseAnalyticsPlugin"; then echo "  FirebaseAnalyticsPlugin: PRESENTE no binario"; else echo "  FirebaseAnalyticsPlugin: AUSENTE do binario"; fi
+          if otool -oV "$APP" 2>/dev/null | grep -qi "SplashScreenPlugin"; then echo "  SplashScreenPlugin (controle, funciona): PRESENTE"; else echo "  SplashScreenPlugin (controle): AUSENTE"; fi
+          if otool -oV "$APP" 2>/dev/null | grep -qi "StatusBarPlugin"; then echo "  StatusBarPlugin (controle, funciona): PRESENTE"; else echo "  StatusBarPlugin (controle): AUSENTE"; fi
+          echo "--- total de classes com 'Plugin' no binario ---"
+          otool -oV "$APP" 2>/dev/null | grep -ci "Plugin"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
