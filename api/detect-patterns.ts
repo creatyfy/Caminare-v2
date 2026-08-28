@@ -20,7 +20,9 @@ import { runStructured } from './_lib/claude.js';
 import { SYSTEM_DETECT_PATTERNS, buildDetectPatternsUser } from './_lib/prompts.js';
 import { trackServer } from './_lib/analytics.js';
 
-export const config = { maxDuration: 30 };
+// 60s: Claude com timeout 25s + 1 retry (~50s no pior caso). Com 30s dava 504
+// (FUNCTION_INVOCATION_TIMEOUT) quando a IA demorava. Mesmo motivo do analyze-beliefs.
+export const config = { maxDuration: 60 };
 
 interface Body {
   user_id?: string;

@@ -238,19 +238,8 @@ workflows:
           # Idempotente (grep antes de inserir).
           grep -q "import FirebaseCore" "$APPDELEGATE" \
             || sed -i '' 's/import Capacitor/import Capacitor\nimport FirebaseCore/' "$APPDELEGATE"
-          # Import do modulo do plugin (guardado por canImport pra nao quebrar o build
-          # caso o nome do modulo mude).
-          grep -q "canImport(CapacitorFirebaseAnalytics)" "$APPDELEGATE" \
-            || sed -i '' 's/import FirebaseCore/import FirebaseCore\n#if canImport(CapacitorFirebaseAnalytics)\nimport CapacitorFirebaseAnalytics\n#warning("DIAG_FBA modulo IMPORTAVEL")\n#else\n#warning("DIAG_FBA modulo NAO importavel")\n#endif/' "$APPDELEGATE"
           grep -q "FirebaseApp.configure()" "$APPDELEGATE" \
             || sed -i '' 's/didFinishLaunchingWithOptions\(.*\)-> Bool {/didFinishLaunchingWithOptions\1-> Bool {\n        FirebaseApp.configure()/' "$APPDELEGATE"
-          # Referencia DIRETA a classe do plugin: forca o linker a manter a classe no
-          # binario (o -ObjC sozinho nao registrou o plugin do framework estatico). Com
-          # a classe presente, o Capacitor a encontra em runtime e o plugin funciona.
-          grep -q "FirebaseAnalyticsPlugin.self" "$APPDELEGATE" \
-            || sed -i '' 's/FirebaseApp.configure()/FirebaseApp.configure()\n        #if canImport(CapacitorFirebaseAnalytics)\n        _ = FirebaseAnalyticsPlugin.self\n        #endif/' "$APPDELEGATE"
-          echo "=== AppDelegate.swift ==="
-          cat "$APPDELEGATE"
       - name: Instalar pods
         script: |
           cd ios/App
@@ -290,29 +279,6 @@ workflows:
           xcode-project build-ipa \
             --workspace "ios/App/App.xcworkspace" \
             --scheme "App"
-      - name: DIAGNOSTICO do binario (classe do plugin no app?)
-        script: |
-          set +e
-          APPDIR=$(find "$HOME/Library/Developer/Xcode/DerivedData" build -name "App.app" -type d 2>/dev/null | grep -i "App.app$" | head -1)
-          APP="$APPDIR/App"
-          echo "=== App.app: $APPDIR ==="
-          echo "--- classes ObjC de plugin no binario (otool -oV; metadados ObjC NAO sao stripados) ---"
-          if otool -oV "$APP" 2>/dev/null | grep -qi "FirebaseAnalyticsPlugin"; then echo "  FirebaseAnalyticsPlugin: PRESENTE no binario"; else echo "  FirebaseAnalyticsPlugin: AUSENTE do binario"; fi
-          if otool -oV "$APP" 2>/dev/null | grep -qi "SplashScreenPlugin"; then echo "  SplashScreenPlugin (controle, funciona): PRESENTE"; else echo "  SplashScreenPlugin (controle): AUSENTE"; fi
-          if otool -oV "$APP" 2>/dev/null | grep -qi "StatusBarPlugin"; then echo "  StatusBarPlugin (controle, funciona): PRESENTE"; else echo "  StatusBarPlugin (controle): AUSENTE"; fi
-          echo "--- total de classes com 'Plugin' no binario ---"
-          otool -oV "$APP" 2>/dev/null | grep -ci "Plugin"
-          DD="$HOME/Library/Developer/Xcode/DerivedData"
-          echo "--- onde esta o framework do plugin (vs SplashScreen)? ---"
-          echo "[FBA framework]:"; find "$DD" -name "CapacitorFirebaseAnalytics.framework" 2>/dev/null | head -3 || echo "  (nao achou framework)"
-          echo "[Splash framework]:"; find "$DD" -name "CapacitorSplashScreen.framework" 2>/dev/null | head -3 || echo "  (nao achou framework)"
-          echo "--- a classe existe no binario do framework do plugin? ---"
-          FBABIN=$(find "$DD" -path "*CapacitorFirebaseAnalytics.framework/CapacitorFirebaseAnalytics" -type f 2>/dev/null | head -1)
-          echo "  binario do framework: $FBABIN"
-          if [ -n "$FBABIN" ] && otool -oV "$FBABIN" 2>/dev/null | grep -qi "FirebaseAnalyticsPlugin"; then echo "  -> classe COMPILADA no framework do plugin (so falta linkar ao app)"; else echo "  -> classe NAO esta no framework do plugin (fonte pode nao estar compilando)"; fi
-          echo "--- a classe esta no Pods_App? ---"
-          PABIN=$(find "$DD" -path "*Pods_App.framework/Pods_App" -type f 2>/dev/null | head -1)
-          if [ -n "$PABIN" ] && otool -oV "$PABIN" 2>/dev/null | grep -qi "FirebaseAnalyticsPlugin"; then echo "  -> classe esta no Pods_App"; else echo "  -> classe NAO esta no Pods_App"; fi
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log

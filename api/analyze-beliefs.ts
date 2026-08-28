@@ -18,7 +18,10 @@ import { runStructured, CLAUDE_MODEL } from './_lib/claude.js';
 import { SYSTEM_ANALYZE_BELIEFS, buildAnalyzeBeliefsUser } from './_lib/prompts.js';
 import { trackServer } from './_lib/analytics.js';
 
-export const config = { maxDuration: 30 };
+// 60s: a chamada do Claude tem timeout de 25s E faz 1 retry (ate ~50s no pior
+// caso). Com 30s a funcao era morta no meio do retry (504 FUNCTION_INVOCATION_TIMEOUT),
+// e a analise de crencas voltava vazia. 60s cobre a chamada + o retry com folga.
+export const config = { maxDuration: 60 };
 
 interface Body {
   entry_id?: string;
