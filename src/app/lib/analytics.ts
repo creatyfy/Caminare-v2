@@ -18,8 +18,10 @@
 import { isNative } from './native';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
-// ID de medição do GA4 (fluxo Web).
-const GA_MEASUREMENT_ID = 'G-NGNBB1JBDL';
+// ID de medição do GA4 (fluxo Web). Stream web da propriedade unificada
+// (mesma propriedade ligada ao Firebase e usada no server-side via Measurement
+// Protocol). A propriedade antiga (G-NGNBB1JBDL) foi aposentada.
+const GA_MEASUREMENT_ID = 'G-RM4NQ1RHL2';
 
 export type EventName =
   // Conversões de marketing (FB + Ads + Meta)
