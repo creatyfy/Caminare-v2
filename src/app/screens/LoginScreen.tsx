@@ -65,12 +65,13 @@ export function LoginScreen() {
         backgroundColor: 'var(--cam-bg-login)',
         display: 'flex',
         flexDirection: 'column',
-        // "safe center": centraliza quando cabe, mas ao abrir o teclado (viewport
-        // encolhe) faz fallback pra flex-start em vez de CORTAR o topo — aí o
-        // overflow:auto consegue rolar até o campo focado. Com só "center" o topo
-        // ficava inacessível e o conteúdo mal posicionado com o teclado aberto.
-        justifyContent: 'safe center',
-        padding: '32px 24px 40px',
+        // Conteúdo ANCORADO NO TOPO (flex-start), não centralizado. Com o teclado em
+        // resize:none, se o conteúdo fica centralizado o campo de senha cai perto da
+        // linha do teclado e o iOS ROLA pra mostrá-lo — é isso que fazia a tela "se
+        // mexer". Ancorado no topo, os campos ficam sempre acima do teclado, o iOS não
+        // precisa rolar, e a tela fica parada (continua responsiva a tamanhos de tela).
+        justifyContent: 'flex-start',
+        padding: '48px 24px 40px',
         overflow: 'auto',
         WebkitOverflowScrolling: 'touch',
         fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
