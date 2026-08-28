@@ -32,6 +32,7 @@ import {
   type EntitlementUpdate,
 } from './_lib/iap-subscriptions.js';
 import { trackServer } from './_lib/analytics.js';
+import { trackMetaConversion } from './_lib/meta.js';
 
 // Mapeia o resultado de uma notificação da loja para o evento do GA4.
 // NO-OP até GA4 configurado (ver _lib/analytics.ts).
@@ -58,6 +59,20 @@ function forwardSubscriptionEvent(
     name = 'subscription_renewed';
   }
   void trackServer(externalId, { name, params: { source, type, status: status ?? '' } });
+
+  // Espelha a conversão pra Meta (CAPI). NO-OP até META_PIXEL_ID +
+  // META_ACCESS_TOKEN configurados (ver _lib/meta.ts). Só os eventos que a Meta
+  // trata como conversão de anúncio: trial->pago = Subscribe; renovação = Purchase.
+  // Cancelamento/reembolso não são conversões, então não vão pra Meta.
+  const metaEvent =
+    name === 'trial_converted' ? 'Subscribe' : name === 'subscription_renewed' ? 'Purchase' : null;
+  if (metaEvent) {
+    void trackMetaConversion({
+      eventName: metaEvent,
+      externalId,
+      customData: { source, type },
+    });
+  }
 }
 
 export const config = { maxDuration: 30 };

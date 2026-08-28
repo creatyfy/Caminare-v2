@@ -453,12 +453,36 @@ run();
   gtag('js', new Date());
   gtag('config', 'G-RM4NQ1RHL2');
 </script>
+<!-- ===== Meta Pixel =========================================================
+  Quando o pixel da Calíope estiver criado, troque 1078382985133912
+  (2 lugares: abaixo e no <noscript>) pelo ID do dataset/pixel. Enquanto for o
+  placeholder, o pixel fica INERTE — não inicializa nem dispara nada. O CAPI
+  (server-side) fica no webhook (api/_lib/meta.ts). -->
+<script>
+(function () {
+  var FB_PIXEL_ID = '1078382985133912';
+  if (!/^\d+$/.test(FB_PIXEL_ID)) return; // inerte até trocar pelo ID real
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', FB_PIXEL_ID);
+  fbq('track', 'PageView');
+})();
+</script>
+<noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1078382985133912&ev=PageView&noscript=1" alt=""/></noscript>
+<!-- End Meta Pixel -->
 <script>
 // Tagueamento de cliques da landing: store_click e nav_click.
 // Inerte enquanto window.gtag não existir (bloco acima comentado).
 (function () {
   function send(name, params) {
     if (typeof window.gtag === 'function') window.gtag('event', name, params);
+    // Espelha na Meta (se o pixel estiver ativo). store_click = intenção de
+    // baixar o app; mandamos como evento custom pra usar em otimização/públicos.
+    if (typeof window.fbq === 'function') window.fbq('trackCustom', name, params);
   }
   document.querySelectorAll('a.store').forEach(function (a) {
     a.addEventListener('click', function () {
