@@ -387,9 +387,11 @@ export function HistoryScreen() {
                     ))}
                   </div>
 
-                  {/* Registro cuja análise da IA não concluiu (rede/erro): o texto
-                      já está salvo, então oferecemos concluir a análise depois. */}
-                  {entry.processing_status !== 'done' && (
+                  {/* Registro que precisa de ação pra fechar: análise não concluiu
+                      (rede/erro) OU concluiu mas ainda tem emoções sem validar
+                      (erro só no cliente). O texto já está salvo, então oferecemos
+                      concluir depois. */}
+                  {entry.needsCompletion && (
                     <button
                       type="button"
                       onClick={(e) => {
@@ -553,8 +555,9 @@ export function HistoryScreen() {
                 </p>
               )}
 
-              {/* Análise não concluída: botão pra retomar a análise da IA. */}
-              {!editing && selectedEntry.processing_status !== 'done' && (
+              {/* Registro pendente de conclusão (análise não concluída OU emoções
+                  ainda sem validar): botão pra retomar o fluxo de validação. */}
+              {!editing && selectedEntry.needsCompletion && (
                 <button
                   type="button"
                   onClick={() => navigate(`/validacao-emocoes?entryId=${selectedEntry.id}`)}

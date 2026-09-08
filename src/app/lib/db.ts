@@ -26,7 +26,16 @@ export interface EntryWithEmotions {
   created_at: string;
   input_type: 'text' | 'audio';
   processing_status: 'pending' | 'processing' | 'done' | 'failed';
+  /** Emoções CONFIRMADAS (as que aparecem no card/modal). */
   emotions: EmotionRow[];
+  /**
+   * true quando o registro precisa de ação do usuário pra fechar: a análise
+   * não concluiu (pending/processing/failed) OU concluiu mas ainda há emoções
+   * sugeridas sem validação. Cobre o caso de erro só no cliente (rede caiu
+   * depois do pedido chegar): o servidor extraiu as emoções, mas o usuário
+   * nunca as validou. Usado pelo botão "Concluir análise" do Histórico.
+   */
+  needsCompletion: boolean;
 }
 
 export interface SummaryBelief {
@@ -224,6 +233,8 @@ type EntryRow = {
 };
 
 function mapEntryRow(row: EntryRow): EntryWithEmotions {
+  const all = row.emotions ?? [];
+  const hasPendingEmotions = all.some((e) => e.validation === 'pending');
   return {
     id: row.id,
     raw_text: row.raw_text,
@@ -231,7 +242,8 @@ function mapEntryRow(row: EntryRow): EntryWithEmotions {
     created_at: row.created_at,
     input_type: row.input_type,
     processing_status: row.processing_status,
-    emotions: (row.emotions ?? []).filter((e) => e.validation === 'confirmed'),
+    emotions: all.filter((e) => e.validation === 'confirmed'),
+    needsCompletion: row.processing_status !== 'done' || hasPendingEmotions,
   };
 }
 
