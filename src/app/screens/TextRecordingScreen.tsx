@@ -9,6 +9,7 @@ import { useSpeechToText, type SpeechErrorKind } from '../lib/speech';
 import { track } from '../lib/analytics';
 import { resolveRecordLanguage } from '../lib/languages';
 import { LanguageSelect } from '../components/LanguageSelect';
+import { isNative } from '../lib/native';
 
 // Equivalente a aproximadamente 2 min de fala (150 wpm × ~6 chars por palavra)
 const MAX_CHARS = 1800;
@@ -17,6 +18,51 @@ const MAX_SECONDS = 120;
 // Marcos de uso (nº total de registros) que disparam milestone_reached. Adicionar
 // um número aqui NÃO exige nova versão da análise — é só estender a lista.
 const RECORD_MILESTONES = [1, 3, 5, 10, 50, 100];
+
+// --- Rascunho persistente ----------------------------------------------------
+// Se o app é interrompido no meio da gravação (ligação, troca de app, o SO mata
+// o app por memória durante a chamada), o texto do registro não pode se perder.
+// Salvamos o rascunho em localStorage (funciona no WebView nativo) enquanto o
+// usuário escreve/fala e restauramos ao reabrir a tela de registro. Limpamos ao
+// concluir. TTL curto pra um rascunho abandonado não "assombrar" um registro novo.
+const DRAFT_TTL_MS = 60 * 60 * 1000; // 1 hora
+const draftKey = (userId: string) => `caminare:draft:${userId}`;
+
+function loadDraft(userId: string): string | null {
+  try {
+    const raw = localStorage.getItem(draftKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { text?: unknown; ts?: unknown };
+    if (typeof parsed.text !== 'string' || typeof parsed.ts !== 'number') return null;
+    if (Date.now() - parsed.ts > DRAFT_TTL_MS) {
+      localStorage.removeItem(draftKey(userId));
+      return null;
+    }
+    return parsed.text.trim() ? parsed.text : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(userId: string, text: string): void {
+  try {
+    if (!text.trim()) {
+      localStorage.removeItem(draftKey(userId));
+      return;
+    }
+    localStorage.setItem(draftKey(userId), JSON.stringify({ text, ts: Date.now() }));
+  } catch {
+    /* localStorage indisponível — rascunho é best-effort, não quebra o fluxo */
+  }
+}
+
+function clearDraft(userId: string): void {
+  try {
+    localStorage.removeItem(draftKey(userId));
+  } catch {
+    /* ignore */
+  }
+}
 
 export function TextRecordingScreen() {
   const navigate = useNavigate();
@@ -46,6 +92,11 @@ export function TextRecordingScreen() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const baseTextRef = useRef(''); // texto já no campo antes da sessão atual de fala
   const autoStartedRef = useRef(false);
+  // Espelho síncrono do texto atual (refs atualizam na hora, diferente do state).
+  // Usado como base da fala e ao salvar o rascunho numa interrupção, evitando a
+  // corrida entre setText (assíncrono) e o auto-start/background.
+  const textRef = useRef('');
+  const restoredRef = useRef(false);
 
   // Idioma do registro: padrão é o idioma nativo do usuário (metadados), com
   // fallback pra interface. Ajustável no seletor da tela de voz. É esse idioma
@@ -96,7 +147,7 @@ export function TextRecordingScreen() {
   async function startRecording() {
     setVoiceError(null);
     setSeconds(0);
-    baseTextRef.current = text;
+    baseTextRef.current = textRef.current;
     await start({
       lang: recordLang,
       onResult: (session) => {
@@ -110,7 +161,7 @@ export function TextRecordingScreen() {
 
   async function stopRecording() {
     await stop();
-    baseTextRef.current = text; // consolida o que já foi transcrito
+    baseTextRef.current = textRef.current; // consolida o que já foi transcrito
     textareaRef.current?.focus({ preventScroll: true });
   }
 
@@ -118,6 +169,53 @@ export function TextRecordingScreen() {
     if (listening) void stopRecording();
     else void startRecording();
   }
+
+  // Mantém o espelho síncrono do texto e salva o rascunho a cada mudança.
+  useEffect(() => {
+    textRef.current = text;
+    if (user) saveDraft(user.id, text);
+  }, [text, user]);
+
+  // Restaura um rascunho pendente ao abrir a tela (ex.: registro interrompido por
+  // uma ligação). Roda ANTES do auto-start pra a base da fala já incluir o texto
+  // restaurado. Uma vez só por montagem.
+  useEffect(() => {
+    if (!user || restoredRef.current) return;
+    restoredRef.current = true;
+    const d = loadDraft(user.id);
+    if (d) {
+      textRef.current = d;
+      baseTextRef.current = d;
+      setText(d);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Interrupção (ligação/troca de app): ao ir pro fundo, consolida o rascunho e
+  // para a gravação pra liberar o microfone. O texto já está salvo no efeito
+  // acima; aqui garantimos o save final com o que estiver no espelho síncrono.
+  useEffect(() => {
+    if (!isNative) return;
+    let cleanup: (() => void) | undefined;
+    void (async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        const handle = await App.addListener('appStateChange', ({ isActive }) => {
+          if (!isActive) {
+            if (user) saveDraft(user.id, textRef.current);
+            void stop();
+          }
+        });
+        cleanup = () => void handle.remove();
+      } catch {
+        /* @capacitor/app indisponível — sem tratamento de background */
+      }
+    })();
+    return () => {
+      if (cleanup) cleanup();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Auto-inicia a gravação ao abrir no modo voz (o "tap" veio da Home).
   useEffect(() => {
@@ -177,6 +275,8 @@ export function TextRecordingScreen() {
         setError(t('textRecording.errorSave'));
         return;
       }
+      // Registro salvo no servidor: o rascunho local já cumpriu o papel, pode limpar.
+      clearDraft(user.id);
       // record_created + milestone_reached. Não bloqueia a navegação: busca a
       // contagem total (já inclui este registro) em background e dispara os
       // eventos. Se a contagem falhar, ainda registra o record_created sem número.

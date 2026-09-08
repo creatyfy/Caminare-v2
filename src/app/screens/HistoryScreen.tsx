@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Heart, Search, ChevronDown, X, Pencil, Trash2, Plus, Check, Loader2 } from 'lucide-react';
+import { Calendar, Heart, Search, ChevronDown, X, Pencil, Trash2, Plus, Check, Loader2, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -23,6 +24,7 @@ const PREVIEW_CHARS = 120;
 
 export function HistoryScreen() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [entries, setEntries] = useState<EntryWithEmotions[]>([]);
   const [loading, setLoading] = useState(true);
@@ -384,6 +386,36 @@ export function HistoryScreen() {
                       </span>
                     ))}
                   </div>
+
+                  {/* Registro cuja análise da IA não concluiu (rede/erro): o texto
+                      já está salvo, então oferecemos concluir a análise depois. */}
+                  {entry.processing_status !== 'done' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/validacao-emocoes?entryId=${entry.id}`);
+                      }}
+                      style={{
+                        marginTop: '12px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: 'var(--cam-bg-accent-soft)',
+                        color: 'var(--cam-text-accent)',
+                        border: 'none',
+                        borderRadius: '9999px',
+                        padding: '8px 14px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      <Sparkles size={14} strokeWidth={2.5} />
+                      {t('history.finishAnalysis')}
+                    </button>
+                  )}
                 </div>
               </div>
             );

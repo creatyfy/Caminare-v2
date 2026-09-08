@@ -182,8 +182,8 @@ workflows:
           # O CFBundleShortVersionString (versão de marketing) fica em 1.0.
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST" 2>/dev/null \
             || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" "$PLIST"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 3.1.2" "$PLIST" 2>/dev/null \
-            || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 3.1.2" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 3.1.3" "$PLIST" 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 3.1.3" "$PLIST"
           # Entitlements: só Sign in with Apple. O associated-domains (Universal Links)
           # está desativado em native/ios/App.entitlements enquanto o domínio de produção
           # não existe (o placeholder quebrava a assinatura). Restaurar lá quando houver domínio.
@@ -255,6 +255,22 @@ workflows:
           grep -n "dependency" "$PODSPEC" || true
           echo "=== Podfile (plugin plain do cap sync) ==="
           grep -n "CapacitorFirebaseAnalytics" Podfile || true
+          # --- Item 3 (retomar musica apos gravacao) -------------------------------
+          # O stop() do plugin de fala (capacitor-community/speech-recognition) NAO
+          # desativa a sessao de audio; so para o engine. Sem a desativacao com
+          # notifyOthersOnDeactivation, o iOS nao avisa os outros apps (Spotify etc.)
+          # pra retomar, e a musica fica pausada. Inserimos essa desativacao logo apos
+          # o endAudio() (linha unica do metodo stop). Idempotente: so aplica se ainda
+          # nao houver um setActive(false ...) (o start() usa setActive(true ...)).
+          SPEECH_SWIFT="../../node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift"
+          if [ -f "$SPEECH_SWIFT" ]; then
+            grep -q "setActive(false" "$SPEECH_SWIFT" \
+              || sed -i '' 's#self.recognitionRequest?.endAudio()#&\n                try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)#' "$SPEECH_SWIFT"
+            echo "=== speech Plugin.swift: patch de retomada de audio ==="
+            grep -n "setActive(false" "$SPEECH_SWIFT" || echo "!!! patch de audio NAO aplicado (verificar Plugin.swift)"
+          else
+            echo "!!! Plugin.swift do speech-recognition nao encontrado em $SPEECH_SWIFT"
+          fi
           # --repo-update: garante o spec repo atualizado p/ achar o FirebaseAnalytics ~> 11.0.
           pod install --repo-update
           echo "=== Podfile.lock: plugin + Firebase instalados? ==="

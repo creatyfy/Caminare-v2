@@ -1,4 +1,4 @@
-import { Check, X, ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { Check, X, ArrowLeft, Plus, Loader2, RotateCcw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +32,8 @@ export function EmotionValidationScreen() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  // Incrementado pelo botão "Tentar novamente": re-dispara o efeito de análise.
+  const [retryNonce, setRetryNonce] = useState(0);
   const [continuing, setContinuing] = useState(false);
   const [isAddingEmotion, setIsAddingEmotion] = useState(false);
   const [newEmotion, setNewEmotion] = useState('');
@@ -69,18 +71,17 @@ export function EmotionValidationScreen() {
               if (finalStatus === 'done' || finalStatus === 'failed') break;
             }
             if (active && finalStatus !== 'done') {
-              setAnalyzeError(
-                `${t('emotionValidation.analyzeError')} — análise não concluiu (status: ${finalStatus}).`
-              );
+              // Detalhe técnico só no console; o usuário vê mensagem amigável + retry.
+              console.warn('[EmotionValidation] análise não concluiu, status:', finalStatus);
+              setAnalyzeError(t('emotionValidation.analyzeErrorFriendly'));
             }
           }
         } catch (err) {
+          // Detalhe técnico (status/rede/URL) fica só no console pra diagnóstico.
+          // Na tela mostramos uma mensagem acolhedora + botão "Tentar novamente";
+          // o registro já está salvo, então nada se perde.
           console.error('[EmotionValidation] process-entry falhou:', err);
-          // Mostra a mensagem REAL (status + texto da resposta / falha de rede +
-          // URL) para diagnosticar — antes o erro só ia pro console (invisível no
-          // app nativo) e a tela exibia um texto genérico.
-          const detail = err instanceof Error ? err.message : String(err);
-          if (active) setAnalyzeError(`${t('emotionValidation.analyzeError')} — ${detail}`);
+          if (active) setAnalyzeError(t('emotionValidation.analyzeErrorFriendly'));
         }
         if (!active) return;
         setAnalyzing(false);
@@ -95,7 +96,7 @@ export function EmotionValidationScreen() {
     return () => {
       active = false;
     };
-  }, [user, entryId, i18n.language, t]);
+  }, [user, entryId, i18n.language, t, retryNonce]);
 
   async function handleContinue() {
     if (!user || !entryId || continuing) return;
@@ -249,9 +250,37 @@ export function EmotionValidationScreen() {
                 fontWeight: 500,
                 marginBottom: '16px',
                 lineHeight: 1.4,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
               }}
             >
-              {analyzeError}
+              <span>{analyzeError}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAnalyzeError(null);
+                  setRetryNonce((n) => n + 1);
+                }}
+                style={{
+                  alignSelf: 'flex-start',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: 'var(--cam-color-brand)',
+                  color: 'var(--cam-text-on-brand)',
+                  border: 'none',
+                  borderRadius: '9999px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <RotateCcw size={15} strokeWidth={2.5} />
+                {t('emotionValidation.retry')}
+              </button>
             </div>
           )}
 

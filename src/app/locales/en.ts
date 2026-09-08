@@ -152,6 +152,8 @@ export const en = {
     addEmotion: 'Add emotion',
     emotionPlaceholder: 'Type an emotion...',
     removeEmotion: 'Remove emotion',
+    analysisPending: 'Analysis pending',
+    finishAnalysis: 'Finish analysis',
   },
   entryDone: {
     title: 'Entry complete!',
@@ -230,6 +232,8 @@ export const en = {
       'Almost there...',
     ],
     analyzeError: 'We could not analyze your entry right now. You can still add emotions manually below.',
+    analyzeErrorFriendly: 'Oops, we could not finish the analysis right now. Your entry is saved, just try again.',
+    retry: 'Try again',
     missingEntry: 'Entry not found. Go back and try again.',
   },
   beliefValidation: {

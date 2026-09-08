@@ -152,6 +152,8 @@ export const ptBR = {
     addEmotion: 'Adicionar emoção',
     emotionPlaceholder: 'Digite uma emoção...',
     removeEmotion: 'Remover emoção',
+    analysisPending: 'Análise pendente',
+    finishAnalysis: 'Concluir análise',
   },
   entryDone: {
     title: 'Registro concluído!',
@@ -230,6 +232,8 @@ export const ptBR = {
       'Quase pronto...',
     ],
     analyzeError: 'Não conseguimos analisar seu relato agora. Você ainda pode adicionar emoções manualmente abaixo.',
+    analyzeErrorFriendly: 'Ops, não conseguimos concluir a análise agora. Seu registro está salvo, é só tentar de novo.',
+    retry: 'Tentar novamente',
     missingEntry: 'Registro não encontrado. Volte e tente de novo.',
   },
   beliefValidation: {
