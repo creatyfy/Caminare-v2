@@ -222,7 +222,12 @@ function RootShell() {
       className={`w-full ${isNative ? '' : 'max-w-[375px]'} mx-auto relative overflow-hidden`}
       style={{
         backgroundColor: 'var(--cam-bg-page)',
-        height: '100dvh',
+        // height 100% (encadeado de #root/body/html = altura do WebView) em vez de
+        // 100dvh: no cold start do iOS o dvh chega depois do 1o paint e fazia a
+        // tela "pular" e cortar o menu de baixo. 100% é estável (o teclado usa
+        // resize:none, então a altura do WebView não muda). height explícito +
+        // insets de safe-area no padding mantêm o conteúdo dentro da área segura.
+        height: '100%',
         boxSizing: 'border-box',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',

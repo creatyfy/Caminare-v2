@@ -25,7 +25,14 @@
       <meta name="twitter:title" content="Caminare — Autoconhecimento" />
       <meta name="twitter:description" content="Um diário inteligente que te ajuda a entender suas emoções, crenças e padrões." />
       <meta name="twitter:image" content="https://www.caminare.com.br/store/og-caminare.jpg" />
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <!-- overflow/overscroll travados: no iOS o WebView "balança" (rubber-band) e
+           deixa rolar de lado/pra cima quando algo passa 1px da viewport. Travando
+           aqui, só os containers internos (com overflow: auto) rolam. -->
+      <style>
+        html, body { height: 100%; width: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+        body { position: relative; }
+        #root { height: 100%; width: 100%; overflow: hidden; }
+      </style>
     </head>
 
     <body>

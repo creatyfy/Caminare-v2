@@ -553,6 +553,32 @@ export function HistoryScreen() {
                 </p>
               )}
 
+              {/* Análise não concluída: botão pra retomar a análise da IA. */}
+              {!editing && selectedEntry.processing_status !== 'done' && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/validacao-emocoes?entryId=${selectedEntry.id}`)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: 'var(--cam-bg-accent-soft)',
+                    color: 'var(--cam-text-accent)',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    padding: '10px 16px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    margin: '0 0 24px 0',
+                  }}
+                >
+                  <Sparkles size={16} strokeWidth={2.5} />
+                  {t('history.finishAnalysis')}
+                </button>
+              )}
+
               <h3
                 style={{
                   fontSize: '13px',
