@@ -534,7 +534,7 @@ function InputField({
           border: 'none',
           outline: 'none',
           background: 'transparent',
-          fontSize: '15px',
+          fontSize: '16px', // >= 16px evita o zoom automático do iOS ao focar
           color: 'var(--cam-text-primary)',
           fontWeight: 500,
           fontFamily: 'inherit',

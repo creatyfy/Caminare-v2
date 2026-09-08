@@ -307,7 +307,9 @@ function InputField({
           border: 'none',
           outline: 'none',
           background: 'transparent',
-          fontSize: '15px',
+          // 16px: abaixo disso o iOS dá ZOOM na página ao focar o input, e o zoom
+          // persistia após o login, deixando a Home ampliada/cortada.
+          fontSize: '16px',
           color: 'var(--cam-text-primary)',
           fontWeight: 500,
           fontFamily: 'inherit',
