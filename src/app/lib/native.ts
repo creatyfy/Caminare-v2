@@ -69,4 +69,19 @@ export async function initNative(): Promise<void> {
   } catch (e) {
     console.warn('[native] SplashScreen indisponível:', e);
   }
+  // iOS: impede o WKWebView de ROLAR o documento quando o teclado abre pra revelar
+  // o campo focado. Essa rolagem é NATIVA (UIScrollView do WebView), então CSS
+  // overflow:hidden não a segura. Era ela que "empurrava" a tela de login e, como
+  // o login navega pra Home enquanto o teclado fecha, deixava a Home deslocada
+  // pra cima/esquerda e cortada (menu de baixo sumindo) até reiniciar o app.
+  // Com resize:none (capacitor.config) + este setScroll, a viewport fica 100%
+  // estática. Os campos continuam visíveis porque o login é ancorado no topo.
+  if (isIOS) {
+    try {
+      const { Keyboard } = await import('@capacitor/keyboard');
+      await Keyboard.setScroll({ isDisabled: true });
+    } catch (e) {
+      console.warn('[native] Keyboard.setScroll indisponível:', e);
+    }
+  }
 }

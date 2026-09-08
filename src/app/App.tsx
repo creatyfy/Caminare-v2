@@ -185,6 +185,22 @@ function RootShell() {
     setScreen(screenNameFromPath(path));
   }, [path]);
 
+  // Zera a rolagem do documento a cada troca de tela. Rede de segurança pro iOS:
+  // o WKWebView rola o documento inteiro quando o teclado abre (pra mostrar o
+  // campo focado) e nem sempre volta ao fechar. Como o login navega pra Home
+  // enquanto o teclado fecha, a Home nascia deslocada pra cima/esquerda e
+  // "cortada" (menu de baixo sumindo) até reiniciar o app. A prevenção principal
+  // é o Keyboard.setScroll(false) em initNative; isto garante o estado limpo.
+  useEffect(() => {
+    try {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.documentElement.scrollLeft = 0;
+    } catch {
+      /* ignore */
+    }
+  }, [path]);
+
   if (!isNative && path === '/') return <LandingScreen />;
   // Página pública de planos/preços (link estável p/ citar nos Termos): abre a
   // landing já na seção de Planos.
